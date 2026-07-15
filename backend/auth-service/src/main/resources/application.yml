@@ -1,0 +1,14 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+  data:
+    mongodb:
+      # Specific database override for Auth service
+      uri: ${AUTH_MONGO_URI:mongodb://localhost:27017/authdb}

@@ -1,0 +1,14 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: payment-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+  data:
+    mongodb:
+      # Specific database override for Payment service
+      uri: ${PAYMENT_MONGO_URI:mongodb://localhost:27017/paymentdb}

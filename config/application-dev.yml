@@ -1,0 +1,44 @@
+# Centralized Spring Boot Development Configuration (application-dev.yml)
+
+spring:
+  data:
+    mongodb:
+      # Each service overrides the database name via its local application.yml
+      uri: ${MONGODB_URI:mongodb://localhost:27017/turfconnect_dev}
+      write-concern:
+        journal: true
+        w: majority
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+# Actuator & Observability Defaults
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configurations
+logging:
+  level:
+    root: INFO
+    com.turfconnect: DEBUG
+    org.springframework.data.mongodb: INFO
+    org.springframework.data.redis: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

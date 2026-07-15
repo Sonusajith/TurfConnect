@@ -1,0 +1,14 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: booking-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+  data:
+    mongodb:
+      # Specific database override for Booking service
+      uri: ${BOOKING_MONGO_URI:mongodb://localhost:27017/bookingdb}

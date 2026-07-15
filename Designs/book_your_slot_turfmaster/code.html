@@ -1,0 +1,471 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>TurfConnect | Venue Details &amp; Booking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#ddeaf2",
+                        "primary-fixed-dim": "#91d78a",
+                        "tertiary-container": "#794500",
+                        "primary": "#00450d",
+                        "surface-tint": "#2a6b2c",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#94f990",
+                        "surface-bright": "#f4faff",
+                        "tertiary-fixed-dim": "#ffb870",
+                        "surface-container-highest": "#d7e4ec",
+                        "on-surface-variant": "#41493e",
+                        "background": "#f4faff",
+                        "on-secondary-fixed-variant": "#005313",
+                        "on-surface": "#111d23",
+                        "secondary-fixed-dim": "#78dc77",
+                        "surface-variant": "#d7e4ec",
+                        "on-tertiary-fixed-variant": "#693c00",
+                        "error-container": "#ffdad6",
+                        "outline": "#717a6d",
+                        "surface": "#f4faff",
+                        "inverse-on-surface": "#e6f3fb",
+                        "surface-dim": "#cfdce4",
+                        "on-primary-container": "#90d689",
+                        "on-secondary-container": "#00731e",
+                        "secondary-container": "#91f78e",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#002203",
+                        "surface-container": "#e3f0f8",
+                        "on-tertiary-fixed": "#2c1600",
+                        "surface-container-low": "#e9f6fd",
+                        "tertiary": "#583100",
+                        "tertiary-fixed": "#ffdcbe",
+                        "on-secondary-fixed": "#002204",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#111d23",
+                        "primary-container": "#1b5e20",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#263238",
+                        "secondary": "#006e1c",
+                        "outline-variant": "#c0c9bb",
+                        "on-primary-fixed-variant": "#0c5216",
+                        "on-tertiary-container": "#ffb66b",
+                        "inverse-primary": "#91d78a",
+                        "primary-fixed": "#acf4a4",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "gutter": "20px",
+                        "base": "8px",
+                        "margin-desktop": "40px",
+                        "xs": "4px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-slot {
+            background-color: #acf4a4 !important;
+            border-color: #2a6b2c !important;
+            color: #002203 !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00450d;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation Bar (Shared Component Logic) -->
+<header class="bg-surface-container-highest dark:bg-surface-dim shadow-sm docked full-width top-0 z-50">
+<nav class="flex justify-between items-center w-full px-margin-desktop max-w-7xl mx-auto h-20">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">TurfConnect</div>
+<div class="hidden md:flex gap-md items-center">
+<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors duration-200" href="#">Dashboard</a>
+<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors duration-200" href="#">Explore</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md" href="#">Venues</a>
+<a class="text-on-surface-variant font-body-md hover:text-primary transition-colors duration-200" href="#">My Matches</a>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a sporty young individual with a friendly smile, set against a blurred athletic field background. The lighting is bright and natural, reflecting a modern light-mode interface aesthetic with clean lines and soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR0SgXrAgZ1g2_KJe9m9FHYIu2ILiO3_35NjV5W_KX94Or4mhcByeW_yCtzi0t7ByC8EK-apHgC5ikOdNVDkGo4mnp5f3_oKRRgNzPkoUFXFl2cMztKUJ-ORLo_iDUpcbEzf1JlwOnPNtrR8wt5tmy39DSlzzAGrJgEXfq15hqFh3cNKNe2vGTrwoC0d8dtK0Z69kftUV90cMAl2I5K8E4k8-DTuM7xhCLWi-jHSH7tmkTYe7XbiypNg">
+</div>
+</div>
+</nav>
+</header>
+<main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-md">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-xs text-on-surface-variant font-label-sm mb-md">
+<span class="">Home</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="">Venues</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-primary font-bold">Elite Arena South</span>
+</div>
+<!-- Bento Gallery Section -->
+<section class="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-sm h-[400px] md:h-[600px] mb-lg overflow-hidden rounded-xl shadow-md">
+<div class="md:col-span-2 md:row-span-2 relative group cursor-pointer">
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors duration-300 z-10"></div>
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="A high-angle wide shot of a professional-grade artificial turf football field under bright afternoon sunlight. The green grass is lush and vibrant, with crisp white boundary lines. In the background, modern stadium seating and floodlights are visible against a clear blue sky. Cinematic and athletic atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDU56ezIidUk-1YvDeJZ7hZibdkANBdVwZK86QpiVK1c1CVj_TGH2m1V7C6gkosTHlnWzNr8o6E1xkWQ8De7wGK-kwR-mG-TVJjZeJsLYmY4It1rjkRur0djkOQfLHnaPQJXX0ByfhW57XB19pJc9kDiHx3ld9LvwdDT_8-Vbx5U2PvzPYqmoMdCuJ6Ef3vXoID2Op8xqZXeLVAITB8159OJO3OOmS7cHWaUZWierLt3aatdjmEyI6DxQ')"></div>
+<div class="absolute bottom-md left-md z-20 text-white drop-shadow-lg">
+<span class="bg-primary px-sm py-1 rounded-full text-label-sm uppercase tracking-wider">Premium Venue</span>
+</div>
+</div>
+<div class="hidden md:block md:col-span-1 relative group cursor-pointer overflow-hidden">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Close-up detail of high-quality synthetic turf fibers showing the texture and infill of a professional sports field. The lighting is dramatic, highlighting the texture and vibrant grass green color. Professional, tactile, and reliable quality feel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_1wjstIxYHT-5q87XmUuHjfYcAR-rFJjcrcAj0hsrIJx8iN4sZmgo4RvZrptWQtyNuMw-fXgRVW-9z764Aj0i7mhIszLv5cRWSvb-zpO1C6RWVn3cWxok6Kfm5gitgYo1VLt_1PMSVzzlYZ0LFSOv2f_gtdAUKhYq_1udWakfU9D0om7FGXYw0E4MHmb9UJQRhhpR87b5XzVqnBSlt9EgOxDQQERf9x_Khn1ca3g9qilGLol47ecVKA')"></div>
+</div>
+<div class="hidden md:block md:col-span-1 relative group cursor-pointer overflow-hidden">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="An interior shot of a modern sports venue changing room featuring sleek wooden lockers, LED accent lighting, and polished concrete floors. The aesthetic is corporate-modern, clean, and professional, suggesting high-end amenities for athletes." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCtA-cPIbsX8olq98KYDf_tTnxxj_-iCl2TNkmZcTSXEVjQMkflJtbhSt0UPwYvN7d7srwI-Kz-nyzRRXi87At802cxXJNwZm0itxWqsaCZl82fADX-JROxN6SvLGaN3zeWJqPvOPMV3laDB01j9b6A3_DHq6pjdheElwsrd88DrgPThJmlzINLHj1RHUiPce0R8Hwp4Z8rCuF5c2GZS7imiaauN9Xl6oF3BIOPl4wDKNHZ8oUwG-jBtQ')"></div>
+</div>
+<div class="hidden md:block md:col-span-2 relative group cursor-pointer overflow-hidden">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="A vibrant night-time view of a turf field illuminated by powerful floodlights, creating high-performance energy. The green of the field pops against the dark night sky. Action-oriented, energetic, and atmospheric sports setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCLCTUQUkxtXe8BuqHWQbEkB2FoIyJIhPxh7GqXwYvF49lM4sj5EPa3QkUQ93koVBlJ8xGwce8PWJDEzWxyZ9nmGhTaX8mJdXSWCRAo-H70P8j2AYpDJ4BI36Wf2-2mnwwa7JsgdQkFvGFl5ebjNO3ujJSROF6spoFPENLqY79Us1kMnmaW6uyR6mJeEZRiSKrSBk6MQmKMjTGT7YPHrbFce3CRahHkqVQfcxjVuNnfKM7Lvm2u7WULpA')"></div>
+<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+<span class="text-white font-label-md border-2 border-white px-md py-2 rounded-lg">View All 12 Photos</span>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md items-start">
+<!-- Left Content: Details & Slot Picker -->
+<div class="lg:col-span-2 space-y-lg">
+<!-- Details Card -->
+<div class="bg-surface-container-lowest p-md md:p-lg rounded-xl shadow-sm" style="opacity: 1; transform: translateY(0px); transition: 0.6s ease-out;">
+<div class="flex justify-between items-start mb-md">
+<div>
+<h1 class="font-headline-xl text-headline-xl text-primary mb-xs">Elite Arena South</h1>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary">location_on</span>
+<span class="font-body-md">122 Olympic Way, South District, Metropolis</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-center gap-xs bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full">
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md">4.9 (128 reviews)</span>
+</div>
+</div>
+</div>
+<p class="text-on-surface-variant font-body-md mb-md leading-relaxed">
+                        Experience the finest 7-a-side artificial turf in the city. Designed for high-performance play with FIFA-approved synthetic grass, shock-absorbent padding, and professional-grade night lighting. Perfect for friendly matches, team training, or local tournaments.
+                    </p>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md pt-md border-t border-outline-variant">
+<div class="flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-2">shower</span>
+<span class="font-label-sm text-on-surface">Showers</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-2">local_parking</span>
+<span class="font-label-sm text-on-surface">Free Parking</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-2">water_drop</span>
+<span class="font-label-sm text-on-surface">Water Station</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-2">wifi</span>
+<span class="font-label-sm text-on-surface">High-speed Wi-Fi</span>
+</div>
+</div>
+</div>
+<!-- Interactive Slot Picker -->
+<div class="bg-surface-container-lowest p-md md:p-lg rounded-xl shadow-sm" style="opacity: 1; transform: translateY(0px); transition: 0.6s ease-out 0.1s;">
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-headline-md text-headline-md text-primary">Select Your Slot</h2>
+<div class="flex gap-xs">
+<button class="px-md py-1 rounded-lg border border-primary text-primary font-label-md active:scale-95 transition-transform">1 Hour</button>
+<button class="px-md py-1 rounded-lg bg-primary text-on-primary font-label-md active:scale-95 transition-transform">2 Hours</button>
+</div>
+</div>
+<!-- Calendar Strip -->
+<div class="flex gap-sm mb-lg overflow-x-auto pb-sm custom-scrollbar">
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border-2 border-primary bg-primary-container text-on-primary-container cursor-pointer">
+<span class="font-label-sm uppercase">Mon</span>
+<span class="font-headline-md">14</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<span class="font-label-sm uppercase">Tue</span>
+<span class="font-headline-md">15</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<span class="font-label-sm uppercase">Wed</span>
+<span class="font-headline-md">16</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<span class="font-label-sm uppercase">Thu</span>
+<span class="font-headline-md">17</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<span class="font-label-sm uppercase">Fri</span>
+<span class="font-headline-md">18</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<span class="font-label-sm uppercase">Sat</span>
+<span class="font-headline-md">19</span>
+</div>
+<div class="flex-shrink-0 w-20 flex flex-col items-center p-sm rounded-xl border border-outline-variant hover:border-primary transition-colors cursor-pointer">
+<span class="font-label-sm uppercase">Sun</span>
+<span class="font-headline-md">20</span>
+</div>
+</div>
+<!-- Time Slots Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-sm">
+<!-- Booked -->
+<div class="p-md rounded-lg bg-surface-dim text-outline flex flex-col items-center opacity-60 cursor-not-allowed">
+<span class="font-label-md">06:00 AM</span>
+<span class="text-[10px] uppercase font-bold">Booked</span>
+</div>
+<div class="p-md rounded-lg bg-surface-dim text-outline flex flex-col items-center opacity-60 cursor-not-allowed">
+<span class="font-label-md">08:00 AM</span>
+<span class="text-[10px] uppercase font-bold">Booked</span>
+</div>
+<!-- Available -->
+<button class="p-md rounded-lg border-2 border-secondary-container bg-surface-container-low text-on-secondary-container flex flex-col items-center hover:shadow-md transition-all active:scale-95" onclick="toggleSlot(this)">
+<span class="font-label-md">10:00 AM</span>
+<span class="text-[10px] uppercase font-bold text-secondary">Available</span>
+</button>
+<button class="p-md rounded-lg border-2 border-secondary-container bg-surface-container-low text-on-secondary-container flex flex-col items-center hover:shadow-md transition-all active:scale-95" onclick="toggleSlot(this)">
+<span class="font-label-md">12:00 PM</span>
+<span class="text-[10px] uppercase font-bold text-secondary">Available</span>
+</button>
+<button class="active-slot p-md rounded-lg border-2 border-primary-container flex flex-col items-center hover:shadow-md transition-all active:scale-95" onclick="toggleSlot(this)">
+<span class="font-label-md">02:00 PM</span>
+<span class="text-[10px] uppercase font-bold">Selected</span>
+</button>
+<button class="p-md rounded-lg border-2 border-secondary-container bg-surface-container-low text-on-secondary-container flex flex-col items-center hover:shadow-md transition-all active:scale-95" onclick="toggleSlot(this)">
+<span class="font-label-md">04:00 PM</span>
+<span class="text-[10px] uppercase font-bold text-secondary">Available</span>
+</button>
+<button class="p-md rounded-lg border-2 border-secondary-container bg-surface-container-low text-on-secondary-container flex flex-col items-center hover:shadow-md transition-all active:scale-95" onclick="toggleSlot(this)">
+<span class="font-label-md">06:00 PM</span>
+<span class="text-[10px] uppercase font-bold text-secondary">Available</span>
+</button>
+<button class="p-md rounded-lg border-2 border-secondary-container bg-surface-container-low text-on-secondary-container flex flex-col items-center hover:shadow-md transition-all active:scale-95" onclick="toggleSlot(this)">
+<span class="font-label-md">08:00 PM</span>
+<span class="text-[10px] uppercase font-bold text-secondary">Available</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Summary -->
+<aside class="space-y-md sticky top-24">
+<div class="bg-surface-container-lowest p-md md:p-lg rounded-xl shadow-md border-t-4 border-primary" style="opacity: 1; transform: translateY(0px); transition: 0.6s ease-out 0.2s;">
+<h3 class="font-headline-md text-headline-md text-primary mb-md">Booking Summary</h3>
+<div class="space-y-sm mb-lg">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant font-body-md">Date</span>
+<span class="font-label-md">Monday, Aug 14</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant font-body-md">Time Slot</span>
+<span class="font-label-md">02:00 PM - 04:00 PM</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant font-body-md">Duration</span>
+<span class="font-label-md">2 Hours</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-on-surface-variant font-body-md">Rate (per hr)</span>
+<span class="font-label-md">$45.00</span>
+</div>
+</div>
+<div class="bg-surface-container-high p-sm rounded-lg flex justify-between items-center mb-lg">
+<span class="font-headline-md text-primary">Total</span>
+<span class="font-headline-md text-primary">$90.00</span>
+</div>
+<button class="w-full bg-tertiary-container hover:bg-tertiary text-on-tertiary py-md rounded-xl font-headline-md shadow-lg transition-all active:scale-[0.98] mb-md flex items-center justify-center gap-sm">
+<span class="">Proceed to Checkout</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<p class="text-label-sm text-on-surface-variant text-center">Free cancellation up to 24 hours before match.</p>
+</div>
+<!-- Contact Owner Card -->
+<div class="bg-surface-container-low p-md rounded-xl border border-outline-variant flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A friendly, middle-aged man wearing a professional sports polo shirt with a venue logo. He is standing in a brightly lit office with sports memorabilia in the background. High-quality corporate-modern photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPOhaGAl44avPsKNHRuSIKR02J1S9gGUhm7tYyLwaKzN_wrF3mSKG4Pt4nhPm1kLC7xCk4TVupfNmzSUjGVgXxY_YRmBV86YQPULHKsjdOtH4W8mESzlDZGi85Ya-G0826CKrkegdVdlgL00FzER5ZXQXH4M95toaSWGMmlp9tb2Dbkdp9DEe5sE_y_ou1kZKKPPUPmri1ZR3jhVol-JAl-7eM3t6xehsTXn5wYgUkd09FT-s30LFh0w">
+</div>
+<div>
+<p class="font-label-md text-primary">Contact Manager</p>
+<p class="font-body-md">Marcus Thompson</p>
+<div class="flex gap-xs mt-1">
+<span class="material-symbols-outlined text-primary scale-75">call</span>
+<span class="material-symbols-outlined text-primary scale-75">chat_bubble</span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Reviews Section -->
+<section class="mt-xl pb-xl">
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-primary">Player Feedback</h2>
+<p class="text-on-surface-variant font-body-md">Real reviews from the TurfConnect community</p>
+</div>
+<button class="hidden md:block px-md py-2 border-2 border-primary text-primary font-label-md rounded-xl hover:bg-primary hover:text-on-primary transition-all">Write a Review</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Review Card 1 -->
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-sm border border-outline-variant/10" style="opacity: 1; transform: translateY(0px); transition: 0.6s ease-out 0.3s;">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center font-bold text-on-secondary-container">JS</div>
+<div>
+<p class="font-label-md">Jason Schmidt</p>
+<p class="text-label-sm text-on-surface-variant">2 days ago</p>
+</div>
+</div>
+<div class="flex text-tertiary">
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<p class="text-on-surface-variant font-body-md italic leading-relaxed">"The turf quality here is unmatched. It feels exactly like natural grass but with perfect consistency. Great lighting for night matches too!"</p>
+</div>
+<!-- Review Card 2 -->
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-sm border border-outline-variant/10" style="opacity: 1; transform: translateY(0px); transition: 0.6s ease-out 0.4s;">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center font-bold text-on-primary-container">AR</div>
+<div>
+<p class="font-label-md">Anita Ray</p>
+<p class="text-label-sm text-on-surface-variant">1 week ago</p>
+</div>
+</div>
+<div class="flex text-tertiary">
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 0;">star</span>
+</div>
+</div>
+<p class="text-on-surface-variant font-body-md italic leading-relaxed">"Excellent facility and very easy booking process through TurfConnect. The changing rooms were pristine. Highly recommend for corporate teams."</p>
+</div>
+</div>
+<div class="mt-md text-center">
+<button class="text-primary font-label-md flex items-center gap-xs mx-auto hover:underline">
+                    View all 128 reviews
+                    <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Footer Space -->
+<footer class="bg-surface-container-highest py-xl mt-xl">
+<div class="max-w-7xl mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-lg">
+<div class="md:col-span-2">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-md">TurfConnect</div>
+<p class="text-on-surface-variant font-body-md max-w-sm">
+                    Connecting athletes with professional-grade venues across the country. Your game, our pitch.
+                </p>
+</div>
+<div>
+<h4 class="font-label-md text-primary mb-md uppercase tracking-wider">Explore</h4>
+<ul class="space-y-sm text-on-surface-variant font-body-md">
+<li class=""><a class="hover:text-primary transition-colors" href="#">Find Venues</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Join a League</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Host a Match</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-primary mb-md uppercase tracking-wider">Support</h4>
+<ul class="space-y-sm text-on-surface-variant font-body-md">
+<li class=""><a class="hover:text-primary transition-colors" href="#">Help Center</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-margin-desktop mt-lg pt-lg border-t border-outline-variant/30 text-center text-label-sm text-on-surface-variant">© 2024 TurfConnect Pro. All Rights Reserved.</div>
+</footer>
+<script>
+        function toggleSlot(el) {
+            // Deselect others (for single selection demo)
+            document.querySelectorAll('.active-slot').forEach(slot => {
+                slot.classList.remove('active-slot');
+                const label = slot.querySelector('span:last-child');
+                if (label) label.innerText = 'Available';
+            });
+
+            // Select this one
+            el.classList.add('active-slot');
+            const label = el.querySelector('span:last-child');
+            if (label) label.innerText = 'Selected';
+
+            // Micro-interaction
+            el.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                el.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // Simple Fade-in animation for cards
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.bg-surface-container-lowest');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.6s ease-out ' + (index * 0.1) + 's';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+    </script>
+
+
+</body></html>

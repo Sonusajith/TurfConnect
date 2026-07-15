@@ -1,0 +1,22 @@
+#!/bin/sh
+# Linux/macOS Maven Wrapper helper script
+MAVEN_VERSION="3.9.6"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+M2_HOME="$DIR/.maven"
+
+if [ ! -d "$M2_HOME" ]; then
+    echo "Maven not found. Downloading Apache Maven $MAVEN_VERSION..."
+    curl -sL -o "$DIR/maven.zip" "https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.zip"
+    if [ $? -ne 0 ]; then
+        echo "Failed to download Maven"
+        exit 1
+    fi
+    echo "Extracting Maven..."
+    unzip -q "$DIR/maven.zip" -d "$DIR"
+    mv "$DIR/apache-maven-$MAVEN_VERSION" "$M2_HOME"
+    rm "$DIR/maven.zip"
+    chmod +x "$M2_HOME/bin/mvn"
+fi
+
+export M2_HOME
+exec "$M2_HOME/bin/mvn" "$@"

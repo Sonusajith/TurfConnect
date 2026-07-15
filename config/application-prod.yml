@@ -1,0 +1,43 @@
+# Centralized Spring Boot Production Configuration (application-prod.yml)
+
+spring:
+  data:
+    mongodb:
+      # Connection URI must be provided by environment variables in production
+      uri: ${MONGODB_URI}
+      write-concern:
+        journal: true
+        w: majority
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: true
+      timeout: 5000
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
+    ssl:
+      enabled: true
+
+# Restrict health actuator info details
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Optimized Logging
+logging:
+  level:
+    root: INFO
+    com.turfconnect: INFO
+    org.springframework: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
