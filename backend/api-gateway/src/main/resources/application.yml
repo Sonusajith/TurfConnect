@@ -4,10 +4,6 @@ server:
 spring:
   application:
     name: api-gateway
-  profiles:
-    active: dev
-  config:
-    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
   cloud:
     gateway:
       routes:
@@ -27,3 +23,9 @@ spring:
           uri: http://localhost:8084
           predicates:
             - Path=/api/v1/payments/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
