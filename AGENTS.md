@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 6 — Payment service
-**Scope (IN):** Payment integration (Razorpay/Stripe, test mode only), payment verification endpoint, updating booking state from PENDING to CONFIRMED on success.
-**Explicitly OUT:** Refunds processing (deferred to Stage 2 Module 11).
-**Definition of done:** Bookings can be confirmed automatically upon successful payment simulation or direct gateway callback.
+**Module:** Module 7 — Minimal frontend (Antigravity)
+**Scope (IN):** Interactive client interface, slot search & browsing dashboard, turf booking checkout form, dynamic payment simulation modal, booking history table, real-time update socket listener (STOMP/SockJS).
+**Explicitly OUT:** Final CSS styling and production branding (Stage 2 dashboard).
+**Definition of done:** Users can view turf availability, checkout a timeslot, complete mock payment checkout, and see successful booking state confirmation live in a browser.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
