@@ -35,8 +35,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
+        String method = request.getMethod().name();
 
-        if (isSecured(path)) {
+        if (isSecured(path, method)) {
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
             }
@@ -84,7 +85,10 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 .getBody();
     }
 
-    private boolean isSecured(String path) {
+    private boolean isSecured(String path, String method) {
+        if ("GET".equalsIgnoreCase(method) && path.startsWith("/api/v1/turfs")) {
+            return false;
+        }
         return OPEN_ENDPOINTS.stream().noneMatch(path::startsWith);
     }
 

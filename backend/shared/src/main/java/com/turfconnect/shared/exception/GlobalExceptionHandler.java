@@ -36,10 +36,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccountLockedException(AccountLockedException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleAccountLocked(AccountLockedException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(com.turfconnect.shared.exception.ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(com.turfconnect.shared.exception.ForbiddenException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    private ResponseEntity<ApiResponse<Void>> buildErrorResponse(HttpStatus status, String message) {
         return ResponseEntity
-                .status(HttpStatus.LOCKED)
-                .body(ApiResponse.error(ex.getMessage()));
+                .status(status)
+                .body(ApiResponse.error(message));
     }
 
     @ExceptionHandler(BadRequestException.class)

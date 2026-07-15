@@ -64,7 +64,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void filter_SecuredEndpointMissingAuthHeader_ShouldReturnUnauthorized() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/turfs").build();
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/turfs").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
         filter.filter(exchange, filterChain).block();
@@ -75,7 +75,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void filter_SecuredEndpointInvalidTokenSignature_ShouldReturnUnauthorized() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/turfs")
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/turfs")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer invalid.token.here")
                 .build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
@@ -89,7 +89,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void filter_SecuredEndpointValidToken_ShouldForwardWithMutatedHeaders() {
         String token = generateValidToken();
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/turfs")
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/turfs")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);

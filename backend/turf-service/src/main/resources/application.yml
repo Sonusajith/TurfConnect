@@ -4,11 +4,13 @@ server:
 spring:
   application:
     name: turf-service
-  profiles:
-    active: dev
-  config:
-    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
   data:
     mongodb:
-      # Specific database override for Turf service
-      uri: ${TURF_MONGO_URI:mongodb://localhost:27017/turfdb}
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+      database: turfdb
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
