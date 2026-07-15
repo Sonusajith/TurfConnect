@@ -29,3 +29,6 @@ management:
     web:
       exposure:
         include: health,info,prometheus
+
+jwt:
+  secret: ${JWT_SECRET:4f7831f13b6329c323f66a877995dc8ab8e92f70b8c6e2646a5b6727282b535d}

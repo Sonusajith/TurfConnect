@@ -1,5 +1,10 @@
 package com.turfconnect.gateway.filter;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -10,14 +15,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.security.Key;
 import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
     private static final List<String> OPEN_ENDPOINTS = List.of(
             "/api/v1/auth/register",
             "/api/v1/auth/login",
+            "/api/v1/auth/refresh",
             "/actuator"
     );
 
@@ -26,37 +36,52 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        // 1. Check if the request is for an open endpoint
         if (isSecured(path)) {
-            // 2. Check for Authorization header
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
             }
 
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return onError(exchange, "Invalid Authorization header", HttpStatus.UNAUTHORIZED);
+                return onError(exchange, "Invalid Authorization header format", HttpStatus.UNAUTHORIZED);
             }
 
-            // 3. Extract the token
             String token = authHeader.substring(7);
 
-            // Dummy validation (Module 1 scope: real JWT parsing is deferred to Module 2)
-            if ("invalid_dummy_token".equals(token)) {
-                return onError(exchange, "Invalid JWT Token", HttpStatus.UNAUTHORIZED);
+            try {
+                Claims claims = extractAllClaims(token);
+
+                // Reject if any essential claim is missing
+                if (claims.get("userId") == null || claims.get("role") == null) {
+                    return onError(exchange, "Invalid JWT claims", HttpStatus.UNAUTHORIZED);
+                }
+
+                ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                        .header("X-User-Id", claims.get("userId", String.class))
+                        .header("X-User-Role", claims.get("role", String.class))
+                        .header("X-User-Email", claims.get("email", String.class))
+                        .build();
+
+                return chain.filter(exchange.mutate().request(mutatedRequest).build());
+
+            } catch (Exception e) {
+                return onError(exchange, "Invalid or expired JWT Token", HttpStatus.UNAUTHORIZED);
             }
-
-            // 4. Mutate request to forward user info (mocking JWT claims)
-            // In a real implementation, these values would be parsed from the token
-            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Id", "mock-user-id-123")
-                    .header("X-User-Role", "PLAYER")
-                    .build();
-
-            return chain.filter(exchange.mutate().request(mutatedRequest).build());
         }
 
         return chain.filter(exchange);
+    }
+
+    private Key key() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private boolean isSecured(String path) {
@@ -65,13 +90,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus httpStatus) {
         exchange.getResponse().setStatusCode(httpStatus);
-        // We can add a custom body here if needed, but for now setting status is enough
         return exchange.getResponse().setComplete();
     }
 
     @Override
     public int getOrder() {
-        // Run before routing
         return -1;
     }
 }

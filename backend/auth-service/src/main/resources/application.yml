@@ -4,11 +4,18 @@ server:
 spring:
   application:
     name: auth-service
-  profiles:
-    active: dev
-  config:
-    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
   data:
     mongodb:
-      # Specific database override for Auth service
-      uri: ${AUTH_MONGO_URI:mongodb://localhost:27017/authdb}
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+      database: authdb
+
+jwt:
+  secret: ${JWT_SECRET:4f7831f13b6329c323f66a877995dc8ab8e92f70b8c6e2646a5b6727282b535d}
+  expirationMs: ${JWT_EXPIRATION_MS:900000}
+  refreshExpirationMs: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
