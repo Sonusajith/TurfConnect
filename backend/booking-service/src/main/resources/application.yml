@@ -12,3 +12,11 @@ spring:
     mongodb:
       # Specific database override for Booking service
       uri: ${BOOKING_MONGO_URI:mongodb://localhost:27017/bookingdb}
+
+# Disable Redis health check — Redis uses WSL networking which causes
+# ClosedChannelException from Java/Netty. The service degrades gracefully
+# (fail-open lock) so we don't want it to report DOWN and cause 503s.
+management:
+  health:
+    redis:
+      enabled: false

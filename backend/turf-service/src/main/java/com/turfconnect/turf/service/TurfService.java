@@ -22,6 +22,7 @@ import com.turfconnect.turf.dto.TurfUpdateRequest;
 import com.turfconnect.turf.mapper.TurfMapper;
 import com.turfconnect.turf.model.Turf;
 import com.turfconnect.turf.repository.TurfRepository;
+import com.turfconnect.turf.controller.SlotBroadcaster;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +40,7 @@ public class TurfService {
     private final TurfRepository turfRepository;
     private final SlotRepository slotRepository;
     private final TurfMapper turfMapper;
+    private final SlotBroadcaster slotBroadcaster;
 
     public TurfResponse createTurf(TurfCreateRequest request, String ownerId) {
         validateSlotConfiguration(request.getOpenTime(), request.getCloseTime(), request.getSlotDurationMinutes());
@@ -291,7 +293,13 @@ public class TurfService {
         slot.setStatus(status);
         slot.setBookingId(bookingId);
         Slot saved = slotRepository.save(slot);
-        return toSlotDTO(saved);
+        SlotDTO updated = toSlotDTO(saved);
+
+        // Broadcast real-time slot status change to all WebSocket subscribers
+        // Frontend subscribes to /topic/slots/{turfId}/{date}
+        slotBroadcaster.broadcastSlotUpdate(updated);
+
+        return updated;
     }
 
     private boolean isDayAvailable(Turf turf, LocalDate date) {

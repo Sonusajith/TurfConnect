@@ -32,10 +32,10 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 | 4 | Slot generation & availability | ☑ Done | `feature/module-04-slots` | 2026-07-15 | ☑ |
 | 5 | Booking service + Redis lock | ☑ Done | `feature/module-05-booking-lock` | 2026-07-15 | ☑ |
 | 6 | Payment service (test mode) | ☑ Done | `feature/module-06-payment` | 2026-07-15 | ☑ |
-| 7 | Minimal frontend (Antigravity) | ☐ Not started | `feature/module-07-frontend` | | ☐ |
+| 7 | Minimal frontend (Antigravity) | ☑ Done | `feature/module-07-frontend` | 2026-07-15 | ☑ |
 
-**Stage 1 milestone:** ☐ Full booking flow demoed end-to-end in a browser, race-condition test on Module 5 passes and is documented in `DEV_LOG.md`.
-**Pushed to GitHub:** ☐
+**Stage 1 milestone:** ☑ Full booking flow demoed end-to-end in a browser, race-condition test on Module 5 passes and is documented in `DEV_LOG.md`.
+**Pushed to GitHub:** ☑
 
 ---
 
