@@ -30,7 +30,7 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 | 2 | Auth service (JWT, register/login) | ☑ Done | `feature/module-02-auth` | 2026-07-15 | ☑ |
 | 3 | Turf service (CRUD + search) | ☑ Done | `feature/module-03-turf` | 2026-07-15 | ☑ |
 | 4 | Slot generation & availability | ☑ Done | `feature/module-04-slots` | 2026-07-15 | ☑ |
-| 5 | Booking service + Redis lock | ☐ Not started | `feature/module-05-booking-lock` | | ☐ |
+| 5 | Booking service + Redis lock | ☑ Done | `feature/module-05-booking-lock` | 2026-07-15 | ☑ |
 | 6 | Payment service (test mode) | ☐ Not started | `feature/module-06-payment` | | ☐ |
 | 7 | Minimal frontend (Antigravity) | ☐ Not started | `feature/module-07-frontend` | | ☐ |
 

@@ -308,6 +308,12 @@ public class TurfService {
         return false;
     }
 
+    public SlotDTO getSlotById(String slotId) {
+        Slot slot = slotRepository.findById(slotId)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + slotId));
+        return toSlotDTO(slot);
+    }
+
     private SlotDTO toSlotDTO(Slot slot) {
         return SlotDTO.builder()
                 .id(slot.getId())

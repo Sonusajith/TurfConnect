@@ -59,4 +59,11 @@ public class SlotController {
         SlotDTO updated = turfService.updateSlotStatus(slotId, status, bookingId);
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
+
+    // Internal endpoint only — not routed in API Gateway
+    @GetMapping("/api/v1/internal/slots/{slotId}")
+    public ResponseEntity<ApiResponse<SlotDTO>> getSlotById(@PathVariable String slotId) {
+        SlotDTO slot = turfService.getSlotById(slotId);
+        return ResponseEntity.ok(ApiResponse.success(slot));
+    }
 }

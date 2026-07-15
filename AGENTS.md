@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 5 — Booking service + Redis lock
-**Scope (IN):** Booking state machine, temporary slot locking with Redis distributed locks (TTL 5 min), booking creation REST endpoint.
-**Explicitly OUT:** Payment integration (deferred to Module 6) and refunds.
-**Definition of done:** Bookings can be initiated, locking slots in Redis; duplicate booking attempts on the same slot are rejected.
+**Module:** Module 6 — Payment service
+**Scope (IN):** Payment integration (Razorpay/Stripe, test mode only), payment verification endpoint, updating booking state from PENDING to CONFIRMED on success.
+**Explicitly OUT:** Refunds processing (deferred to Stage 2 Module 11).
+**Definition of done:** Bookings can be confirmed automatically upon successful payment simulation or direct gateway callback.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
