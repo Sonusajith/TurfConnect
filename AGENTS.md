@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 4 — Slot generation & availability
-**Scope (IN):** Generate bookable slots based on operating hours and turf rules. Query available slots for a given day.
-**Explicitly OUT:** Redis locking and actual booking persistence (deferred to Module 5).
-**Definition of done:** Customers can query which slots are available for a turf on a specific day. Owners can define default generation rules.
+**Module:** Module 5 — Booking service + Redis lock
+**Scope (IN):** Booking state machine, temporary slot locking with Redis distributed locks (TTL 5 min), booking creation REST endpoint.
+**Explicitly OUT:** Payment integration (deferred to Module 6) and refunds.
+**Definition of done:** Bookings can be initiated, locking slots in Redis; duplicate booking attempts on the same slot are rejected.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

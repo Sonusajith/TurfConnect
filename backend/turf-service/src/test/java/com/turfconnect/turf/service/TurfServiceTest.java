@@ -10,6 +10,7 @@ import com.turfconnect.turf.dto.TurfUpdateRequest;
 import com.turfconnect.turf.mapper.TurfMapper;
 import com.turfconnect.turf.model.Turf;
 import com.turfconnect.turf.repository.TurfRepository;
+import java.time.LocalTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +56,9 @@ public class TurfServiceTest {
                 .city("New York")
                 .hourlyRate(new BigDecimal("100.00"))
                 .sportTypes(List.of("Football"))
+                .openTime(LocalTime.of(8, 0))
+                .closeTime(LocalTime.of(22, 0))
+                .slotDurationMinutes(60)
                 .deleted(false)
                 .build();
     }
@@ -68,6 +72,9 @@ public class TurfServiceTest {
                 .sportTypes(List.of("Football"))
                 .latitude(40.7128)
                 .longitude(-74.0060)
+                .openTime(LocalTime.of(8, 0))
+                .closeTime(LocalTime.of(22, 0))
+                .slotDurationMinutes(60)
                 .build();
 
         when(turfRepository.save(any(Turf.class))).thenReturn(turf);
