@@ -27,8 +27,8 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 | # | Module | Status | Branch | Completed On | Pushed? |
 |---|---|---|---|---|---|
 | 1 | Shared foundation + gateway skeleton | ☑ Done | `feature/module-01-foundation` | 2026-07-15 | ☑ |
-| 2 | Auth service (JWT, register/login) | ☐ In progress | `feature/module-02-auth` | | ☐ |
-| 3 | Turf service (CRUD + search) | ☐ Not started | `feature/module-03-turf` | | ☐ |
+| 2 | Auth service (JWT, register/login) | ☑ Done | `feature/module-02-auth` | 2026-07-15 | ☑ |
+| 3 | Turf service (CRUD + search) | ☐ In progress | `feature/module-03-turf` | | ☐ |
 | 4 | Slot generation & availability | ☐ Not started | `feature/module-04-slots` | | ☐ |
 | 5 | Booking service + Redis lock | ☐ Not started | `feature/module-05-booking-lock` | | ☐ |
 | 6 | Payment service (test mode) | ☐ Not started | `feature/module-06-payment` | | ☐ |

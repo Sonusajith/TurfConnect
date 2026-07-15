@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 2 — Auth service (JWT, register/login)
-**Scope (IN):** Auth DB setup, User registration, Login, JWT issuance and refresh, BCrypt password hashing.
-**Explicitly OUT:** Social Auth (OAuth2), Email verification/sending (deferred to notification-service).
-**Definition of done:** Users can register and login successfully. JWT access and refresh tokens are correctly generated and verified by the gateway (Gateway JWT filter fully implemented).
+**Module:** Module 3 — Turf service (CRUD + search)
+**Scope (IN):** Turf DB setup, Turf owner dashboard endpoints (Create, Read, Update, Delete turfs), Customer search endpoints (Find turfs by city, name, amenities).
+**Explicitly OUT:** Booking and slot generation (deferred to Module 4 and 5), Reviews (Module 10).
+**Definition of done:** Turf owners can manage their turfs. Customers can search for turfs. All endpoints are secured with appropriate roles (`TURF_OWNER` vs `PLAYER`) via JWT.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
