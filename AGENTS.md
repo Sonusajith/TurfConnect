@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 3 — Turf service (CRUD + search)
-**Scope (IN):** Turf DB setup, Turf owner dashboard endpoints (Create, Read, Update, Delete turfs), Customer search endpoints (Find turfs by city, name, amenities).
-**Explicitly OUT:** Booking and slot generation (deferred to Module 4 and 5), Reviews (Module 10).
-**Definition of done:** Turf owners can manage their turfs. Customers can search for turfs. All endpoints are secured with appropriate roles (`TURF_OWNER` vs `PLAYER`) via JWT.
+**Module:** Module 4 — Slot generation & availability
+**Scope (IN):** Generate bookable slots based on operating hours and turf rules. Query available slots for a given day.
+**Explicitly OUT:** Redis locking and actual booking persistence (deferred to Module 5).
+**Definition of done:** Customers can query which slots are available for a turf on a specific day. Owners can define default generation rules.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
