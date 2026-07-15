@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 1 — Shared foundation + gateway skeleton
-**Scope (IN):** Shared model classes, base utility packages, gateway security filters skeleton, routing configuration templates, basic validation dependencies.
-**Explicitly OUT:** Database/Redis connections integration, real-time WebSocket messaging, full JWT security filters implementation.
-**Definition of done:** Gateway and shared foundation compile and package successfully; gateway routes map successfully on local testing.
+**Module:** Module 2 — Auth service (JWT, register/login)
+**Scope (IN):** Auth DB setup, User registration, Login, JWT issuance and refresh, BCrypt password hashing.
+**Explicitly OUT:** Social Auth (OAuth2), Email verification/sending (deferred to notification-service).
+**Definition of done:** Users can register and login successfully. JWT access and refresh tokens are correctly generated and verified by the gateway (Gateway JWT filter fully implemented).
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
