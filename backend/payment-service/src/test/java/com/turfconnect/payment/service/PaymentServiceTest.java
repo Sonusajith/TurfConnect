@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,9 @@ public class PaymentServiceTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+
     private PaymentService paymentService;
 
     @BeforeEach
@@ -59,7 +63,7 @@ public class PaymentServiceTest {
         strategyMap.put("RAZORPAY", razorpayStrategy);
         strategyMap.put("MOCK", mockStrategy);
 
-        paymentService = new PaymentService(paymentRepository, strategyMap, restTemplate);
+        paymentService = new PaymentService(paymentRepository, strategyMap, restTemplate, rabbitTemplate);
         ReflectionTestUtils.setField(paymentService, "bookingServiceUrl", "http://localhost:8083");
         ReflectionTestUtils.setField(paymentService, "internalTokenSecret", "secret-test-token");
     }

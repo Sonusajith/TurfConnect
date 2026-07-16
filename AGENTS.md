@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 9 — RabbitMQ + notification service
-**Scope (IN):** Setup RabbitMQ connection configs, implement messaging event publishers in `booking-service` and `payment-service` to broadcast booking/payment updates, create a new `notification-service` microservice that consumes these messages, and process notifications asynchronously with retry and dead-letter queues.
-**Explicitly OUT:** External API gateways integrations for SMS/Email providers (e.g. Twilio, SendGrid) — we will use mock/log-based notification channels.
-**Definition of done:** Creating or updating a booking, or modifying a payment publishes messages onto RabbitMQ exchanges, which are successfully consumed and processed by the `notification-service`.
+**Module:** Module 10 — Reviews & ratings
+**Scope (IN):** Create review-service microservice, implement REST endpoints for users to submit reviews and ratings for turfs they have booked, calculate and expose average ratings, and secure reviews writing with booking verification.
+**Explicitly OUT:** Advanced sentiment analysis on reviews, or custom user profile highlights.
+**Definition of done:** Users can submit reviews for a turf with a valid booking, retrieve reviews of a turf, and see average score aggregated on turf profile.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

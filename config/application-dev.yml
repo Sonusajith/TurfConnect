@@ -28,6 +28,11 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    rabbit:
+      enabled: false
+    redis:
+      enabled: false
   metrics:
     export:
       prometheus:

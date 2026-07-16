@@ -12,6 +12,7 @@ import com.turfconnect.shared.exception.ResourceNotFoundException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RedisLockService redisLockService;
     private final RestTemplate restTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     @Value("${services.turf-service.url:http://localhost:8082}")
     private String turfServiceUrl;
@@ -105,6 +107,9 @@ public class BookingService {
             throw new BadRequestException("Failed to initiate booking due to internal communication error.");
         }
 
+        // Publish booking creation event to RabbitMQ
+        publishBookingEvent(savedBooking, "CREATED");
+
         return toBookingResponse(savedBooking);
     }
 
@@ -133,6 +138,9 @@ public class BookingService {
         String lockKey = "lock:slot:" + booking.getSlotId();
         redisLockService.releaseLock(lockKey, booking.getLockToken());
 
+        // Publish booking confirmation event to RabbitMQ
+        publishBookingEvent(saved, "CONFIRMED");
+
         return toBookingResponse(saved);
     }
 
@@ -159,6 +167,9 @@ public class BookingService {
         // Release the Redis distributed lock
         String lockKey = "lock:slot:" + booking.getSlotId();
         redisLockService.releaseLock(lockKey, booking.getLockToken());
+
+        // Publish booking cancellation event to RabbitMQ
+        publishBookingEvent(saved, "CANCELLED");
 
         return toBookingResponse(saved);
     }
@@ -194,11 +205,60 @@ public class BookingService {
                 .build();
     }
 
+    private void publishBookingEvent(Booking booking, String eventType) {
+        try {
+            String turfName = fetchTurfName(booking.getTurfId());
+            com.turfconnect.shared.dto.event.BookingEvent event = com.turfconnect.shared.dto.event.BookingEvent.builder()
+                    .bookingId(booking.getId())
+                    .userId(booking.getUserId())
+                    .turfId(booking.getTurfId())
+                    .turfName(turfName)
+                    .date(booking.getDate())
+                    .startTime(booking.getStartTime())
+                    .endTime(booking.getEndTime())
+                    .totalPrice(booking.getTotalPrice())
+                    .status(booking.getStatus())
+                    .eventType(eventType)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            rabbitTemplate.convertAndSend(com.turfconnect.booking.config.RabbitMQConfig.BOOKING_EXCHANGE, "booking." + eventType.toLowerCase(), event);
+            log.info("Successfully published booking event {} for booking {}", eventType, booking.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish booking event", e);
+        }
+    }
+
+    private String fetchTurfName(String turfId) {
+        try {
+            String url = turfServiceUrl + "/api/v1/turfs/" + turfId;
+            ResponseEntity<TurfResponseWrapper> response = restTemplate.getForEntity(url, TurfResponseWrapper.class);
+            if (response != null && response.getBody() != null && response.getBody().isSuccess() && response.getBody().getData() != null) {
+                return response.getBody().getData().getName();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch turf name for turfId: " + turfId, e);
+        }
+        return "Sports Venue";
+    }
+
     // Static helper inner class to handle deserialization of ApiResponse wrapped SlotDTO
     @Data
     public static class SlotResponseWrapper {
         private boolean success;
         private SlotDTO data;
         private String message;
+    }
+
+    @Data
+    public static class TurfResponseWrapper {
+        private boolean success;
+        private TurfData data;
+        private String message;
+    }
+
+    @Data
+    public static class TurfData {
+        private String id;
+        private String name;
     }
 }

@@ -119,3 +119,71 @@ The client successfully drives the full transactional booking pipeline:
    Start at  22:09:42
    Duration  4.07s
 ```
+
+---
+
+## Module 9: RabbitMQ & Notification Service
+
+We have introduced asynchronous, message-driven notification support using **RabbitMQ** to decouple notifications (email, SMS, push) from core booking and payment transaction flows.
+
+### 1. Shared Event Layer (`/backend/shared`)
+- Created [BookingEvent.java](file:///c:/Users/rohit/TurfConnect/backend/shared/src/main/java/com/turfconnect/shared/dto/event/BookingEvent.java) to encapsulate booking transitions.
+- Created [PaymentEvent.java](file:///c:/Users/rohit/TurfConnect/backend/shared/src/main/java/com/turfconnect/shared/dto/event/PaymentEvent.java) to encapsulate transaction outcomes.
+
+### 2. Event Publishing Setup
+- Enabled RabbitMQ connection configurations inside `booking-service` and `payment-service` pom files.
+- Configured [RabbitMQConfig.java](file:///c:/Users/rohit/TurfConnect/backend/booking-service/src/main/java/com/turfconnect/booking/config/RabbitMQConfig.java) in `booking-service` declaring `booking.exchange`.
+- Configured [RabbitMQConfig.java](file:///c:/Users/rohit/TurfConnect/backend/payment-service/src/main/java/com/turfconnect/payment/config/RabbitMQConfig.java) in `payment-service` declaring `payment.exchange`.
+- Wired publishers in [BookingService.java](file:///c:/Users/rohit/TurfConnect/backend/booking-service/src/main/java/com/turfconnect/booking/service/BookingService.java) to broadcast booking event payload updates (`CREATED`, `CONFIRMED`, `CANCELLED`).
+- Wired publishers in [PaymentService.java](file:///c:/Users/rohit/TurfConnect/backend/payment-service/src/main/java/com/turfconnect/payment/service/PaymentService.java) to broadcast payment event payload updates (`SUCCESS`, `FAILED`).
+
+### 3. Notification Microservice (`/backend/notification-service`)
+- Created a new microservice mapping to port `8085`.
+- Configured [RabbitMQConfig.java](file:///c:/Users/rohit/TurfConnect/backend/notification-service/src/main/java/com/turfconnect/notification/config/RabbitMQConfig.java) to define:
+  - Main topic bindings mapping `booking.notification.queue` to `booking.exchange` via `booking.#` routing key.
+  - Main topic bindings mapping `payment.notification.queue` to `payment.exchange` via `payment.#` routing key.
+  - Dead Letter Exchange (`notification.dlx`) and Dead Letter Queues (`booking.notification.dlq` / `payment.notification.dlq`) to capture failed/undelivered notifications.
+- Created [NotificationListener.java](file:///c:/Users/rohit/TurfConnect/backend/notification-service/src/main/java/com/turfconnect/notification/listener/NotificationListener.java) consuming from these event queues asynchronously and executing simulated dispatches.
+
+### 4. Resiliency & Actuator Adjustments
+- Added `management.health.rabbit.enabled: false` and `management.health.redis.enabled: false` to the centralized `application-dev.yml` settings to prevent Actuator health checks from marking services as DOWN (503 Service Unavailable) when brokers are starting up or run offline.
+
+---
+
+## Testing Results (Module 9 Update)
+
+### 1. Backend Integration Build
+```text
+[INFO] Reactor Summary for turfconnect-parent 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] turfconnect-parent ................................. SUCCESS [  0.171 s]
+[INFO] shared ............................................. SUCCESS [  4.897 s]
+[INFO] api-gateway ........................................ SUCCESS [  4.317 s]
+[INFO] auth-service ....................................... SUCCESS [  3.901 s]
+[INFO] turf-service ....................................... SUCCESS [  4.093 s]
+[INFO] booking-service .................................... SUCCESS [  3.556 s]
+[INFO] payment-service .................................... SUCCESS [  3.560 s]
+[INFO] notification-service ............................... SUCCESS [  1.408 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+```
+
+### 2. Unit Tests
+- **Notification Service Tests (`NotificationListenerTest.java`):**
+  ```text
+  [INFO] Running com.turfconnect.notification.listener.NotificationListenerTest
+  14:11:09.704 [main] INFO com.turfconnect.notification.listener.NotificationListener -- ✉️ [NOTIFICATION DISPATCHED] To Recipient: u-1 | Message: Booking Confirmed! You are ready to play at Elite Football Arena on 2026-07-16 (18:00 - 19:00). See you there!
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.903 s
+  ```
+- **Booking Service Concurrency Tests:**
+  ```text
+  [INFO] Running com.turfconnect.booking.service.BookingServiceConcurrencyTest
+  2026-07-16 14:12:28 [pool-5-thread-7] INFO  c.t.booking.service.BookingService - Successfully published booking event CREATED for booking booking-generated-id
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.082 s
+  ```
+- **Payment Service Tests:**
+  ```text
+  [INFO] Running com.turfconnect.payment.service.PaymentServiceTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.175 s
+  ```
+
