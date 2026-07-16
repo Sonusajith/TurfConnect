@@ -38,8 +38,14 @@ public class TurfServiceTest {
     @Mock
     private TurfRepository turfRepository;
 
+    @Mock
+    private com.turfconnect.turf.repository.SlotRepository slotRepository;
+
     @Spy
     private TurfMapper turfMapper = new TurfMapper();
+
+    @Mock
+    private com.turfconnect.turf.controller.SlotBroadcaster slotBroadcaster;
 
     @InjectMocks
     private TurfService turfService;
@@ -162,5 +168,16 @@ public class TurfServiceTest {
         assertEquals(1, response.getTotalElements());
         assertEquals(1, response.getContent().size());
         assertEquals("Green Arena", response.getContent().get(0).getName());
+    }
+
+    @Test
+    void updateTurfRating_Success() {
+        when(turfRepository.findByIdAndDeletedFalse("turf-1")).thenReturn(Optional.of(turf));
+        when(turfRepository.save(any(Turf.class))).thenReturn(turf);
+
+        assertDoesNotThrow(() -> turfService.updateTurfRating("turf-1", 4.7));
+
+        assertEquals(4.7, turf.getAverageRating());
+        verify(turfRepository, times(1)).save(turf);
     }
 }

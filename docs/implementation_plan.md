@@ -1,137 +1,177 @@
-# Implementation Plan — Module 9: RabbitMQ & Notification Service
+# Implementation Plan — Module 10: Reviews & Ratings
 
-Introduce asynchronous, message-driven notification support using **RabbitMQ** to decouple notifications (email, SMS, push) from core booking and payment transaction flows.
+Introduce a dedicated **review-service** microservice that handles user reviews and ratings for sports turfs. Reviews will be secured by verifying bookings, preventing duplicate submissions, and propagating average rating metrics to the `turf-service` asynchronously using RabbitMQ events.
 
 ---
 
 ## Proposed Architectural Design
 
-### 1. RabbitMQ Topology
+### 1. Verification and Event Flow
 
 ```mermaid
-graph TD
-    %% Producers
-    BookingService[Booking Service] -- Publish booking.created/confirmed/cancelled --> BookingExchange[booking.exchange <Topic>]
-    PaymentService[Payment Service] -- Publish payment.success/failed --> PaymentExchange[payment.exchange <Topic>]
+sequenceDiagram
+    autonumber
+    actor User as Client / User
+    participant Gateway as API Gateway (8080)
+    participant Review as Review Service (8086)
+    participant Booking as Booking Service (8083)
+    participant MQ as RabbitMQ Broker
+    participant Turf as Turf Service (8082)
 
-    %% Exchanges
-    BookingExchange -- routing key: booking.# --> BookingQueue[booking.notification.queue]
-    PaymentExchange -- routing key: payment.# --> PaymentQueue[payment.notification.queue]
-
-    %% Dead Letter Configuration
-    BookingQueue -- On Max Retries Failure --> DLX[notification.dlx <Direct>]
-    PaymentQueue -- On Max Retries Failure --> DLX
-
-    DLX -- routing key: booking.notification.dlq --> BookingDLQ[booking.notification.dlq]
-    DLX -- routing key: payment.notification.dlq --> PaymentDLQ[payment.notification.dlq]
-
-    %% Consumers
-    BookingQueue --> NotificationService[Notification Service]
-    PaymentQueue --> NotificationService
+    User->>Gateway: POST /api/v1/reviews (with bookingId, rating, comment)
+    Gateway->>Review: Forward Request (X-User-Id, JWT)
+    
+    %% Validate booking exists
+    Review->>Booking: GET /api/v1/bookings/{bookingId}
+    Booking-->>Review: Return Booking Details (userId, turfId, status)
+    
+    Note over Review: Verify booking matches X-User-Id,<br/>status is CONFIRMED, and turfId matches.<br/>Verify no existing review exists for bookingId.
+    
+    Review->>Review: Save Review to MongoDB (turfconnect_reviews)
+    Review->>MQ: Publish ReviewEvent (turfId, averageRating, totalReviews)
+    Review-->>User: Return 201 Created (ReviewResponse)
+    
+    %% Async consumer
+    MQ-->>Turf: Consume ReviewEvent
+    Turf->>Turf: Update Turf Entity (averageRating) in MongoDB
+    Note over Turf: Evict turf details cache from Redis
 ```
 
-### 2. Dead-Letter Queue & Retries
-- Configured with `SimpleMessageListenerContainer` retries:
-  - Max retries: 3
-  - Initial interval: 1000ms
-  - Multiplier: 2.0 (exponential backoff)
-- After 3 failed processing attempts, messages are automatically routed to the Dead Letter Exchange (`notification.dlx`) and stored in the respective `.dlq` queues for manual inspection or replays.
+### 2. Database Schema (review-service)
+- **Database:** MongoDB (`turfconnect_reviews` database)
+- **Collection:** `reviews`
+- **Fields:**
+  - `id` (String / ObjectId)
+  - `userId` (String) - indexed
+  - `bookingId` (String) - unique index to prevent double reviews
+  - `turfId` (String) - indexed
+  - `rating` (Integer, 1-5)
+  - `comment` (String)
+  - `createdAt` (LocalDateTime)
 
 ---
 
 ## Proposed Changes
 
-### Component 1: Shared Foundation (`shared` module)
+### Component 1: Shared Library (`shared` module)
 
-#### [NEW] `com.turfconnect.shared.dto.event.BookingEvent`
-Event object containing:
-- `bookingId` (String)
+#### [NEW] `com.turfconnect.shared.dto.review.ReviewCreateRequest`
+DTO containing:
+- `bookingId` (String, required)
+- `rating` (Integer, required, 1 to 5)
+- `comment` (String, optional)
+
+#### [NEW] `com.turfconnect.shared.dto.review.ReviewResponse`
+DTO containing:
+- `id` (String)
 - `userId` (String)
-- `turfName` (String)
-- `date` (LocalDate)
-- `startTime` (LocalTime)
-- `endTime` (LocalTime)
-- `totalPrice` (BigDecimal)
-- `status` (BookingStatus)
-- `eventType` (String) — `CREATED`, `CONFIRMED`, `CANCELLED`
-- `timestamp` (LocalDateTime)
-
-#### [NEW] `com.turfconnect.shared.dto.event.PaymentEvent`
-Event object containing:
-- `transactionId` (String)
 - `bookingId` (String)
-- `amount` (BigDecimal)
-- `currency` (String)
-- `status` (PaymentStatus)
-- `eventType` (String) — `SUCCESS`, `FAILED`
+- `turfId` (String)
+- `rating` (Integer)
+- `comment` (String)
+- `createdAt` (LocalDateTime)
+
+#### [NEW] `com.turfconnect.shared.dto.event.ReviewEvent`
+RabbitMQ event published to `review.exchange` on routing key `review.updated`:
+- `turfId` (String)
+- `averageRating` (Double)
+- `totalReviews` (Integer)
 - `timestamp` (LocalDateTime)
 
 ---
 
-### Component 2: Notification Microservice (`notification-service` module)
+### Component 2: API Gateway (`api-gateway`)
 
-#### [NEW] [pom.xml](file:///c:/Users/rohit/TurfConnect/backend/notification-service/pom.xml)
-Maven configuration containing:
+#### [MODIFY] [application.yml](file:///c:/Users/rohit/TurfConnect/backend/api-gateway/src/main/resources/application.yml)
+- Map `/api/v1/reviews/**` path route to `http://localhost:8086` (Review Service).
+
+---
+
+### Component 3: Review Microservice (`review-service` - NEW)
+
+#### [NEW] [pom.xml](file:///c:/Users/rohit/TurfConnect/backend/review-service/pom.xml)
+Standard service dependencies:
 - Parent: `turfconnect-parent`
-- Dependencies: `spring-boot-starter-amqp`, `spring-boot-starter-web`, `shared`
+- Dependencies: `spring-boot-starter-web`, `spring-boot-starter-data-mongodb`, `spring-boot-starter-amqp`, `spring-boot-starter-actuator`, `shared`
 
-#### [NEW] [application.yml](file:///c:/Users/rohit/TurfConnect/backend/notification-service/src/main/resources/application.yml)
-- Server Port: `8085`
-- Database: None (stateless service)
-- Config import: shared profile configurations
+#### [NEW] [application.yml](file:///c:/Users/rohit/TurfConnect/backend/review-service/src/main/resources/application.yml)
+- Server Port: `8086`
+- Database: `turfconnect_reviews`
+- Configuration import: shared profile settings
 
-#### [NEW] `com.turfconnect.notification.config.RabbitMQConfig`
-Defines AMQP components:
-- Queue, Exchange, DLQ, and DLX declarations
-- Jackson `MessageConverter` bean for transparent JSON serialization/deserialization.
+#### [NEW] `com.turfconnect.review.model.Review`
+MongoDB document mapped to `reviews` collection:
+- `@Indexed` on `turfId`, `userId`
+- `@Indexed(unique = true)` on `bookingId`
 
-#### [NEW] `com.turfconnect.notification.listener.NotificationListener`
-Consumes RabbitMQ queues using `@RabbitListener`:
-- `booking.notification.queue` -> logs simulated email/SMS alerts to the terminal for user confirmations.
-- `payment.notification.queue` -> logs simulated receipt/receipt-failure notification alerts.
+#### [NEW] `com.turfconnect.review.config.RabbitMQConfig`
+- Declares topic exchange `review.exchange`.
+- Sets up JSON `MessageConverter` bean.
+
+#### [NEW] `com.turfconnect.review.repository.ReviewRepository`
+- Extends `MongoRepository<Review, String>`.
+- Declares:
+  - `List<Review> findByTurfId(String turfId)`
+  - `Optional<Review> findByBookingId(String bookingId)`
+  - `long countByTurfId(String turfId)`
+
+#### [NEW] `com.turfconnect.review.service.ReviewService`
+Core logic functions:
+- `submitReview(ReviewCreateRequest request, String userId)`:
+  - Check rating is within `[1, 5]`.
+  - Validate if booking is already reviewed (`findByBookingId`). If yes, throw `BadRequestException`.
+  - Execute REST query to `booking-service` at `GET http://localhost:8083/api/v1/bookings/{bookingId}` to check booking validity (must belong to `userId` and status must be `CONFIRMED`).
+  - Save `Review` to database.
+  - Calculate new average rating & count for the `turfId` from database.
+  - Publish `ReviewEvent` to `review.exchange` on routing key `review.updated`.
+  - Return `ReviewResponse`.
+- `getReviewsForTurf(String turfId)`:
+  - Fetch list of reviews.
+
+#### [NEW] `com.turfconnect.review.controller.ReviewController`
+Expose endpoints:
+- `POST /api/v1/reviews` (secure with `@RequestHeader("X-User-Id")`)
+- `GET /api/v1/reviews/turf/{turfId}` (public)
 
 ---
 
-### Component 3: Booking Microservice (`booking-service`)
+### Component 4: Turf Microservice (`turf-service`)
 
-#### [MODIFY] [pom.xml](file:///c:/Users/rohit/TurfConnect/backend/booking-service/pom.xml)
-- Add `spring-boot-starter-amqp` dependency.
+#### [MODIFY] [pom.xml](file:///c:/Users/rohit/TurfConnect/backend/turf-service/pom.xml)
+- Add `spring-boot-starter-amqp` dependency (enables listener configuration).
 
-#### [NEW] `com.turfconnect.booking.config.RabbitMQConfig`
-- Configures `RabbitTemplate` to use JSON `MessageConverter` for event publications.
-- Declares the topic exchange `booking.exchange`.
+#### [NEW] `com.turfconnect.turf.config.RabbitMQConfig`
+- Declare queue `turf.review.queue` and exchange `review.exchange`.
+- Bind `turf.review.queue` to `review.exchange` with routing key `review.#`.
 
-#### [MODIFY] `com.turfconnect.booking.service.BookingService`
-- Inject `RabbitTemplate`.
-- Publish `BookingEvent` to `booking.exchange` with routing key `booking.created` upon booking creation, `booking.confirmed` upon payment confirmation, and `booking.cancelled` upon payment failure callbacks.
+#### [NEW] `com.turfconnect.turf.listener.ReviewEventListener`
+- Consumes `ReviewEvent` from `turf.review.queue`.
+- On message consumption, calls `turfService.updateTurfRating(turfId, averageRating)`.
 
----
-
-### Component 4: Payment Microservice (`payment-service`)
-
-#### [MODIFY] [pom.xml](file:///c:/Users/rohit/TurfConnect/backend/payment-service/pom.xml)
-- Add `spring-boot-starter-amqp` dependency.
-
-#### [NEW] `com.turfconnect.payment.config.RabbitMQConfig`
-- Configures `RabbitTemplate` with Jackson JSON converter.
-- Declares topic exchange `payment.exchange`.
-
-#### [MODIFY] `com.turfconnect.payment.service.PaymentService`
-- Inject `RabbitTemplate`.
-- Publish `PaymentEvent` to `payment.exchange` with routing key `payment.success` or `payment.failed` inside webhook handlers.
+#### [MODIFY] `com.turfconnect.turf.service.TurfService`
+- Implement `updateTurfRating(String turfId, Double averageRating)`:
+  - Fetch Turf from repository.
+  - Set `averageRating` to new value.
+  - Save updated Turf.
+  - Evict Redis cache for this turf key (to be implemented in Module 12 or prepared now).
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-1. **Unit Tests in Notification Service:** Validate message deserialization and notification routing.
-2. **Event Publishing Tests:** Assert that `booking-service` and `payment-service` call `rabbitTemplate.convertAndSend(...)` when booking state transitions occur.
+1. **Unit Tests in Review Service:**
+   - Assert validation fails for ratings `< 1` or `> 5`.
+   - Assert double reviews for same `bookingId` are rejected.
+   - Assert booking owner verification mismatch throws `ForbiddenException`.
+2. **Unit Tests in Turf Service:**
+   - Verify that consumer triggers rating updates correctly on `ReviewEvent`.
 
 ### Manual Verification
-1. Start RabbitMQ locally (e.g., inside WSL Docker or standard system installation).
-2. Start the new `notification-service`.
-3. Run the complete booking checkout workflow:
-   - Browse slot -> click checkout -> simulate mock card checkout.
-4. Verify the terminal outputs of `notification-service`:
-   - Inspect that `Booking PENDING` log, `Payment SUCCESS` log, and `Booking CONFIRMED` messages are logged asynchronously in real-time.
+1. Start the new `review-service` and restart `api-gateway` / `turf-service`.
+2. Access Swagger/Postman:
+   - Create a booking and confirm it (via payment verify endpoint).
+   - Submit a review `POST /api/v1/reviews` with the booking ID.
+   - Verify the review is saved successfully.
+   - Verify that submitting a duplicate review for the same booking ID returns a `400 Bad Request`.
+3. Query `GET /api/v1/turfs/{id}` and verify that the `averageRating` field has updated automatically to the correct computed average rating.

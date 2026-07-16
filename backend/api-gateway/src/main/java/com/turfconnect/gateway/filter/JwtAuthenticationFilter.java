@@ -90,7 +90,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isSecured(String path, String method) {
-        if ("GET".equalsIgnoreCase(method) && path.startsWith("/api/v1/turfs")) {
+        if ("GET".equalsIgnoreCase(method) && (path.startsWith("/api/v1/turfs") || path.startsWith("/api/v1/reviews"))) {
             return false;
         }
         return OPEN_ENDPOINTS.stream().noneMatch(path::startsWith);
