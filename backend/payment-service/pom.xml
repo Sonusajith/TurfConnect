@@ -37,6 +37,12 @@
             <groupId>com.turfconnect</groupId>
             <artifactId>shared</artifactId>
         </dependency>
+        <!-- Stripe Java SDK -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>25.10.0</version>
+        </dependency>
     </dependencies>
 
     <build>

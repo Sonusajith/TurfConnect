@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 4 — Slot generation & availability
-**Scope (IN):** Generate bookable slots based on operating hours and turf rules. Query available slots for a given day.
-**Explicitly OUT:** Redis locking and actual booking persistence (deferred to Module 5).
-**Definition of done:** Customers can query which slots are available for a turf on a specific day. Owners can define default generation rules.
+**Module:** Module 9 — RabbitMQ + notification service
+**Scope (IN):** Setup RabbitMQ connection configs, implement messaging event publishers in `booking-service` and `payment-service` to broadcast booking/payment updates, create a new `notification-service` microservice that consumes these messages, and process notifications asynchronously with retry and dead-letter queues.
+**Explicitly OUT:** External API gateways integrations for SMS/Email providers (e.g. Twilio, SendGrid) — we will use mock/log-based notification channels.
+**Definition of done:** Creating or updating a booking, or modifying a payment publishes messages onto RabbitMQ exchanges, which are successfully consumed and processed by the `notification-service`.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

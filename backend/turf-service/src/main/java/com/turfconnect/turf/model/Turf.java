@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -61,7 +62,10 @@ public class Turf {
     private List<TurfImage> images;
     private String coverImage;
     
-    private String operatingHours; // e.g. "06:00-23:00"
+    private LocalTime openTime;
+    private LocalTime closeTime;
+    private Integer slotDurationMinutes; // defaults to 60
+    
     private List<String> availableDays; // e.g. ["MON", "TUE", ...]
     
     private String contactNumber;

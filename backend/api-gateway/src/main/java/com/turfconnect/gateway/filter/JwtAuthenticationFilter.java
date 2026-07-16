@@ -28,7 +28,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/register",
             "/api/v1/auth/login",
             "/api/v1/auth/refresh",
-            "/actuator"
+            "/actuator",
+            // Webhook endpoints are called by payment gateways (not users), so they
+            // cannot carry a JWT. Security is handled by signature verification inside
+            // the payment-service itself (MockPaymentStrategy.verifyWebhookSignature).
+            "/api/v1/payments/webhook"
     );
 
     @Override

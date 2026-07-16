@@ -29,13 +29,13 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 | 1 | Shared foundation + gateway skeleton | ☑ Done | `feature/module-01-foundation` | 2026-07-15 | ☑ |
 | 2 | Auth service (JWT, register/login) | ☑ Done | `feature/module-02-auth` | 2026-07-15 | ☑ |
 | 3 | Turf service (CRUD + search) | ☑ Done | `feature/module-03-turf` | 2026-07-15 | ☑ |
-| 4 | Slot generation & availability | ☐ In progress | `feature/module-04-slots` | | ☐ |
-| 5 | Booking service + Redis lock | ☐ Not started | `feature/module-05-booking-lock` | | ☐ |
-| 6 | Payment service (test mode) | ☐ Not started | `feature/module-06-payment` | | ☐ |
-| 7 | Minimal frontend (Antigravity) | ☐ Not started | `feature/module-07-frontend` | | ☐ |
+| 4 | Slot generation & availability | ☑ Done | `feature/module-04-slots` | 2026-07-15 | ☑ |
+| 5 | Booking service + Redis lock | ☑ Done | `feature/module-05-booking-lock` | 2026-07-15 | ☑ |
+| 6 | Payment service (test mode) | ☑ Done | `feature/module-06-payment` | 2026-07-15 | ☑ |
+| 7 | Minimal frontend (Antigravity) | ☑ Done | `feature/module-07-frontend` | 2026-07-15 | ☑ |
 
-**Stage 1 milestone:** ☐ Full booking flow demoed end-to-end in a browser, race-condition test on Module 5 passes and is documented in `DEV_LOG.md`.
-**Pushed to GitHub:** ☐
+**Stage 1 milestone:** ☑ Full booking flow demoed end-to-end in a browser, race-condition test on Module 5 passes and is documented in `DEV_LOG.md`.
+**Pushed to GitHub:** ☑
 
 ---
 

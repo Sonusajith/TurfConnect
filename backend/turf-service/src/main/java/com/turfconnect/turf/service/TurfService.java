@@ -1,8 +1,20 @@
 package com.turfconnect.turf.service;
 
 import com.turfconnect.shared.dto.PageResponse;
+import com.turfconnect.shared.dto.turf.SlotDTO;
+import com.turfconnect.shared.dto.turf.SlotStatus;
+import com.turfconnect.shared.exception.BadRequestException;
 import com.turfconnect.shared.exception.ForbiddenException;
 import com.turfconnect.shared.exception.ResourceNotFoundException;
+import com.turfconnect.turf.model.Slot;
+import com.turfconnect.turf.repository.SlotRepository;
+import org.springframework.dao.DuplicateKeyException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import com.turfconnect.turf.dto.TurfCreateRequest;
 import com.turfconnect.turf.dto.TurfResponse;
 import com.turfconnect.turf.dto.TurfSearchCriteria;
@@ -10,6 +22,7 @@ import com.turfconnect.turf.dto.TurfUpdateRequest;
 import com.turfconnect.turf.mapper.TurfMapper;
 import com.turfconnect.turf.model.Turf;
 import com.turfconnect.turf.repository.TurfRepository;
+import com.turfconnect.turf.controller.SlotBroadcaster;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,9 +38,12 @@ import java.time.LocalDateTime;
 public class TurfService {
 
     private final TurfRepository turfRepository;
+    private final SlotRepository slotRepository;
     private final TurfMapper turfMapper;
+    private final SlotBroadcaster slotBroadcaster;
 
     public TurfResponse createTurf(TurfCreateRequest request, String ownerId) {
+        validateSlotConfiguration(request.getOpenTime(), request.getCloseTime(), request.getSlotDurationMinutes());
         Turf turf = turfMapper.toEntity(request, ownerId);
         Turf savedTurf = turfRepository.save(turf);
         return turfMapper.toResponse(savedTurf);
@@ -40,6 +56,12 @@ public class TurfService {
         if (!turf.getOwnerId().equals(ownerId)) {
             throw new ForbiddenException("You do not have permission to update this turf.");
         }
+
+        // Validate final slot configuration state
+        LocalTime openTime = request.getOpenTime() != null ? request.getOpenTime() : turf.getOpenTime();
+        LocalTime closeTime = request.getCloseTime() != null ? request.getCloseTime() : turf.getCloseTime();
+        Integer duration = request.getSlotDurationMinutes() != null ? request.getSlotDurationMinutes() : turf.getSlotDurationMinutes();
+        validateSlotConfiguration(openTime, closeTime, duration);
 
         // Apply updates
         if (request.getName() != null) turf.setName(request.getName());
@@ -59,7 +81,11 @@ public class TurfService {
         if (request.getHourlyRate() != null) turf.setHourlyRate(request.getHourlyRate());
         if (request.getCurrency() != null) turf.setCurrency(request.getCurrency());
         if (request.getAmenities() != null) turf.setAmenities(request.getAmenities());
-        if (request.getOperatingHours() != null) turf.setOperatingHours(request.getOperatingHours());
+        
+        if (request.getOpenTime() != null) turf.setOpenTime(request.getOpenTime());
+        if (request.getCloseTime() != null) turf.setCloseTime(request.getCloseTime());
+        if (request.getSlotDurationMinutes() != null) turf.setSlotDurationMinutes(request.getSlotDurationMinutes());
+        
         if (request.getAvailableDays() != null) turf.setAvailableDays(request.getAvailableDays());
         if (request.getContactNumber() != null) turf.setContactNumber(request.getContactNumber());
         if (request.getEmail() != null) turf.setEmail(request.getEmail());
@@ -142,6 +168,170 @@ public class TurfService {
                 .totalElements(responsePage.getTotalElements())
                 .totalPages(responsePage.getTotalPages())
                 .last(responsePage.isLast())
+                .build();
+    }
+
+    private void validateSlotConfiguration(LocalTime openTime, LocalTime closeTime, Integer slotDurationMinutes) {
+        if (slotDurationMinutes == null || slotDurationMinutes <= 0) {
+            throw new BadRequestException("Slot duration must be positive");
+        }
+        if (openTime == null || closeTime == null) {
+            throw new BadRequestException("Open time and close time must be defined");
+        }
+        if (closeTime.isBefore(openTime) || closeTime.equals(openTime)) {
+            throw new BadRequestException("Close time must be after open time");
+        }
+        long totalMinutes = java.time.temporal.ChronoUnit.MINUTES.between(openTime, closeTime);
+        if (totalMinutes % slotDurationMinutes != 0) {
+            throw new BadRequestException("Slot duration (" + slotDurationMinutes + " minutes) must evenly divide operating hours (total " + totalMinutes + " minutes)");
+        }
+    }
+
+    public List<SlotDTO> getSlots(String turfId, LocalDate date) {
+        Turf turf = turfRepository.findByIdAndDeletedFalse(turfId)
+                .orElseThrow(() -> new ResourceNotFoundException("Turf not found with id: " + turfId));
+
+        if (!isDayAvailable(turf, date)) {
+            return Collections.emptyList();
+        }
+
+        if (!slotRepository.existsByTurfIdAndDate(turfId, date)) {
+            // JVM-level lock to prevent concurrent generation on the same node
+            synchronized (turfId.intern()) {
+                if (!slotRepository.existsByTurfIdAndDate(turfId, date)) {
+                    List<Slot> slots = new ArrayList<>();
+                    LocalTime current = turf.getOpenTime();
+                    LocalTime end = turf.getCloseTime();
+                    int duration = turf.getSlotDurationMinutes();
+
+                    while (current.plusMinutes(duration).isBefore(end) || current.plusMinutes(duration).equals(end)) {
+                        LocalTime slotEnd = current.plusMinutes(duration);
+                        Slot slot = Slot.builder()
+                                .turfId(turfId)
+                                .date(date)
+                                .startTime(current)
+                                .endTime(slotEnd)
+                                .price(turf.getHourlyRate())
+                                .status(SlotStatus.AVAILABLE)
+                                .build();
+                        slots.add(slot);
+                        current = slotEnd;
+                    }
+
+                    try {
+                        slotRepository.saveAll(slots);
+                    } catch (DuplicateKeyException e) {
+                        // Another thread/instance generated them concurrently, safe to ignore
+                    }
+                }
+            }
+        }
+
+        List<Slot> slots = slotRepository.findByTurfIdAndDate(turfId, date);
+        slots.sort(Comparator.comparing(Slot::getStartTime));
+
+        List<SlotDTO> dtos = new ArrayList<>();
+        for (Slot s : slots) {
+            dtos.add(toSlotDTO(s));
+        }
+        return dtos;
+    }
+
+    public void generateSlotsForDateRange(String turfId, LocalDate startDate, LocalDate endDate, String ownerId) {
+        Turf turf = turfRepository.findByIdAndDeletedFalse(turfId)
+                .orElseThrow(() -> new ResourceNotFoundException("Turf not found with id: " + turfId));
+
+        if (!turf.getOwnerId().equals(ownerId)) {
+            throw new ForbiddenException("You do not have permission to generate slots for this turf.");
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new BadRequestException("Start date must be before or equal to end date");
+        }
+
+        LocalDate current = startDate;
+        while (!current.isAfter(endDate)) {
+            if (isDayAvailable(turf, current) && !slotRepository.existsByTurfIdAndDate(turfId, current)) {
+                final LocalDate dateToGen = current;
+                synchronized (turfId.intern()) {
+                    if (!slotRepository.existsByTurfIdAndDate(turfId, dateToGen)) {
+                        List<Slot> slots = new ArrayList<>();
+                        LocalTime timeCursor = turf.getOpenTime();
+                        LocalTime end = turf.getCloseTime();
+                        int duration = turf.getSlotDurationMinutes();
+
+                        while (timeCursor.plusMinutes(duration).isBefore(end) || timeCursor.plusMinutes(duration).equals(end)) {
+                            LocalTime slotEnd = timeCursor.plusMinutes(duration);
+                            Slot slot = Slot.builder()
+                                    .turfId(turfId)
+                                    .date(dateToGen)
+                                    .startTime(timeCursor)
+                                    .endTime(slotEnd)
+                                    .price(turf.getHourlyRate())
+                                    .status(SlotStatus.AVAILABLE)
+                                    .build();
+                            slots.add(slot);
+                            timeCursor = slotEnd;
+                        }
+
+                        try {
+                            slotRepository.saveAll(slots);
+                        } catch (DuplicateKeyException e) {
+                            // Concurrency safeguard
+                        }
+                    }
+                }
+            }
+            current = current.plusDays(1);
+        }
+    }
+
+    public SlotDTO updateSlotStatus(String slotId, SlotStatus status, String bookingId) {
+        Slot slot = slotRepository.findById(slotId)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + slotId));
+
+        slot.setStatus(status);
+        slot.setBookingId(bookingId);
+        Slot saved = slotRepository.save(slot);
+        SlotDTO updated = toSlotDTO(saved);
+
+        // Broadcast real-time slot status change to all WebSocket subscribers
+        // Frontend subscribes to /topic/slots/{turfId}/{date}
+        slotBroadcaster.broadcastSlotUpdate(updated);
+
+        return updated;
+    }
+
+    private boolean isDayAvailable(Turf turf, LocalDate date) {
+        if (turf.getAvailableDays() == null || turf.getAvailableDays().isEmpty()) {
+            return true; // If no days specified, assume open everyday
+        }
+        String dayName = date.getDayOfWeek().name(); // e.g. MONDAY
+        for (String openDay : turf.getAvailableDays()) {
+            if (dayName.equalsIgnoreCase(openDay) || 
+                (dayName.length() >= 3 && openDay.length() >= 3 && dayName.substring(0, 3).equalsIgnoreCase(openDay.substring(0, 3)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public SlotDTO getSlotById(String slotId) {
+        Slot slot = slotRepository.findById(slotId)
+                .orElseThrow(() -> new ResourceNotFoundException("Slot not found with id: " + slotId));
+        return toSlotDTO(slot);
+    }
+
+    private SlotDTO toSlotDTO(Slot slot) {
+        return SlotDTO.builder()
+                .id(slot.getId())
+                .turfId(slot.getTurfId())
+                .date(slot.getDate())
+                .startTime(slot.getStartTime())
+                .endTime(slot.getEndTime())
+                .price(slot.getPrice())
+                .status(slot.getStatus())
+                .bookingId(slot.getBookingId())
                 .build();
     }
 }

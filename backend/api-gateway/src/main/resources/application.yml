@@ -7,18 +7,53 @@ spring:
   cloud:
     gateway:
       routes:
+        # Auth Service Health Routing
+        - id: auth-service-health
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/auth/actuator/health
+          filters:
+            - SetPath=/actuator/health
+        # Auth Service Business Routing
         - id: auth-service
           uri: http://localhost:8081
           predicates:
             - Path=/api/v1/auth/**
+
+        # Turf Service Health Routing
+        - id: turf-service-health
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/v1/turfs/actuator/health
+          filters:
+            - SetPath=/actuator/health
+        # Turf Service Business Routing
         - id: turf-service
           uri: http://localhost:8082
           predicates:
             - Path=/api/v1/turfs/**
+
+        # Booking Service Health Routing
+        - id: booking-service-health
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/v1/bookings/actuator/health
+          filters:
+            - SetPath=/actuator/health
+        # Booking Service Business Routing
         - id: booking-service
           uri: http://localhost:8083
           predicates:
             - Path=/api/v1/bookings/**
+
+        # Payment Service Health Routing
+        - id: payment-service-health
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/v1/payments/actuator/health
+          filters:
+            - SetPath=/actuator/health
+        # Payment Service Business Routing
         - id: payment-service
           uri: http://localhost:8084
           predicates:
