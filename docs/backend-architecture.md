@@ -129,13 +129,56 @@ Each service is independently deployable, independently scalable, and has its ow
 | Use case | Introduced | Pattern |
 |---|---|---|
 | Slot distributed lock | Day 1 | `SET lock:slot:{turfId}:{date}:{time} NX PX 300000` |
-| Turf/search cache | Day 2 | Cache-aside, TTL 10 min, invalidated on turf update |
+| Turf/search cache | Day 2 | Cache-aside, externalized TTL, scan eviction on update |
 | Tournament leaderboard | Day 3 | Sorted sets (`ZADD`/`ZREVRANGE`) |
 | Fraud velocity counters | Day 4 | `INCR` with expiring window keys |
 | Session/refresh-token blacklist | Day 1 | Key-value with TTL matching token expiry |
 | Rate limiting at gateway | Day 1 | Token bucket counters per user/IP |
 
-Redis is deployed as a **cluster** (not single-node) from the start, since slot-locking correctness is on the critical path — a single-node Redis failure would otherwise block all bookings platform-wide.
+### Redis Caching Architecture (Module 12)
+
+#### 1. Cache-Aside Workflow
+On read requests:
+1. Generate versioned cache key.
+2. Check Redis via `RedisTemplate`. If hit, deserialize using Jackson and return immediately.
+3. On miss, fetch from MongoDB, serialize to Jackson JSON format, set in Redis with TTL, and return.
+4. On write requests (create, update, delete, review submission), evict relevant cache keys immediately to maintain consistency.
+
+```
+       [Read Request]
+             │
+             ▼
+      Check Redis Cache
+        /         \
+   (Hit)           (Miss / Failure)
+    /                 \
+Return Data       Fetch from MongoDB
+                       │
+                  Write to Redis
+                       │
+                  Return Data
+```
+
+#### 2. Key Versioning and Conventions
+All keys prefix with a version identifier (`v1`) to allow instant invalidation of the entire cache when document schemas evolve:
+- **Single Turf:** `v1:cache:turf:{turfId}` (TTL: 10 minutes)
+- **Search Pages:** `v1:cache:turfs:{SHA-256 of criteria parameters}` (TTL: 5 minutes)
+- **Reviews List:** `v1:cache:reviews:turf:{turfId}` (TTL: 5 minutes)
+
+#### 3. Serialization Configuration
+Both `turf-service` and `review-service` configure custom `RedisTemplate` beans utilizing:
+- **StringRedisSerializer** for keys to keep them human-readable.
+- **Jackson2JsonRedisSerializer** for values, configured with `JavaTimeModule` to support modern Java Time APIs, and a secure `BasicPolymorphicTypeValidator` to allow safe round-trip deserialization of target responses (`com.turfconnect.*`, `java.util.*`, `org.springframework.data.domain.*`). Native JVM serialization is strictly avoided.
+
+#### 4. Safe Eviction Strategy
+- **Scan-based Wildcard Invalidation:** Wildcard eviction of search cache pages (e.g. invalidating search pages on turf updates) uses Redis `SCAN` commands via `redisTemplate.scan(ScanOptions)` to progressively identify keys matching `v1:cache:turfs:*`. This avoids blocking the Redis event loop, which occurs with the O(N) `KEYS` command.
+- **Eviction Hooks:** Cache eviction is triggered on turf creation/updates/deletions, review submissions, review edits, review deletions, and owner replies to ensure reviews list and turf data remains consistent.
+
+#### 5. Graceful Degradation (Fail-Open)
+All interactions with Redis are wrapped in protective try-catch handlers. If Redis goes offline:
+- Redis failures are logged as warnings.
+- The request execution degrades gracefully to the database (MongoDB) without failing user requests (fail-open strategy).
+- Redis health indicators are disabled (`management.health.redis.enabled: false`) in development environments to prevent mock/offline configurations from causing overall application health checks to report as `DOWN`.
 
 ---
 
