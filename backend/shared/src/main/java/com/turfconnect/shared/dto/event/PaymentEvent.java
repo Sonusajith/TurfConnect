@@ -10,7 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Event published when a payment is processed (SUCCESS, FAILED).
+ * Event published when a payment is processed (SUCCESS, FAILED)
+ * or a refund is processed (REFUNDED, REFUND_FAILED).
  * Delivered via RabbitMQ to notification-service.
  */
 @Data
@@ -23,6 +24,10 @@ public class PaymentEvent {
     private BigDecimal amount;
     private String currency;
     private PaymentStatus status;
-    private String eventType; // "SUCCESS", "FAILED"
+    private String eventType;         // "SUCCESS", "FAILED", "REFUNDED", "REFUND_FAILED"
     private LocalDateTime timestamp;
+
+    // Refund-specific fields (null for non-refund events)
+    private BigDecimal refundAmount;   // Amount refunded to the user
+    private String refundReference;    // Gateway-level refund reference for reconciliation
 }

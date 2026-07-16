@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "payments")
@@ -56,4 +56,12 @@ public class Payment {
     private LocalDateTime updatedAt;
 
     private LocalDateTime completedAt;
+
+    // === Refund sub-document (Module 11) ===
+    // Embedded here to keep refund lifecycle atomically tied to the payment.
+    // Null until a refund is initiated.
+    private Refund refund;
+
+    // Timestamp when refund was first initiated (for SLA tracking)
+    private LocalDateTime refundInitiatedAt;
 }

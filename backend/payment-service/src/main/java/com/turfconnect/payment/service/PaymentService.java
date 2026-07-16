@@ -226,4 +226,14 @@ public class PaymentService {
                 .completedAt(payment.getCompletedAt())
                 .build();
     }
+
+    /**
+     * Returns the current payment record for a booking.
+     * Used internally by booking-service before triggering a refund.
+     */
+    public PaymentResponse getPaymentByBookingId(String bookingId) {
+        Payment payment = paymentRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("No payment found for bookingId: " + bookingId));
+        return toPaymentResponse(payment);
+    }
 }

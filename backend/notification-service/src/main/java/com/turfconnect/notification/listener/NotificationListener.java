@@ -63,6 +63,20 @@ public class NotificationListener {
                         "Payment Failed. Transaction ID " + event.getTransactionId() + " for Booking ID " +
                         event.getBookingId() + " of amount INR " + event.getAmount() + " failed.");
                 break;
+            // Module 11 — Refund events
+            case "REFUNDED":
+                String refundAmt = event.getRefundAmount() != null ? event.getRefundAmount().toPlainString() : "N/A";
+                String refundRef = event.getRefundReference() != null ? event.getRefundReference() : "N/A";
+                sendMockNotification("system_admin",
+                        "Refund Processed! ₹" + refundAmt + " refunded for Booking ID " + event.getBookingId() +
+                        ". Refund Reference: " + refundRef + ". Funds will appear within 5-7 business days.");
+                break;
+            case "REFUND_FAILED":
+                sendMockNotification("system_admin",
+                        "Refund Failed. The refund for Booking ID " + event.getBookingId() +
+                        " could not be processed. Please contact support with reference: " +
+                        event.getTransactionId());
+                break;
             default:
                 log.warn("Unknown payment event type received: {}", eventType);
         }
