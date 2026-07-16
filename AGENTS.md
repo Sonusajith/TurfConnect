@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 7 — Minimal frontend (Antigravity)
-**Scope (IN):** Interactive client interface, slot search & browsing dashboard, turf booking checkout form, dynamic payment simulation modal, booking history table, real-time update socket listener (STOMP/SockJS).
-**Explicitly OUT:** Final CSS styling and production branding (Stage 2 dashboard).
-**Definition of done:** Users can view turf availability, checkout a timeslot, complete mock payment checkout, and see successful booking state confirmation live in a browser.
+**Module:** Module 9 — RabbitMQ + notification service
+**Scope (IN):** Setup RabbitMQ connection configs, implement messaging event publishers in `booking-service` and `payment-service` to broadcast booking/payment updates, create a new `notification-service` microservice that consumes these messages, and process notifications asynchronously with retry and dead-letter queues.
+**Explicitly OUT:** External API gateways integrations for SMS/Email providers (e.g. Twilio, SendGrid) — we will use mock/log-based notification channels.
+**Definition of done:** Creating or updating a booking, or modifying a payment publishes messages onto RabbitMQ exchanges, which are successfully consumed and processed by the `notification-service`.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
