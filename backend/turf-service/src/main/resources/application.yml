@@ -8,9 +8,25 @@ spring:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017}
       database: turfdb
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+
+# Externalized cache TTL settings (seconds).
+# Override per environment without recompiling:
+#   CACHE_TURF_DETAIL_TTL=300 java -jar turf-service.jar
+cache:
+  turf-detail-ttl-seconds: ${CACHE_TURF_DETAIL_TTL:600}
+  turf-search-ttl-seconds: ${CACHE_TURF_SEARCH_TTL:300}
+  reviews-turf-ttl-seconds: ${CACHE_REVIEWS_TTL:300}
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
+  # Disable Redis health indicator in dev — Redis uses WSL networking which
+  # causes ClosedChannelException from Java/Netty. The service degrades
+  # gracefully (falls back to MongoDB) so we don't want it to report DOWN.
+  health:
+    redis:
+      enabled: false

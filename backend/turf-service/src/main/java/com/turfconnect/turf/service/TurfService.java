@@ -24,6 +24,7 @@ import com.turfconnect.turf.model.Turf;
 import com.turfconnect.turf.repository.TurfRepository;
 import com.turfconnect.turf.controller.SlotBroadcaster;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,17 +36,23 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TurfService {
 
     private final TurfRepository turfRepository;
     private final SlotRepository slotRepository;
     private final TurfMapper turfMapper;
     private final SlotBroadcaster slotBroadcaster;
+    private final TurfCacheService turfCacheService;
 
     public TurfResponse createTurf(TurfCreateRequest request, String ownerId) {
         validateSlotConfiguration(request.getOpenTime(), request.getCloseTime(), request.getSlotDurationMinutes());
         Turf turf = turfMapper.toEntity(request, ownerId);
         Turf savedTurf = turfRepository.save(turf);
+
+        // New turf affects search result pages — evict all search caches
+        turfCacheService.evictAllTurfPages();
+
         return turfMapper.toResponse(savedTurf);
     }
 
@@ -105,6 +112,10 @@ public class TurfService {
         if (request.getStatus() != null) turf.setStatus(request.getStatus());
 
         Turf updatedTurf = turfRepository.save(turf);
+
+        // Evict this turf's detail cache + all search pages (price/name/etc. may have changed)
+        turfCacheService.evictTurf(id);
+
         return turfMapper.toResponse(updatedTurf);
     }
 
@@ -119,15 +130,47 @@ public class TurfService {
         turf.setDeleted(true);
         turf.setUpdatedAt(LocalDateTime.now());
         turfRepository.save(turf);
+
+        // Deleted turf must vanish from all cached search pages
+        turfCacheService.evictTurf(id);
     }
 
+    /**
+     * Cache-aside: check Redis first, fall back to MongoDB on miss, then populate cache.
+     * If Redis is down the call transparently hits MongoDB (graceful degradation).
+     */
     public TurfResponse getTurfById(String id) {
+        // 1. Try cache
+        TurfResponse cached = turfCacheService.getTurf(id);
+        if (cached != null) {
+            return cached;
+        }
+
+        // 2. Cache miss — hit MongoDB
         Turf turf = turfRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Turf not found with id: " + id));
-        return turfMapper.toResponse(turf);
+        TurfResponse response = turfMapper.toResponse(turf);
+
+        // 3. Populate cache for next read
+        turfCacheService.putTurf(id, response);
+
+        return response;
     }
 
+    /**
+     * Cache-aside for paginated search results.
+     * Cache key is a SHA-256 hash of all search parameters so every unique
+     * combination of filters/sort/page maps to its own cache entry.
+     */
     public PageResponse<TurfResponse> searchTurfs(TurfSearchCriteria criteria) {
+        // 1. Try cache
+        String cacheKey = turfCacheService.buildSearchCacheKey(criteria);
+        PageResponse<TurfResponse> cachedPage = turfCacheService.getTurfsPage(cacheKey);
+        if (cachedPage != null) {
+            return cachedPage;
+        }
+
+        // 2. Cache miss — hit MongoDB
         Sort sort = Sort.by(Sort.Direction.fromString(criteria.getSortDirection()), criteria.getSortBy());
         Pageable pageable = PageRequest.of(criteria.getPage(), criteria.getSize(), sort);
         
@@ -147,7 +190,7 @@ public class TurfService {
         );
         
         Page<TurfResponse> responsePage = page.map(turfMapper::toResponse);
-        return PageResponse.<TurfResponse>builder()
+        PageResponse<TurfResponse> result = PageResponse.<TurfResponse>builder()
                 .content(responsePage.getContent())
                 .pageNumber(responsePage.getNumber())
                 .pageSize(responsePage.getSize())
@@ -155,6 +198,11 @@ public class TurfService {
                 .totalPages(responsePage.getTotalPages())
                 .last(responsePage.isLast())
                 .build();
+
+        // 3. Populate cache for next identical search
+        turfCacheService.putTurfsPage(cacheKey, result);
+
+        return result;
     }
 
     public PageResponse<TurfResponse> getMyTurfs(String ownerId, int page, int size) {
@@ -335,6 +383,10 @@ public class TurfService {
                 .build();
     }
 
+    /**
+     * Called by the RabbitMQ listener when a review is submitted/updated.
+     * Persists the new average rating to MongoDB and evicts stale cache entries.
+     */
     public void updateTurfRating(String turfId, Double averageRating) {
         Turf turf = turfRepository.findByIdAndDeletedFalse(turfId)
                 .orElseThrow(() -> new ResourceNotFoundException("Turf not found with id: " + turfId));
@@ -342,9 +394,8 @@ public class TurfService {
         turf.setAverageRating(averageRating);
         turfRepository.save(turf);
 
-        // TODO: PLACEHOLDER FOR REDIS CACHE EVICTION (Module 12 Caching)
-        // Once Redis is set up in Module 12, evict cache key on update:
-        // redisTemplate.delete("cache:turf:" + turfId);
-        // redisTemplate.keys("cache:turfs:*").forEach(redisTemplate::delete);
+        // Rating change affects cached detail and any search sorted/filtered by rating
+        turfCacheService.evictTurf(turfId);
+        log.info("Turf rating updated and cache evicted for turfId={}, newAvg={}", turfId, averageRating);
     }
 }

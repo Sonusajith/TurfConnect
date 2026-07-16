@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 11 — Refunds & payment state extension
-**Scope (IN):** Extend payment-service with a full refund state machine (`REFUND_INITIATED → REFUND_PROCESSING → REFUNDED / REFUND_FAILED`), implement idempotent refund flow keyed by bookingId, trigger refund from booking-service on cancellation, publish `payment.refunded` RabbitMQ events, and consume in notification-service.
-**Explicitly OUT:** Partial refunds, chargebacks, dispute management, automated refund approval, accounting reconciliation.
-**Definition of done:** When a booking is cancelled and payment was SUCCESS, a refund is initiated idempotently, the payment transitions to REFUNDED, a RabbitMQ event is published, and notification-service logs the refund event.
+**Module:** Module 12 — Redis Caching (Turf Search, Turf Details, and Reviews)
+**Scope (IN):** Centralized versioned key generator utility, Cache-Aside pattern, polymorphic Jackson JSON serialization with JavaTimeModule support, scan-based eviction, graceful degradation (fail-open), externalized TTL configurations.
+**Explicitly OUT:** Cache invalidation via key events, distributed locks for caching, cache replication.
+**Definition of done:** When turf updates/deletes or review modifications occur, cache evictions trigger correctly; test suites run successfully verifying hits, misses, graceful degradation, and SCAN wildcard deletes.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

@@ -57,3 +57,24 @@ This file is a running log of decisions, debug sessions, and important configura
 - PaymentServiceTest: 5 tests — ALL PASS
 - NotificationListenerTest: 5 tests — ALL PASS
 - Full multi-module build: 9/9 SUCCESS
+---
+
+## Module 12 - Redis Caching (Turf Search, Turf Details, and Reviews) (2026-07-16)
+
+### Key Decisions
+
+- **Cache-Aside Pattern:** Implemented the Cache-Aside pattern in TurfCacheService and ReviewServiceImpl. Redis handles reads while MongoDB remains the source of truth.
+- **Centralized Versioned Keys:** Created CacheKeyUtil in the shared module to generate standardized, versioned cache keys (e.g., 1:cache:turf:{id}, 1:cache:reviews:turf:{id}).
+- **Polymorphic JSON Serialization:** Configured RedisTemplate to use Jackson2JsonRedisSerializer with JavaTimeModule for standard JSON, making cache values portable and easy to debug. Configured a BasicPolymorphicTypeValidator to restrict deserialization to allowed packages.
+- **SCAN-based Eviction:** Used SCAN instead of KEYS for wildcard cache invalidation (e.g., 1:cache:turfs:* for search results). This prevents blocking the Redis single-threaded event loop during high-volume evictions.
+- **Graceful Degradation:** Built a fail-open mechanism wrapped in try-catch blocks. If Redis goes down, the system logs the failure and seamlessly falls back to MongoDB for reads/writes, ensuring uninterrupted user experience.
+- **Externalized TTL:** Moved TTL values to application properties, bound via @ConfigurationProperties in CacheProperties.
+- **Review Cache Invalidation:** Hooked into review creation, update, deletion, and owner replies to evict the corresponding turf's review cache. Turf cache is also invalidated when its average rating is updated.
+- **Suppressed Health Indicators:** Disabled Redis health checks in the development profile to prevent Spring Boot Actuator from marking the service as DOWN when Redis is unreachable (matching the fail-open design).
+
+### Test Results
+
+- TurfCacheServiceTest: Tests for cache hits, misses, timeouts, graceful fallback, and concurrent threads - ALL PASS
+- ReviewCacheTest: Tests for review reads, writes, modifications, and graceful degradation - ALL PASS
+- Unit tests modified to support the new caching components (via mocking TurfCacheService and RedisTemplate).
+- Full multi-module build (mvn test -pl turf-service,review-service): SUCCESS

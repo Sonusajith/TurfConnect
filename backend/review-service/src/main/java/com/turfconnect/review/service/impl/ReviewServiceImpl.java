@@ -6,6 +6,8 @@ import com.turfconnect.review.model.Review;
 import com.turfconnect.review.model.ReviewStatus;
 import com.turfconnect.review.repository.ReviewRepository;
 import com.turfconnect.review.service.ReviewService;
+import com.turfconnect.shared.cache.CacheKeyUtil;
+import com.turfconnect.shared.cache.CacheProperties;
 import com.turfconnect.shared.dto.event.ReviewEvent;
 import com.turfconnect.shared.dto.review.ReviewCreateRequest;
 import com.turfconnect.shared.dto.review.ReviewResponse;
@@ -23,6 +25,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -31,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +46,8 @@ public class ReviewServiceImpl implements ReviewService {
     private final MongoTemplate mongoTemplate;
     private final RestTemplate restTemplate;
     private final RabbitTemplate rabbitTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final CacheProperties cacheProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${services.booking-service.url:http://localhost:8083}")
@@ -91,21 +97,55 @@ public class ReviewServiceImpl implements ReviewService {
         Review saved = reviewRepository.save(review);
         log.info("Review successfully saved with ID: {}", saved.getId());
 
-        // 5. Calculate Average Rating asynchronously using Aggregation
+        // 5. Evict review cache for this turf (new review added)
+        evictReviewCache(booking.getTurfId());
+
+        // 6. Calculate Average Rating asynchronously using Aggregation
         TurfRatingSummary summary = getRatingSummary(booking.getTurfId());
 
-        // 6. Publish ReviewEvent
+        // 7. Publish ReviewEvent
         publishReviewEvent(booking.getTurfId(), summary);
 
         return toReviewResponse(saved);
     }
 
+    /**
+     * Cache-aside: check Redis first, fall back to MongoDB on miss.
+     * If Redis is unavailable, transparently queries MongoDB (graceful degradation).
+     */
     @Override
+    @SuppressWarnings("unchecked")
     public List<ReviewResponse> getReviewsByTurf(String turfId) {
-        return reviewRepository.findByTurfId(turfId).stream()
+        String cacheKey = CacheKeyUtil.reviewsByTurf(turfId);
+
+        // 1. Try cache
+        try {
+            Object cached = redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                log.debug("CACHE HIT  — key={}", cacheKey);
+                return (List<ReviewResponse>) cached;
+            }
+            log.debug("CACHE MISS — key={}", cacheKey);
+        } catch (Exception e) {
+            log.warn("CACHE FAILURE (get) — key={}, error={}", cacheKey, e.getMessage());
+        }
+
+        // 2. Cache miss — hit MongoDB
+        List<ReviewResponse> reviews = reviewRepository.findByTurfId(turfId).stream()
                 .filter(r -> r.getStatus() == ReviewStatus.ACTIVE && !r.getIsDeleted())
                 .map(this::toReviewResponse)
                 .collect(Collectors.toList());
+
+        // 3. Populate cache
+        try {
+            redisTemplate.opsForValue().set(cacheKey, reviews,
+                    cacheProperties.getReviewsTurfTtlSeconds(), TimeUnit.SECONDS);
+            log.debug("CACHE WRITE — key={}, ttl={}s", cacheKey, cacheProperties.getReviewsTurfTtlSeconds());
+        } catch (Exception e) {
+            log.warn("CACHE FAILURE (put) — key={}, error={}", cacheKey, e.getMessage());
+        }
+
+        return reviews;
     }
 
     @Override
@@ -158,6 +198,9 @@ public class ReviewServiceImpl implements ReviewService {
 
         Review saved = reviewRepository.save(review);
 
+        // Evict review cache (content changed)
+        evictReviewCache(review.getTurfId());
+
         // Re-aggregate and publish event
         TurfRatingSummary summary = getRatingSummary(review.getTurfId());
         publishReviewEvent(review.getTurfId(), summary);
@@ -179,6 +222,9 @@ public class ReviewServiceImpl implements ReviewService {
         review.setUpdatedAt(LocalDateTime.now());
         reviewRepository.save(review);
 
+        // Evict review cache (review soft-deleted)
+        evictReviewCache(review.getTurfId());
+
         // Re-aggregate and publish event
         TurfRatingSummary summary = getRatingSummary(review.getTurfId());
         publishReviewEvent(review.getTurfId(), summary);
@@ -193,12 +239,30 @@ public class ReviewServiceImpl implements ReviewService {
         review.setUpdatedAt(LocalDateTime.now());
         Review saved = reviewRepository.save(review);
 
+        // Owner reply changes the cached review list
+        evictReviewCache(review.getTurfId());
+
         return toReviewResponse(saved);
     }
 
     // ==========================================
     // Internal Helper Methods
     // ==========================================
+
+    /**
+     * Evict cached review list for a turf.
+     * Graceful degradation: logs failure but never throws — the write operation
+     * that triggered eviction must always succeed even if Redis is down.
+     */
+    private void evictReviewCache(String turfId) {
+        String cacheKey = CacheKeyUtil.reviewsByTurf(turfId);
+        try {
+            Boolean deleted = redisTemplate.delete(cacheKey);
+            log.info("CACHE EVICT — key={}, deleted={}", cacheKey, deleted);
+        } catch (Exception e) {
+            log.warn("CACHE FAILURE (evict) — key={}, error={}", cacheKey, e.getMessage());
+        }
+    }
 
     private BookingData fetchBookingDetails(String bookingId) {
         try {

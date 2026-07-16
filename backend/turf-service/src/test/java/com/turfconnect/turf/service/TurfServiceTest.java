@@ -47,6 +47,9 @@ public class TurfServiceTest {
     @Mock
     private com.turfconnect.turf.controller.SlotBroadcaster slotBroadcaster;
 
+    @Mock
+    private TurfCacheService turfCacheService;
+
     @InjectMocks
     private TurfService turfService;
 
