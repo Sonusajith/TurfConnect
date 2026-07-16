@@ -334,4 +334,17 @@ public class TurfService {
                 .bookingId(slot.getBookingId())
                 .build();
     }
+
+    public void updateTurfRating(String turfId, Double averageRating) {
+        Turf turf = turfRepository.findByIdAndDeletedFalse(turfId)
+                .orElseThrow(() -> new ResourceNotFoundException("Turf not found with id: " + turfId));
+        
+        turf.setAverageRating(averageRating);
+        turfRepository.save(turf);
+
+        // TODO: PLACEHOLDER FOR REDIS CACHE EVICTION (Module 12 Caching)
+        // Once Redis is set up in Module 12, evict cache key on update:
+        // redisTemplate.delete("cache:turf:" + turfId);
+        // redisTemplate.keys("cache:turfs:*").forEach(redisTemplate::delete);
+    }
 }

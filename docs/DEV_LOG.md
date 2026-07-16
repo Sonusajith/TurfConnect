@@ -25,3 +25,13 @@ This file is a running log of decisions, debug sessions, and important configura
 - **Resiliency & Error Handling:** Configured Dead Letter Exchange (`notification.dlx`) and direct Dead Letter Queues (`booking.notification.dlq`, `payment.notification.dlq`) to capture unacknowledged or toxic messages.
 - **Actuator Health Adjustment:** Configured health checks for `rabbit` and `redis` to run as disabled in `application-dev.yml` to prevent entire microservices from failing with 503 SERVICE_UNAVAILABLE codes when AMQP brokers are not active locally during developmental offline launches.
 - **Testing:** Wrote unit tests for `NotificationListener` confirming message processing routes correctly. Verified all backend modules compile successfully with Maven.
+
+---
+
+## Module 10 — Reviews & Ratings
+- **Decentralized Reviews Microservice:** Created the new `review-service` microservice, utilizing MongoDB (`turfconnect_reviews` database) for storage, adhering to the database-per-service paradigm.
+- **Review Submission Restrictions:** Secured review submissions to require a validated CONFIRMED booking belonging to the active user retrieved dynamically via REST call to the `booking-service`. Added checks to prevent duplicate reviews for the same booking.
+- **Event-Driven Aggregation:** Built aggregation pipelines using Spring Data MongoDB to calculate the average rating and total review counts per turf. Emitted `ReviewEvent` with UUID, eventType, timestamp, version, and metrics to `review.exchange` on MongoDB writes.
+- **Automatic Turf Rating Propagation:** Configured `turf-service` to consume `ReviewEvent` via RabbitMQ binding, update the local turf entity's `averageRating` cache-aside store, and invalidate cached turf queries.
+- **Future Readiness & Enhanced Fields:** Enhanced the `Review` entity with future-proofing fields: soft delete (`isDeleted`), edited status (`isEdited`), `updatedAt`, `status` (`ACTIVE`, `HIDDEN`, `DELETED`), and `ownerReply` placeholders to avoid future schema changes.
+- **Testing:** Wrote exhaustive unit tests in `review-service` checking validations, duplicate submissions, and aggregation math. Wrote AMQP listener tests in `turf-service` verifying event consumption and rating updates. Verified end-to-end routing and validation using Python test script.

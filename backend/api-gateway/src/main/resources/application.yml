@@ -59,6 +59,19 @@ spring:
           predicates:
             - Path=/api/v1/payments/**
 
+        # Review Service Health Routing
+        - id: review-service-health
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/v1/reviews/actuator/health
+          filters:
+            - SetPath=/actuator/health
+        # Review Service Business Routing
+        - id: review-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/v1/reviews/**
+
 management:
   endpoints:
     web:
