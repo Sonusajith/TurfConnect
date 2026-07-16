@@ -7,5 +7,9 @@ public enum PaymentStatus {
     FAILED,
     CANCELLED,
     REFUNDED,
-    EXPIRED
+    EXPIRED,
+    // Refund lifecycle states (Module 11)
+    REFUND_INITIATED,      // refund has been triggered, gateway call pending
+    REFUND_PROCESSING,     // gateway acknowledged refund, awaiting settlement
+    REFUND_FAILED          // gateway rejected the refund or an error occurred
 }

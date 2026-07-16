@@ -45,7 +45,7 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 |---|---|---|---|---|---|
 | 9 | RabbitMQ + notification service | ☑ Done | `feature/module-09-notifications` | 2026-07-16 | ☑ |
 | 10 | Reviews & ratings | ☑ Done | `feature/module-10-reviews` | 2026-07-16 | ☑ |
-| 11 | Refunds + payment state extension | ☐ Not started | `feature/module-11-refunds` | | ☐ |
+| 11 | Refunds + payment state extension | ☑ Done | `feature/module-11-refunds` | 2026-07-16 | ☑ |
 | 12 | Caching + pagination/filtering | ☐ Not started | `feature/module-12-caching` | | ☐ |
 
 **Pushed to GitHub:** ☑

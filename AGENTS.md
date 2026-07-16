@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 10 — Reviews & ratings
-**Scope (IN):** Create review-service microservice, implement REST endpoints for users to submit reviews and ratings for turfs they have booked, calculate and expose average ratings, and secure reviews writing with booking verification.
-**Explicitly OUT:** Advanced sentiment analysis on reviews, or custom user profile highlights.
-**Definition of done:** Users can submit reviews for a turf with a valid booking, retrieve reviews of a turf, and see average score aggregated on turf profile.
+**Module:** Module 11 — Refunds & payment state extension
+**Scope (IN):** Extend payment-service with a full refund state machine (`REFUND_INITIATED → REFUND_PROCESSING → REFUNDED / REFUND_FAILED`), implement idempotent refund flow keyed by bookingId, trigger refund from booking-service on cancellation, publish `payment.refunded` RabbitMQ events, and consume in notification-service.
+**Explicitly OUT:** Partial refunds, chargebacks, dispute management, automated refund approval, accounting reconciliation.
+**Definition of done:** When a booking is cancelled and payment was SUCCESS, a refund is initiated idempotently, the payment transitions to REFUNDED, a RabbitMQ event is published, and notification-service logs the refund event.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

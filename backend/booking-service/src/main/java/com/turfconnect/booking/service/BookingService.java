@@ -5,6 +5,8 @@ import com.turfconnect.booking.repository.BookingRepository;
 import com.turfconnect.shared.dto.booking.BookingCreateRequest;
 import com.turfconnect.shared.dto.booking.BookingResponse;
 import com.turfconnect.shared.dto.booking.BookingStatus;
+import com.turfconnect.shared.dto.payment.PaymentStatus;
+import com.turfconnect.shared.dto.payment.RefundRequest;
 import com.turfconnect.shared.dto.turf.SlotDTO;
 import com.turfconnect.shared.dto.turf.SlotStatus;
 import com.turfconnect.shared.exception.BadRequestException;
@@ -15,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -36,6 +41,12 @@ public class BookingService {
 
     @Value("${services.turf-service.url:http://localhost:8082}")
     private String turfServiceUrl;
+
+    @Value("${services.payment-service.url:http://localhost:8084}")
+    private String paymentServiceUrl;
+
+    @Value("${spring.security.internal-token:internal-secret-token}")
+    private String internalToken;
 
     public BookingResponse createBooking(BookingCreateRequest request, String userId) {
         String slotId = request.getSlotId();
@@ -171,7 +182,63 @@ public class BookingService {
         // Publish booking cancellation event to RabbitMQ
         publishBookingEvent(saved, "CANCELLED");
 
+        // Trigger refund if the payment was successfully charged.
+        // Refund failure is non-blocking — the booking cancellation is already persisted.
+        triggerRefundIfApplicable(bookingId, userId);
+
         return toBookingResponse(saved);
+    }
+
+    /**
+     * Checks whether a successful payment exists for this booking and, if so,
+     * calls payment-service to initiate a refund.
+     *
+     * Design decisions:
+     * - We query payment-service via REST (internal token) to check payment status.
+     * - If no payment record exists (e.g., booking was never paid), we skip silently.
+     * - If payment is already in a refund state (idempotency), payment-service returns current state.
+     * - Any exception here is caught and logged — the cancellation is already committed.
+     */
+    private void triggerRefundIfApplicable(String bookingId, String userId) {
+        try {
+            // 1. Check if a payment exists and is in SUCCESS state
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Internal-Token", internalToken);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            String paymentCheckUrl = paymentServiceUrl + "/api/v1/payments/booking/" + bookingId;
+            ResponseEntity<PaymentStatusWrapper> paymentResponse =
+                    restTemplate.exchange(paymentCheckUrl, HttpMethod.GET, entity, PaymentStatusWrapper.class);
+
+            if (paymentResponse.getBody() == null || !paymentResponse.getBody().isSuccess()
+                    || paymentResponse.getBody().getData() == null) {
+                log.info("No payment record found for bookingId={}. Skipping refund.", bookingId);
+                return;
+            }
+
+            String paymentStatus = String.valueOf(paymentResponse.getBody().getData().getStatus());
+            if (!PaymentStatus.SUCCESS.name().equals(paymentStatus)) {
+                log.info("Payment for bookingId={} is in status {}. Refund not applicable.", bookingId, paymentStatus);
+                return;
+            }
+
+            // 2. Initiate refund via payment-service
+            RefundRequest refundRequest = RefundRequest.builder()
+                    .bookingId(bookingId)
+                    .reason("Booking cancelled by user")
+                    .initiatedBy(userId != null ? userId : "SYSTEM")
+                    .build();
+
+            HttpEntity<RefundRequest> refundEntity = new HttpEntity<>(refundRequest, headers);
+            String refundUrl = paymentServiceUrl + "/api/v1/payments/refund";
+            restTemplate.exchange(refundUrl, HttpMethod.POST, refundEntity, Void.class);
+            log.info("Refund successfully initiated for bookingId={}", bookingId);
+
+        } catch (Exception e) {
+            // Refund failure is non-fatal — booking is cancelled, refund can be retried
+            log.error("Failed to initiate refund for bookingId={}: {}. Manual retry may be required.",
+                    bookingId, e.getMessage());
+        }
     }
 
     public BookingResponse getBookingById(String id) {
@@ -260,5 +327,19 @@ public class BookingService {
     public static class TurfData {
         private String id;
         private String name;
+    }
+
+    // Wrapper for deserializing payment status response from payment-service
+    @Data
+    public static class PaymentStatusWrapper {
+        private boolean success;
+        private PaymentData data;
+        private String message;
+    }
+
+    @Data
+    public static class PaymentData {
+        private String id;
+        private PaymentStatus status;
     }
 }
