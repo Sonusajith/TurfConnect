@@ -43,6 +43,11 @@
             <artifactId>stripe-java</artifactId>
             <version>25.10.0</version>
         </dependency>
+        <!-- RabbitMQ AMQP starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

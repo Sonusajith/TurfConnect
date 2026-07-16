@@ -12,6 +12,7 @@ import com.turfconnect.shared.exception.BadRequestException;
 import com.turfconnect.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpEntity;
@@ -31,6 +32,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final Map<String, PaymentGatewayStrategy> gatewayStrategies;
     private final RestTemplate restTemplate;
+    private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${services.booking-service.url:http://localhost:8083}")
@@ -98,6 +100,9 @@ public class PaymentService {
         // Notify Booking Service via secure REST call
         updateBookingStatus(payment.getBookingId(), true);
 
+        // Publish payment success event to RabbitMQ
+        publishPaymentEvent(saved);
+
         return toPaymentResponse(saved);
     }
 
@@ -141,7 +146,10 @@ public class PaymentService {
         if (webhookStatus == PaymentStatus.SUCCESS || webhookStatus == PaymentStatus.FAILED) {
             payment.setCompletedAt(LocalDateTime.now());
         }
-        paymentRepository.save(payment);
+        Payment saved = paymentRepository.save(payment);
+
+        // Publish payment status change event to RabbitMQ
+        publishPaymentEvent(saved);
 
         // 6. Notify Booking Service
         if (webhookStatus == PaymentStatus.SUCCESS) {
@@ -181,6 +189,25 @@ public class PaymentService {
         } catch (Exception e) {
             log.error("Failed to propagate booking state confirmation to booking-service", e);
             throw new BadRequestException("Booking service is currently unavailable. Rollback or queue retry required.");
+        }
+    }
+
+    private void publishPaymentEvent(Payment payment) {
+        try {
+            String eventType = payment.getStatus() == PaymentStatus.SUCCESS ? "SUCCESS" : "FAILED";
+            com.turfconnect.shared.dto.event.PaymentEvent event = com.turfconnect.shared.dto.event.PaymentEvent.builder()
+                    .transactionId(payment.getTransactionId())
+                    .bookingId(payment.getBookingId())
+                    .amount(payment.getAmount())
+                    .currency(payment.getCurrency())
+                    .status(payment.getStatus())
+                    .eventType(eventType)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+            rabbitTemplate.convertAndSend(com.turfconnect.payment.config.RabbitMQConfig.PAYMENT_EXCHANGE, "payment." + eventType.toLowerCase(), event);
+            log.info("Successfully published payment event {} for transaction {}", eventType, payment.getTransactionId());
+        } catch (Exception e) {
+            log.error("Failed to publish payment event", e);
         }
     }
 

@@ -49,6 +49,9 @@ public class BookingServiceConcurrencyTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
     @InjectMocks
     private BookingService bookingService;
 
