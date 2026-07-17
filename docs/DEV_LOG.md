@@ -122,3 +122,9 @@ This file is a running log of decisions, debug sessions, and important configura
 - Implemented real-time anomaly detection using pure Redis INCR/EXPIRE counters.
 - Added FraudAlertEvent publishing for downstream action.
 - Addressed concurrent atomic race conditions in Redis by testing parallel thread increments.
+
+### Module 18: Admin Analytics Dashboard
+- Added analytics-service.
+- Implemented event-driven aggregation for Bookings and Fraud signals using RabbitMQ.
+- Applied strict RBAC for Platform-wide vs Turf-specific metrics.
+- Used MongoDB atomic operations for high-performance idempotency and aggregation.
