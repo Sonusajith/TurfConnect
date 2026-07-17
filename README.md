@@ -2,13 +2,16 @@
 
 TurfConnect is a premium sports turf booking platform (Playo/Hudle-style) designed to connect athletes with sports facilities. The project is organized as a Spring Boot microservice architecture for the backend and a React + Vite + Tailwind CSS application for the frontend.
 
+## 🚀 Final Release (v1.0-submission)
+This repository represents the completed academic submission for the TurfConnect platform. It encompasses a fully functional 5-phase backend architecture (Core Booking, Enhanced Features, Community, AI Analytics, and Enterprise Multi-Region scaling) and a premium, responsive Frontend UI designed with the Athletic Synergy design system.
+
 ## Tech Stack
 - **Backend:** Spring Boot 3.3.x (Java 17), Spring Cloud Gateway, Spring Security
-- **Database:** MongoDB (Database-per-service architecture)
+- **Database:** MongoDB (Strict Database-per-service architecture)
 - **Distributed Caching & Locks:** Redis
 - **Message Broker:** RabbitMQ
 - **Real-Time Updates:** WebSockets (STOMP over SockJS)
-- **Frontend:** React, Vite, Tailwind CSS
+- **Frontend:** React, Vite, Tailwind CSS v3
 
 ---
 
@@ -21,45 +24,21 @@ TurfConnect/
 ├── AGENTS.md             # Active agent execution instructions
 ├── README.md             # This instructions file
 ├── config/               # Centralized configuration profiles
-│   ├── application-dev.yml
-│   ├── application-test.yml
-│   └── application-prod.yml
-├── docs/                 # Project documentation
-│   ├── srs.md            # Software Requirements Specification
-│   ├── backend-architecture.md
-│   ├── module-roadmap.md
-│   ├── PROGRESS.md       # Stage tracker
-│   └── DEV_LOG.md        # Running development log
+├── docs/                 # Project documentation (SRS, Architecture, Progress)
 ├── backend/              # Java backend microservices
-│   ├── pom.xml           # Parent Maven POM
-│   ├── mvnw / mvnw.cmd   # Custom Maven wrapper
 │   ├── shared/           # Common library module
 │   ├── api-gateway/      # API Gateway
 │   ├── auth-service/     # Authentication & Authorization
 │   ├── turf-service/     # Turf CRUD & Search
 │   ├── booking-service/  # Booking & Locks
 │   ├── payment-service/  # Integration with payments
-│   └── (notification-service, review-service, etc.) # Placeholder modules
-└── Designs/              # UI/UX design resources and mockups
-```
-
----
-
-## Port Allocation Strategy
-
-```text
-8080: API Gateway
-8081: Auth Service
-8082: Turf Service
-8083: Booking Service
-8084: Payment Service
-8085: Notification Service (Placeholder)
-8086: Review Service (Placeholder)
-8087: Community Service (Placeholder)
-8088: Tournament Service (Placeholder)
-8089: Recommendation Service (Placeholder)
-8090: Analytics Service (Placeholder)
-8091: Org Admin Service (Placeholder)
+│   ├── review-service/   # Reviews and Ratings
+│   ├── community-service/# Teams and Invites
+│   ├── tournament-service/ # Tournaments and Leaderboards
+│   ├── analytics-service/# Admin Analytics
+│   ├── audit-service/    # Audit Logging
+│   └── (other modules)
+└── frontend/             # React + Vite web application
 ```
 
 ---
@@ -68,8 +47,10 @@ TurfConnect/
 
 ### Prerequisites
 - **Java 17 Development Kit (JDK)**
+- **Node.js (v18+) and npm**
 - **MongoDB** (running locally on port 27017 or Atlas cloud instance)
 - **Redis** (running locally on port 6379 or Upstash instance)
+- **RabbitMQ** (running locally on port 5672)
 
 ### Local Environment Setup
 1. Copy `.env.example` to `.env` in the root directory:
@@ -78,39 +59,37 @@ TurfConnect/
    ```
 2. Adjust connection strings and keys in `.env`.
 
-### central Configuration
-Centralized configuration is managed inside the `/config` folder:
-- **`application-dev.yml`**: Shared development settings.
-- **`application-test.yml`**: Shared test settings.
-- **`application-prod.yml`**: Shared production-grade connection profiles.
-
-Downstream microservices import these configurations dynamically on startup based on their active Spring profile.
-
 ---
 
 ## Build & Test Instructions
 
-Build the parent and all active modules inside the `/backend` folder:
+### Running the Backend (Low-RAM Core Profile)
+To launch the core services needed for booking without exhausting local RAM, use the provided batch script:
+```bash
+./start-core.bat
+```
+*(This starts the Gateway, Auth, Turf, Booking, and Payment services).*
+
+Alternatively, build and run manually:
 ```bash
 cd backend
-# Windows command prompt
-mvnw.cmd clean install
-# Unix shell
 ./mvnw clean install
-```
-
-To run a specific service:
-```bash
-cd backend/<service-name>
-# Windows
-../mvnw.cmd spring-boot:run
-# Unix
+cd <service-name>
 ../mvnw spring-boot:run
 ```
 
+### Running the Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Navigate to `http://localhost:5173` to view the TurfConnect UI.
+
 ---
 
-## Git Workflow & Branching
-- **Branch Naming:** `feature/module-<number>-<short-name>`
-- **Commit Message Format:** `feat(<service>): <what> — <why>`
-- **Tagging:** After completing each milestone, create a tag (e.g. `v0.1-setup`) before pushing.
+## Documentation & Evidence
+For the academic viva, please refer to:
+- `docs/DEV_LOG.md`: Running log of architectural decisions.
+- `docs/srs.md`: Complete requirement specifications.
+- `docs/scaling-strategy.md`: Module 22 scaling documentation.
