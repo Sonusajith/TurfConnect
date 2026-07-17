@@ -139,7 +139,7 @@ public class AuthService {
 
         refreshTokenRepository.save(refreshToken);
 
-        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), tokenId);
+        String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), tokenId, user.getOrganizationId(), user.getFranchiseId());
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -177,7 +177,7 @@ public class AuthService {
                 .orElseThrow(() -> new InvalidTokenException("User no longer exists"));
 
         // Issue new access token (we can also rotate refresh tokens if we want, but for now just issue access token)
-        String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), tokenId);
+        String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), tokenId, user.getOrganizationId(), user.getFranchiseId());
 
         return AuthResponse.builder()
                 .accessToken(newAccessToken)

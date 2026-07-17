@@ -27,6 +27,9 @@ public class TurfCreateRequest {
     @NotEmpty(message = "At least one sport type is required")
     private List<String> sportTypes;
 
+    private String organizationId;
+    private String franchiseId;
+
     @NotBlank(message = "Address is required")
     private String address;
 

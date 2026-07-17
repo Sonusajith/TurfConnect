@@ -38,16 +38,17 @@ class JwtAuthenticationFilterTest {
     }
 
     private String generateValidToken() {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", "user-123");
-        claims.put("role", "PLAYER");
-        claims.put("email", "test@test.com");
+        String userId = "user-123";
+        String role = "PLAYER";
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject("user-123")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + 900000))
+                .setSubject(userId)
+                .claim("userId", userId)
+                .claim("email", "test@test.com")
+                .claim("role", role)
+                .claim("orgId", "org-123")
+                .claim("franchiseId", "fran-123")
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
                 .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(testSecret)), SignatureAlgorithm.HS256)
                 .compact();
     }

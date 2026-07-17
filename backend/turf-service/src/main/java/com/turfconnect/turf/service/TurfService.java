@@ -73,6 +73,8 @@ public class TurfService {
         // Apply updates
         if (request.getName() != null) turf.setName(request.getName());
         if (request.getDescription() != null) turf.setDescription(request.getDescription());
+        if (request.getOrganizationId() != null) turf.setOrganizationId(request.getOrganizationId());
+        if (request.getFranchiseId() != null) turf.setFranchiseId(request.getFranchiseId());
         if (request.getSportTypes() != null) turf.setSportTypes(request.getSportTypes());
         if (request.getAddress() != null) turf.setAddress(request.getAddress());
         if (request.getCity() != null) turf.setCity(request.getCity());

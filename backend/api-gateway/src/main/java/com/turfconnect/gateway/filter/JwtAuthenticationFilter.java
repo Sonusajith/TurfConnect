@@ -61,13 +61,19 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     return onError(exchange, "Invalid JWT claims", HttpStatus.UNAUTHORIZED);
                 }
 
-                ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate()
                         .header("X-User-Id", claims.get("userId", String.class))
                         .header("X-User-Role", claims.get("role", String.class))
-                        .header("X-User-Email", claims.get("email", String.class))
-                        .build();
+                        .header("X-User-Email", claims.get("email", String.class));
+                        
+                if (claims.get("orgId") != null) {
+                    requestBuilder.header("X-Org-Id", claims.get("orgId", String.class));
+                }
+                if (claims.get("franchiseId") != null) {
+                    requestBuilder.header("X-Franchise-Id", claims.get("franchiseId", String.class));
+                }
 
-                return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                return chain.filter(exchange.mutate().request(requestBuilder.build()).build());
 
             } catch (Exception e) {
                 return onError(exchange, "Invalid or expired JWT Token", HttpStatus.UNAUTHORIZED);

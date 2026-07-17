@@ -29,7 +29,13 @@ public class Turf {
     private String id;
     
     @Indexed
-    private String ownerId;
+    private String ownerId; // ID of the TURF_OWNER user
+    
+    @Indexed
+    private String organizationId;
+    
+    @Indexed
+    private String franchiseId;
     
     private String venueId; // Future support for multi-ground venues
     

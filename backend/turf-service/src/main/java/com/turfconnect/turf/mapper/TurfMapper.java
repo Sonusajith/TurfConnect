@@ -17,6 +17,8 @@ public class TurfMapper {
         
         return Turf.builder()
                 .ownerId(ownerId)
+                .organizationId(request.getOrganizationId())
+                .franchiseId(request.getFranchiseId())
                 .name(request.getName())
                 .description(request.getDescription())
                 .sportTypes(request.getSportTypes())
@@ -61,6 +63,8 @@ public class TurfMapper {
                 .ownerId(turf.getOwnerId())
                 .name(turf.getName())
                 .description(turf.getDescription())
+                .organizationId(turf.getOrganizationId())
+                .franchiseId(turf.getFranchiseId())
                 .sportTypes(turf.getSportTypes())
                 .address(turf.getAddress())
                 .city(turf.getCity())
