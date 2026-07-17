@@ -86,4 +86,19 @@ public class NotificationListener {
         // Logging simulates SMS, email, or push notifications dispatch
         log.info("✉️ [NOTIFICATION DISPATCHED] To Recipient: {} | Message: {}", recipientId, message);
     }
+
+    /**
+     * Listen to community invitation events and dispatch email notifications.
+     * Module 13 — Teams & Invitations
+     */
+    @RabbitListener(queues = "community.notification.queue")
+    public void handleTeamInvitationEvent(com.turfconnect.shared.dto.event.TeamInvitationNotificationEvent event) {
+        log.info("🔔 [EVENT CONSUMED] Received TeamInvitationEvent: InvitationId={}, TeamId={}, InviteeEmail={}",
+                event.getInvitationId(), event.getTeamId(), event.getInviteeEmail());
+
+        sendMockNotification(event.getInviteeEmail(),
+                "You have been invited to join team '" + event.getTeamName() + "' by " + event.getInviterName() +
+                (event.getMessage() != null ? ". Message: " + event.getMessage() : "") +
+                ". This invitation expires at: " + event.getExpiresAt() + ". Login to accept or decline.");
+    }
 }

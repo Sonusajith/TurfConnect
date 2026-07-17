@@ -18,15 +18,18 @@ public class RabbitMQConfig {
     // Exchange names
     public static final String BOOKING_EXCHANGE = "booking.exchange";
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
+    public static final String COMMUNITY_EXCHANGE = "community.exchange";
     public static final String NOTIFICATION_DLX = "notification.dlx";
 
     // Queue names
     public static final String BOOKING_QUEUE = "booking.notification.queue";
     public static final String PAYMENT_QUEUE = "payment.notification.queue";
+    public static final String COMMUNITY_QUEUE = "community.notification.queue";
     
     // DLQ names
     public static final String BOOKING_DLQ = "booking.notification.dlq";
     public static final String PAYMENT_DLQ = "payment.notification.dlq";
+    public static final String COMMUNITY_DLQ = "community.notification.dlq";
 
     // Declarations for Exchanges
     @Bean
@@ -37,6 +40,11 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange paymentExchange() {
         return new TopicExchange(PAYMENT_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange communityExchange() {
+        return new DirectExchange(COMMUNITY_EXCHANGE);
     }
 
     @Bean
@@ -53,6 +61,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue paymentDeadLetterQueue() {
         return new Queue(PAYMENT_DLQ, true);
+    }
+
+    @Bean
+    public Queue communityDeadLetterQueue() {
+        return new Queue(COMMUNITY_DLQ, true);
     }
 
     // Declarations for main Queues (configured with DLX arguments)
@@ -72,6 +85,14 @@ public class RabbitMQConfig {
         return new Queue(PAYMENT_QUEUE, true, false, false, args);
     }
 
+    @Bean
+    public Queue communityQueue() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-dead-letter-exchange", NOTIFICATION_DLX);
+        args.put("x-dead-letter-routing-key", COMMUNITY_DLQ);
+        return new Queue(COMMUNITY_QUEUE, true, false, false, args);
+    }
+
     // Bindings for main Queues
     @Bean
     public Binding bookingBinding() {
@@ -87,6 +108,13 @@ public class RabbitMQConfig {
                 .with("payment.#");
     }
 
+    @Bean
+    public Binding communityBinding() {
+        return BindingBuilder.bind(communityQueue())
+                .to(communityExchange())
+                .with("community.invitation.#");
+    }
+
     // Bindings for DLQs
     @Bean
     public Binding bookingDLQBinding() {
@@ -100,6 +128,13 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(paymentDeadLetterQueue())
                 .to(deadLetterExchange())
                 .with(PAYMENT_DLQ);
+    }
+
+    @Bean
+    public Binding communityDLQBinding() {
+        return BindingBuilder.bind(communityDeadLetterQueue())
+                .to(deadLetterExchange())
+                .with(COMMUNITY_DLQ);
     }
 
     /**

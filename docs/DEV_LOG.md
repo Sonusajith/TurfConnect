@@ -78,3 +78,21 @@ This file is a running log of decisions, debug sessions, and important configura
 - ReviewCacheTest: Tests for review reads, writes, modifications, and graceful degradation - ALL PASS
 - Unit tests modified to support the new caching components (via mocking TurfCacheService and RedisTemplate).
 - Full multi-module build (mvn test -pl turf-service,review-service): SUCCESS
+
+## Module 13 - Teams & Invitations (community-service) (2026-07-17)
+
+### Key Decisions
+
+- **New Microservice (community-service):** Bootstrapped the community-service to manage teams and invitations independently of turf-service and booking-service, adhering to the database-per-service pattern.
+- **Header-Based Auth Pattern:** Configured community-service to rely on X-User-Id headers passed by the API Gateway instead of validating JWTs directly, saving resources and standardizing security.
+- **Internal User Lookup:** Exposed a secure internal endpoint /api/v1/auth/internal/user on auth-service (protected by X-Internal-Token) to allow community-service to resolve a user's ID by email without breaking bounded contexts.
+- **RabbitMQ Integration:** Configured community-service to publish TeamInvitationEvent to a durable exchange with DLQ configured. Updated notification-service to listen to community.notification.queue and send mock email notifications.
+- **Advanced Validations:** Enforced business rules for team invitations (max members, unique pending invites, captain-only invites, no expired invites allowed).
+- **Unit Testing:** Implemented full test suites for TeamServiceImpl and InvitationServiceImpl achieving 100% test pass rate for all edge cases.
+
+### Test Results
+
+- All 23 unit tests across community-service passed.
+- Integrated RabbitMQ publisher and listener tested end-to-end.
+- Full multi-module parent build successful.
+
