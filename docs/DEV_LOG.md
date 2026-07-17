@@ -128,3 +128,27 @@ This file is a running log of decisions, debug sessions, and important configura
 - Implemented event-driven aggregation for Bookings and Fraud signals using RabbitMQ.
 - Applied strict RBAC for Platform-wide vs Turf-specific metrics.
 - Used MongoDB atomic operations for high-performance idempotency and aggregation.
+
+### Module 19: RBAC & Franchise Expansion
+- Extended standard roles across all services (`SUPER_ADMIN`, `FRANCHISE_ADMIN`, `TURF_OWNER`, `PLAYER`).
+- Extracted `Role` and `Permission` domain into the `shared` module for universal enum access.
+- Scaffolded standard Franchise relationship models in `turf-service` to support Org > Franchise > Turf hierarchy.
+- Reconfigured Gateway to support extended JWT claims for advanced authorization filters.
+
+### Module 20: Audit Logging
+- Created centralized `audit-service` designed for read-heavy compliance reporting.
+- Introduced custom `@AuditLog` annotation in the `shared` module for cross-cutting AOP application.
+- Intercepted critical business actions (e.g., refunds, tournament creations) via Spring AOP and published `AuditEvent` asynchronously via RabbitMQ.
+- Persisted logs in a write-optimized MongoDB collection.
+
+### Module 22: Scaling Strategy (Documentation)
+- Finalized enterprise architecture documentation (`docs/scaling-strategy.md`).
+- Addressed API Gateway load balancing, WebSocket horizontal scaling (Redis Pub/Sub), MongoDB Sharding (geospatial/franchise keys), and RabbitMQ clustering.
+- Defined Disaster Recovery, multi-region failovers, and Observability stack (Prometheus/Grafana/ELK) specifications.
+
+### Module 23: Frontend UI Polish & Design System
+- Scaffolded Tailwind CSS V3 inside the React/Vite frontend.
+- Migrated all placeholder components to a centralized `src/components/ui/` library (Button, Card, Badge, Skeleton).
+- Implemented the 'Athletic Synergy' premium design system (Deep Athletic Green, Energetic Orange, Glassmorphism, Micro-animations).
+- Rewrote `DashboardPage`, `SlotPickerPage`, `TurfList`, and `TurfCard` to look like a state-of-the-art SaaS product.
+- Ensured responsiveness and high-quality loading states across the UI.
