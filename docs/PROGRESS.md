@@ -56,7 +56,7 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 
 | # | Module | Status | Branch | Completed On | Pushed? |
 |---|---|---|---|---|---|
-| 13 | Teams & invitations | ☐ Not started | `feature/module-13-teams` | | ☐ |
+| 13 | Teams & invitations | ☑ Done | `feature/module-13-teams` | 2026-07-17 | ☑ |
 | 14 | Matches | ☐ Not started | `feature/module-14-matches` | | ☐ |
 | 15 | Tournaments + leaderboard | ☐ Not started | `feature/module-15-tournaments` | | ☐ |
 

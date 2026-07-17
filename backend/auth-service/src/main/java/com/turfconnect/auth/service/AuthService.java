@@ -198,6 +198,17 @@ public class AuthService {
         }
     }
 
+    public com.turfconnect.shared.dto.user.UserDTO getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new com.turfconnect.shared.exception.ResourceNotFoundException("User not found for email: " + email));
+        return com.turfconnect.shared.dto.user.UserDTO.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole())
+                .build();
+    }
+
     public void logoutAll(String userId) {
         refreshTokenRepository.deleteByUserId(userId);
         log.info("Logged out from all devices for user: {}", userId);

@@ -72,6 +72,19 @@ spring:
           predicates:
             - Path=/api/v1/reviews/**
 
+        # Community Service Health Routing
+        - id: community-service-health
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/v1/teams/actuator/health,/api/v1/invitations/actuator/health
+          filters:
+            - SetPath=/actuator/health
+        # Community Service Business Routing
+        - id: community-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/v1/teams/**,/api/v1/invitations/**
+
 management:
   endpoints:
     web:
