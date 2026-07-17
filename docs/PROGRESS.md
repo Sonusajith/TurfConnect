@@ -69,7 +69,7 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 
 | # | Module | Status | Branch | Completed On | Pushed? |
 |---|---|---|---|---|---|
-| 16 | Recommendation service (heuristic v1) | ☐ Not started | `feature/module-16-recommend` | | ☐ |
+| 16 | Recommendation service (heuristic v1) | ✅ Complete | `feature/module-16-recommend` | | ✅ |
 | 17 | Fraud-signal service | ☐ Not started | `feature/module-17-fraud` | | ☐ |
 | 18 | Admin analytics dashboard | ☐ Not started | `feature/module-18-analytics` | | ☐ |
 

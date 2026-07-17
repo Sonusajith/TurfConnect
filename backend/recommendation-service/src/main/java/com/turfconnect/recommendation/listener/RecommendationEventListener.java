@@ -20,7 +20,7 @@ public class RecommendationEventListener {
     public void handleBookingEvent(BookingEvent event) {
         log.info("Received booking event for turf: {}, status: {}", event.getTurfId(), event.getStatus());
         try {
-            recommendationService.processBookingEvent(event.getTurfId(), event.getStatus());
+            recommendationService.processBookingEvent(event.getTurfId(), event.getStatus() != null ? event.getStatus().name() : "UNKNOWN");
         } catch (Exception e) {
             log.error("Failed to process booking event: {}", e.getMessage());
             throw e; // Throwing exception triggers RabbitMQ retry and eventual DLQ
@@ -29,11 +29,11 @@ public class RecommendationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.REVIEW_QUEUE)
     public void handleReviewEvent(ReviewEvent event) {
-        log.info("Received review event for turf: {}, rating: {}", event.getTurfId(), event.getRating());
+        log.info("Received review event for turf: {}, rating: {}", event.getTurfId(), event.getAverageRating());
         try {
             // Assume the event sends the individual rating, or the review-service sends the new average.
             // For this heuristic, we pass the rating down.
-            recommendationService.processReviewEvent(event.getTurfId(), event.getRating());
+            recommendationService.processReviewEvent(event.getTurfId(), event.getAverageRating() != null ? event.getAverageRating() : 0.0);
         } catch (Exception e) {
             log.error("Failed to process review event: {}", e.getMessage());
             throw e; // Throwing exception triggers RabbitMQ retry and eventual DLQ

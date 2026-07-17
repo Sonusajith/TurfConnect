@@ -25,7 +25,7 @@ class RecommendationEventListenerTest {
     void handleBookingEvent_callsService() {
         BookingEvent event = new BookingEvent();
         event.setTurfId("turf-1");
-        event.setStatus("CONFIRMED");
+        event.setStatus(com.turfconnect.shared.dto.booking.BookingStatus.CONFIRMED);
 
         listener.handleBookingEvent(event);
 

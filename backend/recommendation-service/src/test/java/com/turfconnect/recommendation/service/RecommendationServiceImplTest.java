@@ -88,9 +88,6 @@ class RecommendationServiceImplTest {
         recommendationService.processReviewEvent(TURF_ID, 5.0);
 
         assertThat(existingProfile.getAverageRating()).isEqualTo(5.0);
-        // Normalized rating = 5.0/5.0 = 1.0. Weight = 0.7.
-        // Normalized bookings = 5/1000 = 0.005. Weight = 0.3.
-        // Score = 0.7 + (0.005 * 0.3) = 0.7015
-        assertThat(existingProfile.getHeuristicScore()).isEqualTo(0.7015);
+        assertThat(existingProfile.getHeuristicScore()).isCloseTo(0.7015, org.assertj.core.data.Offset.offset(0.0001));
     }
 }
