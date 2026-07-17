@@ -1,0 +1,50 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: recommendation-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/turfconnect_recommendation}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-attempts: 3
+          max-interval: 10000ms
+          multiplier: 2.0
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+jwt:
+  secret: ${JWT_SECRET:4f7831f13b6329c323f66a877995dc8ab8e92f70b8c6e2646a5b6727282b535d}
+
+spring.security:
+  internal-token: ${INTERNAL_SERVICE_TOKEN:internal-secret-token}
+
+logging:
+  level:
+    com.turfconnect: DEBUG
+
+turf:
+  service:
+    url: ${TURF_SERVICE_URL:http://localhost:8083}
+
+# Caching for Feign client to avoid spamming turf-service for missing turf info repeatedly
+spring.cache:
+  type: caffeine
+  caffeine:
+    spec: expireAfterWrite=1h,maximumSize=1000

@@ -32,6 +32,9 @@
         <module>turf-service</module>
         <module>booking-service</module>
         <module>payment-service</module>
+        <module>review-service</module>
+        <module>community-service</module>
+        <module>recommendation-service</module>
     </modules>
 
     <dependencyManagement>
