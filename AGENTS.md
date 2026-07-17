@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 8 — CI Pipeline (Docker/K8s Skipped for RAM)
-**Scope (IN):** Implemented GitHub Actions for cloud-based CI to ensure tests run automatically on push/PR. Created `start-core.bat` to allow running only essential microservices locally to save RAM. Docker and Kubernetes modules are explicitly skipped to accommodate standard laptop RAM limits.
-**Explicitly OUT:** Dockerfiles, docker-compose for services, Kubernetes manifests.
-**Definition of done:** CI pipeline file exists and core runner script is provided.
+**Module:** Module 22 — Sharding & Multi-Region Strategy (Documentation)
+**Scope (IN):** Create architectural documentation for enterprise scalability, including API Gateway, WebSocket horizontal scaling, MongoDB sharding, read replicas, RabbitMQ clustering, multi-region DR, caching, observability, and security.
+**Explicitly OUT:** Implementing this infrastructure in code.
+**Definition of done:** `docs/scaling-strategy.md` exists and covers all required enterprise scaling concepts. All backend modules in the roadmap are now complete.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

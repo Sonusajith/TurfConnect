@@ -85,7 +85,7 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 | 20 | Audit logging | ✅ Complete | `feature/module-20-audit` | 2026-07-17 | ✅ |
 | 8 | **Basic CI** *(Docker skipped for RAM)* | ✅ Complete | `feature/module-08-docker` | 2026-07-17 | ✅ |
 | 21 | Kubernetes manifests (minikube) | ⏭️ Skipped | *(Skipped to save RAM)* | | ⏭️ |
-| 22 | Sharding & multi-region strategy (**doc only**) | ☐ Not started | `feature/module-22-scale-doc` | | ☐ |
+| 22 | Sharding & multi-region strategy (**doc only**) | ✅ Complete | `feature/module-22-scale-doc` | 2026-07-17 | ✅ |
 
 **Pushed to GitHub:** ✅
 
