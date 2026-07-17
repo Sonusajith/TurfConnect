@@ -261,3 +261,11 @@ If useful, I can next produce:
 1. A **sequence diagram** (text-based) for the booking → payment → confirmation flow specifically, showing every service/queue hop, or
 2. A **MongoDB schema design doc** per service (collections, fields, indexes) to sit underneath this architecture, or
 3. A **Kubernetes manifest set** (Deployment/Service/HPA YAML) for one or two of these services as a concrete starting point.
+
+## Fraud-Signal Service Details
+
+### Workflow
+1. Event Processing Lifecycle: The service consumes BookingEvent messages from RabbitMQ using a durable queue (raud.booking.queue) with a Dead Letter Queue (DLQ) configured for failed processing.
+2. Redis Counter Strategy: Uses atomic INCR followed conditionally by EXPIRE to maintain rolling window velocity metrics. Redis acts as the sole data store, enforcing a stateless and highly concurrent microservice.
+3. Configurable Thresholds: All thresholds (e.g., max 5 bookings in 1 hour) are externalized to application configuration for dynamic tuning without redeployment.
+4. Alert Publishing Flow: When a threshold is breached, the user is flagged in Redis (with a TTL to prevent alert spam) and a FraudAlertEvent is published to the raud.exchange for downstream reaction by Auth or Analytics services.
