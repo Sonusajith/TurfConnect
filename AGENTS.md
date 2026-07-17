@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 13 — Teams & Invitations (community-service)
-**Scope (IN):** Create community-service, define Team/Invitation models with extended fields and roles (CAPTAIN, CO_CAPTAIN, PLAYER, SUBSTITUTE), implement email-based invite workflow, ensure unique team names and size limits, configure robust RabbitMQ event publishing with DLQ/retries, add internal auth lookup in auth-service, update api-gateway, and implement notification listeners.
-**Explicitly OUT:** Team chat, team statistics, player rankings, match scheduling, tournament integration, leaving/removing from team (these are just stubbed for architecture readiness).
-**Definition of done:** When a user creates a team and invites a user by email, the internal auth lookup resolves the user, an invitation is created (preventing duplicates), and a RabbitMQ event is reliably published to notification-service. Expired invites cannot be accepted. Full test suite passes.
+**Module:** Module 20 — Audit Logging (audit-service)
+**Scope (IN):** Create `audit-service` to store audit logs in MongoDB. Capture admin and critical user actions (like booking creation, refunds, organization/franchise updates). Implement a cross-cutting concern (e.g., AOP or interceptor) in backend services to publish audit events to RabbitMQ. The `audit-service` will consume these events and persist them. Provide an API for SUPER_ADMIN and ORG_ADMIN to query audit logs.
+**Explicitly OUT:** Exporting logs to SIEM systems, advanced reporting on logs.
+**Definition of done:** When an admin or user performs a critical action, an audit event is published to RabbitMQ and stored in the `audit-service` MongoDB. Admins can view these logs via a secured API endpoint. All logic has unit tests.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)

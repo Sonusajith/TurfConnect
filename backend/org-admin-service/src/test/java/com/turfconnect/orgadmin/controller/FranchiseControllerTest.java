@@ -27,6 +27,9 @@ public class FranchiseControllerTest {
     @MockBean
     private FranchiseService franchiseService;
 
+    @MockBean
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
     @Test
     public void testGetFranchise_AsSuperAdmin_Success() throws Exception {
         Mockito.when(franchiseService.getFranchise("f1")).thenReturn(new Franchise());

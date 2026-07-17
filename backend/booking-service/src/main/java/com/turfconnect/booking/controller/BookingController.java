@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.turfconnect.shared.audit.AuditLog;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class BookingController {
     }
 
     @PostMapping
+    @AuditLog(action = "CREATE_BOOKING", resource = "BOOKING")
     public ResponseEntity<ApiResponse<BookingResponse>> createBooking(
             @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody BookingCreateRequest request) {
@@ -65,6 +67,7 @@ public class BookingController {
     }
 
     @PutMapping("/{id}/cancel")
+    @AuditLog(action = "CANCEL_BOOKING", resource = "BOOKING")
     public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
             @PathVariable String id,
             @RequestHeader(value = "X-User-Id", required = false) String userId,

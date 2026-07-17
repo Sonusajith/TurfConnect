@@ -40,6 +40,7 @@
         <module>fraud-signal-service</module>
         <module>analytics-service</module>
         <module>org-admin-service</module>
+        <module>audit-service</module>
     </modules>
 
     <dependencyManagement>

@@ -8,6 +8,7 @@ import com.turfconnect.shared.dto.payment.PaymentResponse;
 import com.turfconnect.shared.dto.payment.RefundRequest;
 import com.turfconnect.shared.dto.payment.RefundResponse;
 import com.turfconnect.shared.exception.BadRequestException;
+import com.turfconnect.shared.audit.AuditLog;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +78,7 @@ public class PaymentController {
      * same bookingId return the existing refund state without re-triggering the gateway.
      */
     @PostMapping("/refund")
+    @AuditLog(action = "INITIATE_REFUND", resource = "PAYMENT")
     public ResponseEntity<ApiResponse<RefundResponse>> initiateRefund(
             @RequestHeader("X-Internal-Token") String token,
             @Valid @RequestBody RefundRequest request) {

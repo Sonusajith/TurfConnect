@@ -71,9 +71,9 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 |---|---|---|---|---|---|
 | 16 | Recommendation service (heuristic v1) | ✅ Complete | `feature/module-16-recommend` | | ✅ |
 | 17 | Fraud-signal service | ✅ Complete | `feature/module-17-fraud` | | ✅ |
-| 18 | Admin analytics dashboard | ☐ Not started | `feature/module-18-analytics` | | ☐ |
+| 18 | Admin analytics dashboard | ✅ Complete | `feature/module-18-analytics` | 2026-07-17 | ✅ |
 
-**Pushed to GitHub:** ☐
+**Pushed to GitHub:** ✅
 
 ---
 
@@ -81,7 +81,7 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 
 | # | Module | Status | Branch | Completed On | Pushed? |
 |---|---|---|---|---|---|
-| 19 | RBAC expansion + franchise hierarchy | ☐ Not started | `feature/module-19-rbac` | | ☐ |
+| 19 | RBAC expansion + franchise hierarchy | ✅ Complete | `feature/module-19-rbac` | 2026-07-17 | ✅ |
 | 20 | Audit logging | ☐ Not started | `feature/module-20-audit` | | ☐ |
 | 8 | **Docker + basic CI** *(moved here — must precede K8s)* | ☐ Not started | `feature/module-08-docker` | | ☐ |
 | 21 | Kubernetes manifests (minikube) | ☐ Not started | `feature/module-21-k8s` | | ☐ |
