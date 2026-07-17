@@ -45,6 +45,10 @@ spring:
           uri: http://localhost:8083
           predicates:
             - Path=/api/v1/bookings/**
+        - id: recommendation-service
+          uri: lb://recommendation-service
+          predicates:
+            - Path=/api/v1/recommendations/**
 
         # Payment Service Health Routing
         - id: payment-service-health

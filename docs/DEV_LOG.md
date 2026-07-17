@@ -111,3 +111,9 @@ This file is a running log of decisions, debug sessions, and important configura
 - Points are also persisted to `TournamentRegistration` for DB rebuilding in case of Redis failure.
 - Used `CommunityServiceClient` (via `RestTemplate`) to synchronously check `community-service` if a team exists before allowing tournament registration.
 - Added comprehensive unit tests for business rules (state transitions, duplicate registration prevention, full tournament checks, Redis mock operations).
+
+### Module 16: Recommendation Service
+- Set up event-driven materialized view for fast recommendation lookups.
+- Configured RabbitMQ consumers with DLQ and retries for resilience.
+- Implemented heuristic scoring algorithm integrating popularity and ratings.
+- Verified behavior with automated tests.
