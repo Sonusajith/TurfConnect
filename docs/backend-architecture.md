@@ -269,3 +269,12 @@ If useful, I can next produce:
 2. Redis Counter Strategy: Uses atomic INCR followed conditionally by EXPIRE to maintain rolling window velocity metrics. Redis acts as the sole data store, enforcing a stateless and highly concurrent microservice.
 3. Configurable Thresholds: All thresholds (e.g., max 5 bookings in 1 hour) are externalized to application configuration for dynamic tuning without redeployment.
 4. Alert Publishing Flow: When a threshold is breached, the user is flagged in Redis (with a TTL to prevent alert spam) and a FraudAlertEvent is published to the raud.exchange for downstream reaction by Auth or Analytics services.
+
+## Admin Analytics Dashboard (Module 18)
+
+### Analytics Data Flow
+1. **Event Sources**: Transactions and fraud alerts are generated in source systems (booking-service, fraud-signal-service) and published to RabbitMQ (booking.exchange, fraud.exchange).
+2. **Event Aggregation Pipeline**: The analytics-service listens to these events via its own durable queues with DLQ configured. Upon receiving an event, it atomically upserts daily aggregation documents.
+3. **Materialized View Strategy**: MongoDB $inc operations are used to increment daily counters (PlatformDailyMetrics, TurfDailyMetrics). Duplicate event processing is prevented by checking a processedEventIds set during the atomic update, ensuring strict idempotency.
+4. **RBAC Model**: Platform-wide metrics are restricted to SUPER_ADMIN. Turf-specific metrics can be viewed by SUPER_ADMIN or the TURF_OWNER matching the requested Turf ID.
+5. **Supported Analytics Metrics**: Total bookings, confirmed bookings, cancelled bookings, total revenue, fraud alerts, confirmation rate, cancellation rate, and average revenue per booking.
