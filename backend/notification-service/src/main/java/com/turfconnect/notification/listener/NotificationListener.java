@@ -101,4 +101,20 @@ public class NotificationListener {
                 (event.getMessage() != null ? ". Message: " + event.getMessage() : "") +
                 ". This invitation expires at: " + event.getExpiresAt() + ". Login to accept or decline.");
     }
+
+    /**
+     * Listen to community match events and dispatch mock notifications to captains.
+     * Module 14 — Matches
+     */
+    @RabbitListener(queues = "community.match.notification.queue")
+    public void handleMatchNotificationEvent(com.turfconnect.shared.dto.event.MatchNotificationEvent event) {
+        log.info("🔔 [EVENT CONSUMED] Received MatchNotificationEvent: MatchId={}, EventType={}, HomeTeam={}, AwayTeam={}",
+                event.getMatchId(), event.getEventType(), event.getHomeTeamName(), event.getAwayTeamName());
+
+        String message = String.format("Match Update: Your team is involved in a match %s on %s at %s.", 
+                event.getEventType(), event.getDate(), event.getStartTime());
+                
+        // In reality, this would look up the captain emails for both teams
+        sendMockNotification("team-captains-of-match-" + event.getMatchId(), message);
+    }
 }

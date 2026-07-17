@@ -115,6 +115,31 @@ public class RabbitMQConfig {
                 .with("community.invitation.#");
     }
 
+    @Bean
+    public Binding communityInvitationBinding() {
+        return BindingBuilder.bind(communityQueue())
+                .to(communityExchange())
+                .with("community.invitation.*");
+    }
+
+    // --- Module 14: Matches ---
+
+    @Bean
+    public Queue communityMatchNotificationQueue() {
+        return QueueBuilder.durable("community.match.notification.queue")
+                .withArgument("x-dead-letter-exchange", NOTIFICATION_DLX)
+                .withArgument("x-dead-letter-routing-key", COMMUNITY_DLQ)
+                .build();
+    }
+
+
+    @Bean
+    public Binding communityMatchBinding() {
+        return BindingBuilder.bind(communityMatchNotificationQueue())
+                .to(communityExchange())
+                .with("community.match.*");
+    }
+
     // Bindings for DLQs
     @Bean
     public Binding bookingDLQBinding() {

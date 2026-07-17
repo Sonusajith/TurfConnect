@@ -40,3 +40,11 @@ spring.security:
 logging:
   level:
     com.turfconnect: DEBUG
+
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081}
+
+booking:
+  service:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8084}

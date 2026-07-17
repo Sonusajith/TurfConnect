@@ -96,3 +96,11 @@ This file is a running log of decisions, debug sessions, and important configura
 - Integrated RabbitMQ publisher and listener tested end-to-end.
 - Full multi-module parent build successful.
 
+
+### Module 14: Matches
+- Added TeamMatch, MatchStatus, MatchType domains.
+- Integrated BookingServiceClient using RestTemplate to enforce booking ownership and confirmed status.
+- Added MatchNotificationEvent to shared module.
+- Validated state machine transitions and prevented self challenges.
+- Verified all functionality with unit tests and multi-module build.
+
