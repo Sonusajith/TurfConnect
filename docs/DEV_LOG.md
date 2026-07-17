@@ -117,3 +117,8 @@ This file is a running log of decisions, debug sessions, and important configura
 - Configured RabbitMQ consumers with DLQ and retries for resilience.
 - Implemented heuristic scoring algorithm integrating popularity and ratings.
 - Verified behavior with automated tests.
+
+### Module 17: Fraud-Signal Service
+- Implemented real-time anomaly detection using pure Redis INCR/EXPIRE counters.
+- Added FraudAlertEvent publishing for downstream action.
+- Addressed concurrent atomic race conditions in Redis by testing parallel thread increments.

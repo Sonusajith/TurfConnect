@@ -49,6 +49,10 @@ spring:
           uri: lb://recommendation-service
           predicates:
             - Path=/api/v1/recommendations/**
+        - id: fraud-signal-service
+          uri: lb://fraud-signal-service
+          predicates:
+            - Path=/api/v1/fraud/**
 
         # Payment Service Health Routing
         - id: payment-service-health
