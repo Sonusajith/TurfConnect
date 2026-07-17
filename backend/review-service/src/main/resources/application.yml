@@ -1,0 +1,30 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: review-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+  data:
+    mongodb:
+      database: turfconnect_reviews
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  rabbitmq:
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+
+# Externalized cache TTL settings (seconds)
+cache:
+  reviews-turf-ttl-seconds: ${CACHE_REVIEWS_TTL:300}
+
+# Disable Redis health indicator in dev (same pattern as booking-service)
+management:
+  health:
+    redis:
+      enabled: false

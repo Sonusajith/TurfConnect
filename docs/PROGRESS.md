@@ -29,13 +29,13 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 | 1 | Shared foundation + gateway skeleton | ☑ Done | `feature/module-01-foundation` | 2026-07-15 | ☑ |
 | 2 | Auth service (JWT, register/login) | ☑ Done | `feature/module-02-auth` | 2026-07-15 | ☑ |
 | 3 | Turf service (CRUD + search) | ☑ Done | `feature/module-03-turf` | 2026-07-15 | ☑ |
-| 4 | Slot generation & availability | ☐ In progress | `feature/module-04-slots` | | ☐ |
-| 5 | Booking service + Redis lock | ☐ Not started | `feature/module-05-booking-lock` | | ☐ |
-| 6 | Payment service (test mode) | ☐ Not started | `feature/module-06-payment` | | ☐ |
-| 7 | Minimal frontend (Antigravity) | ☐ Not started | `feature/module-07-frontend` | | ☐ |
+| 4 | Slot generation & availability | ☑ Done | `feature/module-04-slots` | 2026-07-15 | ☑ |
+| 5 | Booking service + Redis lock | ☑ Done | `feature/module-05-booking-lock` | 2026-07-15 | ☑ |
+| 6 | Payment service (test mode) | ☑ Done | `feature/module-06-payment` | 2026-07-15 | ☑ |
+| 7 | Minimal frontend (Antigravity) | ☑ Done | `feature/module-07-frontend` | 2026-07-15 | ☑ |
 
-**Stage 1 milestone:** ☐ Full booking flow demoed end-to-end in a browser, race-condition test on Module 5 passes and is documented in `DEV_LOG.md`.
-**Pushed to GitHub:** ☐
+**Stage 1 milestone:** ☑ Full booking flow demoed end-to-end in a browser, race-condition test on Module 5 passes and is documented in `DEV_LOG.md`.
+**Pushed to GitHub:** ☑
 
 ---
 
@@ -43,12 +43,12 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 
 | # | Module | Status | Branch | Completed On | Pushed? |
 |---|---|---|---|---|---|
-| 9 | RabbitMQ + notification service | ☐ Not started | `feature/module-09-notifications` | | ☐ |
-| 10 | Reviews & ratings | ☐ Not started | `feature/module-10-reviews` | | ☐ |
-| 11 | Refunds + payment state extension | ☐ Not started | `feature/module-11-refunds` | | ☐ |
-| 12 | Caching + pagination/filtering | ☐ Not started | `feature/module-12-caching` | | ☐ |
+| 9 | RabbitMQ + notification service | ☑ Done | `feature/module-09-notifications` | 2026-07-16 | ☑ |
+| 10 | Reviews & ratings | ☑ Done | `feature/module-10-reviews` | 2026-07-16 | ☑ |
+| 11 | Refunds + payment state extension | ☑ Done | `feature/module-11-refunds` | 2026-07-16 | ☑ |
+| 12 | Caching + pagination/filtering | ☑ Done | `feature/module-12-caching` | 2026-07-16 | ☑ |
 
-**Pushed to GitHub:** ☐
+**Pushed to GitHub:** ☑
 
 ---
 
@@ -56,9 +56,9 @@ Update the **"Current Module"** section in `AGENTS.md` every time you move to a 
 
 | # | Module | Status | Branch | Completed On | Pushed? |
 |---|---|---|---|---|---|
-| 13 | Teams & invitations | ☐ Not started | `feature/module-13-teams` | | ☐ |
-| 14 | Matches | ☐ Not started | `feature/module-14-matches` | | ☐ |
-| 15 | Tournaments + leaderboard | ☐ Not started | `feature/module-15-tournaments` | | ☐ |
+| 13 | Teams & invitations | ☑ Done | `feature/module-13-teams` | 2026-07-17 | ☑ |
+| 14 | Matches | ☑ Done | `feature/module-14-matches` | 2026-07-17 | ☑ |
+| 15 | Tournaments + leaderboard | ☑ Done | `feature/module-15-tournaments` | 2026-07-17 | ☑ |
 
 **Stage 3 milestone:** ☐ This is a complete, strong submission on its own if Stage 4/5 time runs out.
 **Pushed to GitHub:** ☐

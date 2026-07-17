@@ -1,0 +1,50 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: community-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/turfconnect_community}
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 2.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+jwt:
+  secret: ${JWT_SECRET:4f7831f13b6329c323f66a877995dc8ab8e92f70b8c6e2646a5b6727282b535d}
+
+spring.security:
+  internal-token: ${INTERNAL_SERVICE_TOKEN:internal-secret-token}
+
+logging:
+  level:
+    com.turfconnect: DEBUG
+
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081}
+
+booking:
+  service:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8084}

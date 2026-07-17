@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.List;
 
 @Data
@@ -36,8 +38,14 @@ public class TurfResponse {
     
     private List<TurfImage> images;
     private String coverImage;
-    
-    private String operatingHours;
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime openTime;
+
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime closeTime;
+
+    private Integer slotDurationMinutes;
+
     private List<String> availableDays;
     private String contactNumber;
     private String email;

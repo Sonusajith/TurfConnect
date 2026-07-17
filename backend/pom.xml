@@ -32,8 +32,10 @@
         <module>turf-service</module>
         <module>booking-service</module>
         <module>payment-service</module>
+        <module>notification-service</module>
         <module>review-service</module>
         <module>community-service</module>
+        <module>tournament-service</module>
         <module>recommendation-service</module>
     </modules>
 

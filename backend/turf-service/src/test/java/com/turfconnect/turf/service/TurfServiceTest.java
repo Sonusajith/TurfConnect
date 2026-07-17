@@ -10,6 +10,7 @@ import com.turfconnect.turf.dto.TurfUpdateRequest;
 import com.turfconnect.turf.mapper.TurfMapper;
 import com.turfconnect.turf.model.Turf;
 import com.turfconnect.turf.repository.TurfRepository;
+import java.time.LocalTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,8 +38,17 @@ public class TurfServiceTest {
     @Mock
     private TurfRepository turfRepository;
 
+    @Mock
+    private com.turfconnect.turf.repository.SlotRepository slotRepository;
+
     @Spy
     private TurfMapper turfMapper = new TurfMapper();
+
+    @Mock
+    private com.turfconnect.turf.controller.SlotBroadcaster slotBroadcaster;
+
+    @Mock
+    private TurfCacheService turfCacheService;
 
     @InjectMocks
     private TurfService turfService;
@@ -55,6 +65,9 @@ public class TurfServiceTest {
                 .city("New York")
                 .hourlyRate(new BigDecimal("100.00"))
                 .sportTypes(List.of("Football"))
+                .openTime(LocalTime.of(8, 0))
+                .closeTime(LocalTime.of(22, 0))
+                .slotDurationMinutes(60)
                 .deleted(false)
                 .build();
     }
@@ -68,6 +81,9 @@ public class TurfServiceTest {
                 .sportTypes(List.of("Football"))
                 .latitude(40.7128)
                 .longitude(-74.0060)
+                .openTime(LocalTime.of(8, 0))
+                .closeTime(LocalTime.of(22, 0))
+                .slotDurationMinutes(60)
                 .build();
 
         when(turfRepository.save(any(Turf.class))).thenReturn(turf);
@@ -155,5 +171,16 @@ public class TurfServiceTest {
         assertEquals(1, response.getTotalElements());
         assertEquals(1, response.getContent().size());
         assertEquals("Green Arena", response.getContent().get(0).getName());
+    }
+
+    @Test
+    void updateTurfRating_Success() {
+        when(turfRepository.findByIdAndDeletedFalse("turf-1")).thenReturn(Optional.of(turf));
+        when(turfRepository.save(any(Turf.class))).thenReturn(turf);
+
+        assertDoesNotThrow(() -> turfService.updateTurfRating("turf-1", 4.7));
+
+        assertEquals(4.7, turf.getAverageRating());
+        verify(turfRepository, times(1)).save(turf);
     }
 }

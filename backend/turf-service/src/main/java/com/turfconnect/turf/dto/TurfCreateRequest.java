@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -55,7 +57,19 @@ public class TurfCreateRequest {
     
     private List<String> amenities;
     
-    private String operatingHours;
+    @NotNull(message = "Open time is required")
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime openTime;
+
+    @NotNull(message = "Close time is required")
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime closeTime;
+
+    @NotNull(message = "Slot duration is required")
+    @Min(value = 5, message = "Slot duration must be at least 5 minutes")
+    @Max(value = 1440, message = "Slot duration cannot exceed 24 hours")
+    private Integer slotDurationMinutes;
+
     private List<String> availableDays;
     
     @NotBlank(message = "Contact number is required")

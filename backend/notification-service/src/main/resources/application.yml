@@ -1,0 +1,10 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: notification-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
