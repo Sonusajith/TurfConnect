@@ -81,9 +81,14 @@ spring:
             - SetPath=/actuator/health
         # Community Service Business Routing
         - id: community-service
-          uri: http://localhost:8087
+          uri: lb://community-service
           predicates:
-            - Path=/api/v1/teams/**,/api/v1/invitations/**
+            - Path=/api/v1/teams/**,/api/v1/invitations/**,/api/v1/matches/**
+
+        - id: tournament-service
+          uri: lb://tournament-service
+          predicates:
+            - Path=/api/v1/tournaments/**,/api/v1/leaderboards/**
 
 management:
   endpoints:

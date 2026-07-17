@@ -35,6 +35,7 @@
         <module>notification-service</module>
         <module>review-service</module>
         <module>community-service</module>
+        <module>tournament-service</module>
     </modules>
 
     <dependencyManagement>

@@ -1,0 +1,34 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: tournament-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/turfconnect_tournament}
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  config:
+    import: "optional:file:../../config/application-${spring.profiles.active}.yml"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+jwt:
+  secret: ${JWT_SECRET:4f7831f13b6329c323f66a877995dc8ab8e92f70b8c6e2646a5b6727282b535d}
+
+spring.security:
+  internal-token: ${INTERNAL_SERVICE_TOKEN:internal-secret-token}
+
+logging:
+  level:
+    com.turfconnect: DEBUG
+
+community:
+  service:
+    url: ${COMMUNITY_SERVICE_URL:http://localhost:8087}
