@@ -13,6 +13,9 @@ import java.util.List;
 public class TurfDTO {
     private String id;
     private String name;
+    private String ownerId;
+    private String organizationId;
+    private String franchiseId;
     private String location;
     private String city;
     private List<String> sportsSupported;

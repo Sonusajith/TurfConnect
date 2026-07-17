@@ -61,7 +61,7 @@ class AuthServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         
         when(jwtUtil.generateRefreshTokenId()).thenReturn("uuid-123");
-        when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString())).thenReturn("access_token");
+        when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString(), any(), any())).thenReturn("access_token");
 
         AuthResponse resp = authService.register(req);
 
@@ -94,7 +94,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("Password@123", "hashed_pw")).thenReturn(true);
         when(jwtUtil.generateRefreshTokenId()).thenReturn("uuid-123");
-        when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString())).thenReturn("access_token");
+        when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString(), any(), any())).thenReturn("access_token");
 
         AuthResponse resp = authService.login(req, "Device", "127.0.0.1");
 

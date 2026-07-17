@@ -23,12 +23,14 @@ public class JwtUtil {
     @Value("${jwt.expirationMs}")
     private long jwtExpirationMs;
 
-    public String generateAccessToken(String userId, String email, String role, String tokenId) {
+    public String generateAccessToken(String userId, String email, String role, String tokenId, String organizationId, String franchiseId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("email", email);
         claims.put("role", role);
         claims.put("tokenId", tokenId);
+        if (organizationId != null) claims.put("orgId", organizationId);
+        if (franchiseId != null) claims.put("franchiseId", franchiseId);
 
         return Jwts.builder()
                 .setClaims(claims)

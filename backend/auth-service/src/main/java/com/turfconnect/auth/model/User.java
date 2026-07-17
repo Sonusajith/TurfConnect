@@ -23,7 +23,10 @@ public class User {
     private String email;
     private String mobileNumber;
     private String passwordHash;
-    private String role; // PLAYER, TURF_OWNER, etc.
+    private String role; // PLAYER, TURF_OWNER, ORG_ADMIN, FRANCHISE_ADMIN, SUPER_ADMIN
+    
+    private String organizationId;
+    private String franchiseId;
     
     private String accountStatus; // ACTIVE, LOCKED, DISABLED
     

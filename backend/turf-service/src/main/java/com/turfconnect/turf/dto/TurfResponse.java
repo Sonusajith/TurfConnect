@@ -21,6 +21,9 @@ public class TurfResponse {
     private String ownerId;
     private String name;
     private String description;
+    
+    private String organizationId;
+    private String franchiseId;
     private List<String> sportTypes;
     private String address;
     private String city;

@@ -1,0 +1,13 @@
+package com.turfconnect.orgadmin;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class OrgAdminServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(OrgAdminServiceApplication.class, args);
+    }
+}

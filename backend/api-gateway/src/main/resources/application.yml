@@ -57,6 +57,10 @@ spring:
           uri: lb://analytics-service
           predicates:
             - Path=/api/v1/analytics/**
+        - id: org-admin-service
+          uri: lb://org-admin-service
+          predicates:
+            - Path=/api/v1/orgs/**
 
         # Payment Service Health Routing
         - id: payment-service-health
