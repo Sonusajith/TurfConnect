@@ -26,10 +26,10 @@ Sports turf booking platform (Playo/Hudle-style) — academic project, built sol
 ## Current Module
 > **Update this section every time you move to a new module. This is the single most important line in this file — agents only build what's listed here.**
 
-**Module:** Module 20 — Audit Logging (audit-service)
-**Scope (IN):** Create `audit-service` to store audit logs in MongoDB. Capture admin and critical user actions (like booking creation, refunds, organization/franchise updates). Implement a cross-cutting concern (e.g., AOP or interceptor) in backend services to publish audit events to RabbitMQ. The `audit-service` will consume these events and persist them. Provide an API for SUPER_ADMIN and ORG_ADMIN to query audit logs.
-**Explicitly OUT:** Exporting logs to SIEM systems, advanced reporting on logs.
-**Definition of done:** When an admin or user performs a critical action, an audit event is published to RabbitMQ and stored in the `audit-service` MongoDB. Admins can view these logs via a secured API endpoint. All logic has unit tests.
+**Module:** Module 8 — CI Pipeline (Docker/K8s Skipped for RAM)
+**Scope (IN):** Implemented GitHub Actions for cloud-based CI to ensure tests run automatically on push/PR. Created `start-core.bat` to allow running only essential microservices locally to save RAM. Docker and Kubernetes modules are explicitly skipped to accommodate standard laptop RAM limits.
+**Explicitly OUT:** Dockerfiles, docker-compose for services, Kubernetes manifests.
+**Definition of done:** CI pipeline file exists and core runner script is provided.
 
 ## Reference Docs
 - `/docs/srs.md` — full feature specs (functional requirements, acceptance criteria, API design, DB schema, etc.)
