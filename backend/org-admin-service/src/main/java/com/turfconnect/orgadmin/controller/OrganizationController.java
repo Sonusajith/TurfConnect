@@ -2,6 +2,7 @@ package com.turfconnect.orgadmin.controller;
 
 import com.turfconnect.orgadmin.model.Organization;
 import com.turfconnect.orgadmin.service.OrganizationService;
+import com.turfconnect.shared.audit.AuditLog;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ public class OrganizationController {
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @AuditLog(action = "CREATE_ORGANIZATION", resource = "ORGANIZATION")
     public ResponseEntity<Organization> createOrganization(@RequestBody Organization organization) {
         return new ResponseEntity<>(organizationService.createOrganization(organization), HttpStatus.CREATED);
     }
@@ -39,6 +41,7 @@ public class OrganizationController {
 
     @PutMapping("/{orgId}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or @securityService.canAccessOrg(authentication, #orgId)")
+    @AuditLog(action = "UPDATE_ORGANIZATION", resource = "ORGANIZATION")
     public ResponseEntity<Organization> updateOrganization(@PathVariable String orgId, @RequestBody Organization organization) {
         return ResponseEntity.ok(organizationService.updateOrganization(orgId, organization));
     }

@@ -1,0 +1,17 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: audit-service
+  data:
+    mongodb:
+      uri: mongodb+srv://rohit:rohit123@cluster0.turfconnect.mongodb.net/turfconnect_audit?retryWrites=true&w=majority
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

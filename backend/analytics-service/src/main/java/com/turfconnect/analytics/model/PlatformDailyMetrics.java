@@ -13,6 +13,8 @@ public class PlatformDailyMetrics {
 
     @Id
     private String id;
+    
+    @org.springframework.data.mongodb.core.index.Indexed(unique = true)
     private LocalDate date;
     
     private long totalBookings;

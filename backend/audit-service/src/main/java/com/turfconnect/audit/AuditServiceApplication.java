@@ -1,16 +1,13 @@
-package com.turfconnect.orgadmin;
+package com.turfconnect.audit;
 
-import com.turfconnect.shared.audit.AuditAspect;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@Import(AuditAspect.class)
-public class OrgAdminServiceApplication {
+public class AuditServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(OrgAdminServiceApplication.class, args);
+        SpringApplication.run(AuditServiceApplication.class, args);
     }
 }

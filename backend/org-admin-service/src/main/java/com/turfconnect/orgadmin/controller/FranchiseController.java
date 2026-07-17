@@ -2,6 +2,7 @@ package com.turfconnect.orgadmin.controller;
 
 import com.turfconnect.orgadmin.model.Franchise;
 import com.turfconnect.orgadmin.service.FranchiseService;
+import com.turfconnect.shared.audit.AuditLog;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ public class FranchiseController {
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('ORG_ADMIN') and @securityService.canAccessOrg(authentication, #orgId))")
+    @AuditLog(action = "CREATE_FRANCHISE", resource = "FRANCHISE")
     public ResponseEntity<Franchise> createFranchise(@PathVariable String orgId, @RequestBody Franchise franchise) {
         return new ResponseEntity<>(franchiseService.createFranchise(orgId, franchise), HttpStatus.CREATED);
     }
@@ -39,6 +41,7 @@ public class FranchiseController {
 
     @PutMapping("/{franchiseId}")
     @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('ORG_ADMIN') and @securityService.canAccessOrg(authentication, #orgId)) or @securityService.canAccessFranchise(authentication, #orgId, #franchiseId)")
+    @AuditLog(action = "UPDATE_FRANCHISE", resource = "FRANCHISE")
     public ResponseEntity<Franchise> updateFranchise(@PathVariable String orgId, @PathVariable String franchiseId, @RequestBody Franchise franchise) {
         return ResponseEntity.ok(franchiseService.updateFranchise(franchiseId, franchise));
     }

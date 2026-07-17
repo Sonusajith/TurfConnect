@@ -27,6 +27,9 @@ public class OrganizationControllerTest {
     @MockBean
     private OrganizationService organizationService;
 
+    @MockBean
+    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+
     @Test
     public void testGetOrganization_AsSuperAdmin_Success() throws Exception {
         Mockito.when(organizationService.getOrganization("org123"))

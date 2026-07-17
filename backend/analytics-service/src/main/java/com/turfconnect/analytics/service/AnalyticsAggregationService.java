@@ -39,39 +39,68 @@ public class AnalyticsAggregationService {
         String eventId = event.getUserId() + "-" + event.getAlertType() + "-" + event.getTimestamp();
         LocalDate date = LocalDate.now();
 
-        Query query = new Query(Criteria.where("date").is(date)
+        Query updateQuery = new Query(Criteria.where("date").is(date)
                 .and("processedEventIds").ne(eventId));
 
         Update update = new Update()
                 .inc("fraudAlerts", 1)
                 .push("processedEventIds", eventId)
-                .set("updatedAt", LocalDateTime.now())
-                .setOnInsert("createdAt", LocalDateTime.now())
-                .setOnInsert("date", date);
+                .set("updatedAt", LocalDateTime.now());
 
-        mongoTemplate.upsert(query, update, PlatformDailyMetrics.class);
+        var result = mongoTemplate.updateFirst(updateQuery, update, PlatformDailyMetrics.class);
+
+        if (result.getMatchedCount() == 0) {
+            Query existsQuery = new Query(Criteria.where("date").is(date));
+            if (!mongoTemplate.exists(existsQuery, PlatformDailyMetrics.class)) {
+                Query upsertQuery = new Query(Criteria.where("date").is(date));
+                Update upsertUpdate = new Update()
+                        .inc("fraudAlerts", 1)
+                        .push("processedEventIds", eventId)
+                        .set("updatedAt", LocalDateTime.now())
+                        .setOnInsert("createdAt", LocalDateTime.now())
+                        .setOnInsert("date", date);
+                mongoTemplate.upsert(upsertQuery, upsertUpdate, PlatformDailyMetrics.class);
+            }
+        }
     }
 
     private void updatePlatformBookingMetrics(LocalDate date, BookingEvent event, String eventId) {
-        Query query = new Query(Criteria.where("date").is(date)
+        Query updateQuery = new Query(Criteria.where("date").is(date)
                 .and("processedEventIds").ne(eventId));
 
-        Update update = buildBookingUpdate(event, eventId)
-                .setOnInsert("date", date);
+        Update update = buildBookingUpdate(event, eventId);
 
-        mongoTemplate.upsert(query, update, PlatformDailyMetrics.class);
+        var result = mongoTemplate.updateFirst(updateQuery, update, PlatformDailyMetrics.class);
+
+        if (result.getMatchedCount() == 0) {
+            Query existsQuery = new Query(Criteria.where("date").is(date));
+            if (!mongoTemplate.exists(existsQuery, PlatformDailyMetrics.class)) {
+                Query upsertQuery = new Query(Criteria.where("date").is(date));
+                Update upsertUpdate = buildBookingUpdate(event, eventId).setOnInsert("date", date);
+                mongoTemplate.upsert(upsertQuery, upsertUpdate, PlatformDailyMetrics.class);
+            }
+        }
     }
 
     private void updateTurfBookingMetrics(LocalDate date, String turfId, BookingEvent event, String eventId) {
-        Query query = new Query(Criteria.where("date").is(date)
+        Query updateQuery = new Query(Criteria.where("date").is(date)
                 .and("turfId").is(turfId)
                 .and("processedEventIds").ne(eventId));
 
-        Update update = buildBookingUpdate(event, eventId)
-                .setOnInsert("date", date)
-                .setOnInsert("turfId", turfId);
+        Update update = buildBookingUpdate(event, eventId);
 
-        mongoTemplate.upsert(query, update, TurfDailyMetrics.class);
+        var result = mongoTemplate.updateFirst(updateQuery, update, TurfDailyMetrics.class);
+
+        if (result.getMatchedCount() == 0) {
+            Query existsQuery = new Query(Criteria.where("date").is(date).and("turfId").is(turfId));
+            if (!mongoTemplate.exists(existsQuery, TurfDailyMetrics.class)) {
+                Query upsertQuery = new Query(Criteria.where("date").is(date).and("turfId").is(turfId));
+                Update upsertUpdate = buildBookingUpdate(event, eventId)
+                        .setOnInsert("date", date)
+                        .setOnInsert("turfId", turfId);
+                mongoTemplate.upsert(upsertQuery, upsertUpdate, TurfDailyMetrics.class);
+            }
+        }
     }
 
     private Update buildBookingUpdate(BookingEvent event, String eventId) {
