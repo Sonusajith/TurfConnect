@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
   },
   PAYMENTS: {
     INITIATE: '/api/v1/payments/initiate',
+    VERIFY: '/api/v1/payments/verify',
     WEBHOOK_MOCK: '/api/v1/payments/webhook/mock',
   },
 };
