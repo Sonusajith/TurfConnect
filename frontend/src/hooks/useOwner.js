@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './useAuth';
 import { API_ENDPOINTS, API_BASE_URL } from '../constants/api';
 
 export const useOwner = () => {
@@ -18,21 +18,19 @@ export const useOwner = () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch stats
-      const statsRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.OWNER.STATS}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!statsRes.ok) throw new Error('Failed to fetch owner stats');
-      const statsData = await statsRes.json();
-      setStats(statsData.data || statsData);
-
-      // Fetch turfs
       const turfsRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.OWNER.TURFS}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!turfsRes.ok) throw new Error('Failed to fetch owner turfs');
       const turfsData = await turfsRes.json();
-      setTurfs(turfsData.data || turfsData || []);
+      const ownerTurfs = turfsData.data?.content || turfsData.data || turfsData || [];
+      setTurfs(ownerTurfs);
+      setStats({
+        totalRevenue: 0,
+        totalBookings: 0,
+        avgOccupancy: 0,
+        activeTurfs: ownerTurfs.filter((turf) => turf.status === 'ACTIVE' || turf.active).length,
+      });
     } catch (e) {
       console.warn("Owner API failed, using mock data:", e.message);
       setStats({

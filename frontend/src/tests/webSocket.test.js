@@ -1,7 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import useSlotSocket from '../hooks/useSlotSocket';
-import { Client } from '@stomp/stompjs';
 
 const { mockActivate, mockDeactivate, mockSubscribe } = vi.hoisted(() => {
   return {

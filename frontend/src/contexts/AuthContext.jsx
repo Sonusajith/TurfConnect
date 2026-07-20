@@ -1,9 +1,8 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { AuthContext } from './authContextCore';
 
-const AuthContext = createContext(null);
-
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children, value }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     if (storedUser && token) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (e) {
+      } catch {
         localStorage.removeItem('user');
       }
     }
@@ -46,17 +45,12 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const token = localStorage.getItem('accessToken');
+  const providerValue = value || { user, loading, token, login, logout };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={providerValue}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

@@ -3,7 +3,7 @@ import { Card, CardContent } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 
 const TeamCard = ({ team, onJoin, onView }) => {
-  const { name, sport, membersCount, skillLevel, isCaptain } = team;
+  const { name, sport, membersCount, isCaptain } = team;
 
   return (
     <Card className="group hover:border-primary/30 transition-all shadow-sm">

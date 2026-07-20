@@ -51,7 +51,7 @@ apiClient.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return axios(originalRequest).then(res => res.data);
           }
-        } catch (refreshError) {
+        } catch {
           // Token refresh failed, clean up and redirect
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');

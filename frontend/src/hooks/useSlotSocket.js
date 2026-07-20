@@ -31,7 +31,7 @@ export const useSlotSocket = (turfId, date, onSlotUpdate) => {
       heartbeatOutgoing: 4000,
     });
 
-    client.onConnect = (frame) => {
+    client.onConnect = () => {
       console.log('[STOMP] Connected');
       
       // Subscribe to the specific slot update topic

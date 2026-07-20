@@ -66,7 +66,7 @@ const TurfSearch = ({ onSearch }) => {
           } else {
             alert('Could not determine your city from location.');
           }
-        } catch (error) {
+        } catch {
           alert('Error fetching location data.');
         } finally {
           setIsLocating(false);

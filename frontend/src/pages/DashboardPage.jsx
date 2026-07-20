@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { Card, CardContent } from '../components/ui/Card';

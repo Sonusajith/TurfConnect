@@ -48,7 +48,16 @@ describe('CheckoutModal Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirm & pay/i }));
     
     await waitFor(() => {
-      expect(handleConfirm).toHaveBeenCalledWith(mockSlot, mockTurf);
+      expect(handleConfirm).toHaveBeenCalledWith(
+        mockSlot,
+        mockTurf,
+        expect.objectContaining({
+          memberCount: 6,
+          members: expect.arrayContaining([
+            expect.objectContaining({ name: 'You', status: 'PAID' }),
+          ]),
+        })
+      );
     });
   });
 

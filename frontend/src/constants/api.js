@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   TURFS: {
     LIST: '/api/v1/turfs',
     GET: '/api/v1/turfs',
+    MY_TURFS: '/api/v1/turfs/my-turfs',
   },
   SLOTS: {
     LIST: '/api/v1/turfs/:turfId/slots',
@@ -24,8 +25,9 @@ export const API_ENDPOINTS = {
     WEBHOOK_MOCK: '/api/v1/payments/webhook/mock',
   },
   REVIEWS: {
-    LIST: '/api/v1/turfs/:turfId/reviews',
-    CREATE: '/api/v1/turfs/:turfId/reviews',
+    LIST: '/api/v1/reviews/turf/:turfId',
+    SUMMARY: '/api/v1/reviews/turf/:turfId/summary',
+    CREATE: '/api/v1/reviews',
   },
   TEAMS: {
     LIST: '/api/v1/teams',
@@ -33,12 +35,13 @@ export const API_ENDPOINTS = {
     GET: '/api/v1/teams/:teamId',
   },
   INVITATIONS: {
-    LIST: '/api/v1/invitations',
-    RESPOND: '/api/v1/invitations/:invitationId/respond',
+    LIST: '/api/v1/invitations/me',
+    ACCEPT: '/api/v1/invitations/:invitationId/accept',
+    DECLINE: '/api/v1/invitations/:invitationId/decline',
   },
   OWNER: {
-    STATS: '/api/v1/owner/stats',
-    TURFS: '/api/v1/owner/turfs',
+    STATS: '/api/v1/analytics/platform',
+    TURFS: '/api/v1/turfs/my-turfs',
   }
 };
 

@@ -5,13 +5,13 @@ import { bookingService } from '../services/bookingService';
 import { paymentService } from '../services/paymentService';
 import { useSlots } from '../hooks/useSlots';
 import { useSlotSocket } from '../hooks/useSlotSocket';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../hooks/useToast';
 import SlotGrid from '../features/slots/SlotGrid';
 import CheckoutModal from '../features/booking/CheckoutModal';
 import PaymentModal from '../features/payment/PaymentModal';
-import Button from '../components/Button';
 import { ROUTES } from '../constants/routes';
 import { formatCurrency } from '../utils/formatters';
+import { saveBookingSplitPlan } from '../utils/splitPlans';
 
 const statusItems = [
   ['Available', 'bg-primary text-white'],
@@ -59,7 +59,7 @@ const SlotPickerPage = () => {
         if (response && response.success) {
           setTurf(response.data);
         }
-      } catch (e) {
+      } catch {
         addToast('Failed to load venue details', 'error');
         navigate(ROUTES.DASHBOARD);
       } finally {
@@ -74,10 +74,11 @@ const SlotPickerPage = () => {
     setIsCheckoutOpen(true);
   };
 
-  const handleConfirmCheckout = async (slot) => {
+  const handleConfirmCheckout = async (slot, _turfDetails, splitPlan) => {
     try {
       const response = await bookingService.create(slot.id, slot.price);
       if (response && response.success) {
+        saveBookingSplitPlan(response.data.id, splitPlan);
         setActiveBooking(response.data);
         setIsCheckoutOpen(false);
         setIsPaymentOpen(true);

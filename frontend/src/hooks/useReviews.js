@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './useAuth';
 import { API_ENDPOINTS, API_BASE_URL } from '../constants/api';
 
 export const useReviews = (turfId) => {
@@ -34,7 +34,7 @@ export const useReviews = (turfId) => {
 
   const submitReview = async (reviewData) => {
     try {
-      const url = `${API_BASE_URL}${API_ENDPOINTS.REVIEWS.CREATE.replace(':turfId', turfId)}`;
+      const url = `${API_BASE_URL}${API_ENDPOINTS.REVIEWS.CREATE}`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {

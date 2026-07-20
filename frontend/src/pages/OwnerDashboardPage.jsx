@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import useOwner from '../hooks/useOwner';

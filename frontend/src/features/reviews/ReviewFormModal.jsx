@@ -4,16 +4,18 @@ import Modal from '../../components/Modal';
 const ReviewFormModal = ({ isOpen, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [bookingId, setBookingId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (rating === 0) return alert('Please select a rating');
     setIsSubmitting(true);
-    await onSubmit({ rating, comment });
+    await onSubmit({ bookingId, rating, comment });
     setIsSubmitting(false);
     setRating(0);
     setComment('');
+    setBookingId('');
     onClose();
   };
 
@@ -34,6 +36,17 @@ const ReviewFormModal = ({ isOpen, onClose, onSubmit }) => {
               </button>
             ))}
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Booking ID</label>
+          <input
+            required
+            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+            placeholder="Paste a completed booking ID"
+            value={bookingId}
+            onChange={(e) => setBookingId(e.target.value)}
+          />
+          <p className="mt-1 text-xs font-medium text-gray-500">Required by the backend for verified reviews.</p>
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">Comment</label>

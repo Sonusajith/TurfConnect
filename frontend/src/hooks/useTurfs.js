@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { turfService } from '../services/turfService';
 
-export const useTurfs = (searchParams = {}) => {
+const DEFAULT_SEARCH_PARAMS = {};
+
+export const useTurfs = (searchParams = DEFAULT_SEARCH_PARAMS) => {
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchTurfs = useCallback(async (params = searchParams) => {
+  const fetchTurfs = useCallback(async (params = DEFAULT_SEARCH_PARAMS) => {
     setLoading(true);
     setError(null);
     try {
@@ -29,8 +31,8 @@ export const useTurfs = (searchParams = {}) => {
   }, []);
 
   useEffect(() => {
-    fetchTurfs();
-  }, [fetchTurfs]);
+    fetchTurfs(searchParams);
+  }, [fetchTurfs, searchParams]);
 
   return { turfs, loading, error, refetch: fetchTurfs };
 };

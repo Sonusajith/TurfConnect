@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '../components/ui/Card';
+import { Card } from '../components/ui/Card';
 import NotificationToggle from '../features/settings/NotificationToggle';
 
 const SettingsPage = () => {

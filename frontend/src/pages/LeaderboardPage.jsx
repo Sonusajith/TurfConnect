@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '../components/ui/Card';
+import { Card } from '../components/ui/Card';
 
 const MOCK_LEADERBOARD = [
   { rank: 1, team: 'FC Thunder', played: 5, won: 4, drawn: 1, lost: 0, points: 13 },

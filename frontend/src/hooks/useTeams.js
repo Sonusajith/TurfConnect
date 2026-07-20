@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './useAuth';
 import { API_ENDPOINTS, API_BASE_URL } from '../constants/api';
 
 export const useTeams = () => {
@@ -69,14 +69,16 @@ export const useTeams = () => {
 
   const respondToInvitation = async (invitationId, status) => {
     try {
-      const url = `${API_BASE_URL}${API_ENDPOINTS.INVITATIONS.RESPOND.replace(':invitationId', invitationId)}`;
+      const endpoint = status === 'ACCEPTED'
+        ? API_ENDPOINTS.INVITATIONS.ACCEPT
+        : API_ENDPOINTS.INVITATIONS.DECLINE;
+      const url = `${API_BASE_URL}${endpoint.replace(':invitationId', invitationId)}`;
       const res = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ status })
+        }
       });
       if (res.ok) {
         await fetchInvitations();

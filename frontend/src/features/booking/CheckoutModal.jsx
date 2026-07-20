@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Modal from '../../components/Modal';
 import Button from '../../components/Button';
 import { formatCurrency, formatTime, formatDate } from '../../utils/formatters';
+import SplitContributionPanel from './SplitContributionPanel';
+import { createSplitPlan } from '../../utils/splitPlans';
 
 const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [memberCount, setMemberCount] = useState(6);
+  const [memberNames, setMemberNames] = useState(['You']);
+
+  const totalAmount = Number(slot?.price || 0);
+  const teammateCount = Math.max(memberCount - 1, 0);
+  const splitPlan = useMemo(() => createSplitPlan({
+    totalAmount,
+    memberCount,
+    memberNames,
+  }), [totalAmount, memberCount, memberNames]);
 
   if (!slot || !turf) return null;
-
-  const totalAmount = Number(slot.price || 0);
-  const contributionAmount = memberCount > 0 ? totalAmount / memberCount : totalAmount;
-  const teammateCount = Math.max(memberCount - 1, 0);
 
   const updateMemberCount = (value) => {
     const parsedValue = Number(value);
@@ -20,11 +27,19 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
     setMemberCount(Math.min(30, Math.max(1, parsedValue)));
   };
 
+  const updateMemberName = (index, value) => {
+    setMemberNames((currentNames) => {
+      const nextNames = [...currentNames];
+      nextNames[index] = value;
+      return nextNames;
+    });
+  };
+
   const handleCheckout = async () => {
     setLoading(true);
     setError('');
     try {
-      await onConfirm(slot, turf);
+      await onConfirm(slot, turf, splitPlan);
     } catch (e) {
       setError(e.message || 'Checkout failed. Please try again.');
     } finally {
@@ -103,20 +118,17 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
               </Button>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-orange-100 bg-white/80 p-3">
-              <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Members</span>
-              <span className="text-lg font-extrabold text-gray-900">{memberCount}</span>
-            </div>
-            <div className="rounded-lg border border-orange-100 bg-white/80 p-3">
-              <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Each contributes</span>
-              <span className="text-lg font-extrabold text-accent">
-                {formatCurrency(contributionAmount)}
-              </span>
-            </div>
-          </div>
         </div>
+
+        <SplitContributionPanel
+          splitPlan={splitPlan}
+          title="Members and contributions"
+          subtitle={memberCount === 1
+            ? 'Solo booking, you cover the full slot amount.'
+            : 'Member names and payment status for this booking.'}
+          editable
+          onMemberNameChange={updateMemberName}
+        />
 
         {error && (
           <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-600">

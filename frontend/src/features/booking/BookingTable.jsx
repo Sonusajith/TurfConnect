@@ -1,7 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Badge from '../../components/Badge';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
 import { formatCurrency, formatTime, formatDate } from '../../utils/formatters';
+import { ROUTES } from '../../constants/routes';
+import SplitContributionPanel from './SplitContributionPanel';
+import { createSplitPlan, getBookingSplitPlan } from '../../utils/splitPlans';
 
 const BookingTable = ({ bookings, loading, error }) => {
   if (loading) {
@@ -35,41 +39,80 @@ const BookingTable = ({ bookings, loading, error }) => {
   }
 
   return (
-    <div className="mt-6 overflow-x-auto rounded-lg border border-primary/10 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-primary/10">
-        <thead className="bg-[#f4faff]">
-          <tr>
-            {['Booking ID', 'Date', 'Time Slot', 'Price', 'Status'].map((heading) => (
-              <th key={heading} scope="col" className="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wider text-gray-500">
-                {heading}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-primary/10 bg-white">
-          {bookings.map((booking) => (
-            <tr key={booking.id} className="transition-colors hover:bg-[#f4faff]">
-              <td className="whitespace-nowrap px-6 py-4 font-mono text-sm font-bold text-gray-900">
-                {booking.id}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-600">
-                {formatDate(booking.date)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-600">
-                {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm font-extrabold text-gray-900">
-                {formatCurrency(booking.totalPrice)}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4">
-                <Badge status={booking.status} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mt-6 grid gap-4">
+      {bookings.map((booking) => (
+        <BookingCard key={booking.id} booking={booking} />
+      ))}
     </div>
   );
 };
+
+const BookingCard = ({ booking }) => {
+  const savedSplitPlan = getBookingSplitPlan(booking.id);
+  const splitPlan = savedSplitPlan || createSplitPlan({
+    totalAmount: booking.totalPrice,
+    memberCount: 6,
+    paidMemberIds: booking.status === 'CONFIRMED' ? ['member-1'] : [],
+  });
+  const turfDetailsPath = booking.turfId
+    ? ROUTES.TURF_DETAILS.replace(':turfId', booking.turfId)
+    : ROUTES.EXPLORE;
+
+  return (
+    <article className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm transition hover:border-primary/20 hover:shadow-md">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge status={booking.status} />
+            <span className="rounded-full bg-[#f4faff] px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-primary-dark">
+              {formatDate(booking.date)}
+            </span>
+          </div>
+          <h3 className="mt-3 break-all font-mono text-sm font-extrabold text-gray-950">
+            Booking {booking.id}
+          </h3>
+          <p className="mt-2 text-sm font-medium text-gray-500">
+            {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+            {booking.turfId ? ` at Turf ${booking.turfId}` : ''}
+          </p>
+        </div>
+
+        <div className="grid min-w-0 grid-cols-2 gap-3 sm:min-w-80">
+          <Metric label="Amount" value={formatCurrency(booking.totalPrice)} />
+          <Metric label="Split members" value={splitPlan.memberCount} />
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <SplitContributionPanel
+          splitPlan={splitPlan}
+          title={savedSplitPlan ? 'Saved split contributions' : 'Suggested split contributions'}
+          subtitle={savedSplitPlan
+            ? `${splitPlan.memberCount} members attached to this booking`
+            : 'No saved split yet, showing a 6-player planning split'}
+        />
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3 border-t border-primary/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs font-medium text-gray-500">
+          Split plans are stored on this browser until backend split persistence is added.
+        </p>
+        <Link
+          to={turfDetailsPath}
+          className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          View Turf
+        </Link>
+      </div>
+    </article>
+  );
+};
+
+const Metric = ({ label, value }) => (
+  <div className="rounded-lg border border-primary/10 bg-[#f4faff] p-3">
+    <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{label}</p>
+    <p className="mt-1 truncate text-lg font-extrabold text-gray-950">{value}</p>
+  </div>
+);
 
 export default BookingTable;
