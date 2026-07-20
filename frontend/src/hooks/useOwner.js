@@ -22,19 +22,17 @@ export const useOwner = () => {
       const statsRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.OWNER.STATS}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData.data || statsData);
-      }
+      if (!statsRes.ok) throw new Error('Failed to fetch owner stats');
+      const statsData = await statsRes.json();
+      setStats(statsData.data || statsData);
 
       // Fetch turfs
       const turfsRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.OWNER.TURFS}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (turfsRes.ok) {
-        const turfsData = await turfsRes.json();
-        setTurfs(turfsData.data || turfsData || []);
-      }
+      if (!turfsRes.ok) throw new Error('Failed to fetch owner turfs');
+      const turfsData = await turfsRes.json();
+      setTurfs(turfsData.data || turfsData || []);
     } catch (e) {
       setError(e.message);
     } finally {

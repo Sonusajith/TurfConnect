@@ -15,10 +15,9 @@ export const useTeams = () => {
       const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEAMS.LIST}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setTeams(data.data || data || []);
-      }
+      if (!res.ok) throw new Error('Failed to load teams');
+      const data = await res.json();
+      setTeams(data.data || data || []);
     } catch (e) {
       setError(e.message);
     } finally {

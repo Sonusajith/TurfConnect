@@ -96,7 +96,8 @@ const AppLayout = () => {
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
+      {/* Mobile Drawer Overlay (Optional fallback if user expected drawer) */}
+      <div className="min-w-0 flex-1 flex flex-col h-screen overflow-y-auto overflow-x-hidden">
         <header className="sticky top-0 z-30 border-b border-primary/10 bg-white/95 backdrop-blur">
           <div className="mx-auto flex h-[74px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10">
             <Link to={ROUTES.DASHBOARD} className="flex items-center gap-2 text-primary-dark lg:hidden">
@@ -137,9 +138,9 @@ const AppLayout = () => {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-primary/10 bg-white/95 pb-safe pt-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur lg:hidden">
-        {navItems.slice(0, 5).map((item) => (
+      {/* Mobile Bottom Navigation - Using more items or scrolling if needed */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-start sm:justify-around overflow-x-auto border-t border-primary/10 bg-white/95 pb-safe pt-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur lg:hidden hide-scrollbar">
+        {navItems.map((item) => (
           <Link
             key={item.id}
             to={item.path}
