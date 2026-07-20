@@ -11,6 +11,13 @@ import CheckoutModal from '../features/booking/CheckoutModal';
 import PaymentModal from '../features/payment/PaymentModal';
 import Button from '../components/Button';
 import { ROUTES } from '../constants/routes';
+import { formatCurrency } from '../utils/formatters';
+
+const statusItems = [
+  ['Available', 'bg-primary text-white'],
+  ['Locked', 'bg-yellow-400 text-yellow-950'],
+  ['Booked', 'bg-gray-400 text-white'],
+];
 
 const SlotPickerPage = () => {
   const { turfId } = useParams();
@@ -30,15 +37,12 @@ const SlotPickerPage = () => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
-  // Fetch Slots
   const { slots, loading: slotsLoading, error: slotsError, updateSlotInList } = useSlots(turfId, date);
 
-  // Real-time updates via WebSockets
   useSlotSocket(turfId, date, (updatedSlot) => {
     console.log('[WS] Received slot status change', updatedSlot);
     updateSlotInList(updatedSlot);
-    
-    // Alert user if their selected slot gets locked by someone else while looking
+
     if (selectedSlot && selectedSlot.id === updatedSlot.id && updatedSlot.status !== 'AVAILABLE') {
       addToast('Sorry, this slot has just been locked by another user.', 'warning');
       setSelectedSlot(null);
@@ -46,7 +50,6 @@ const SlotPickerPage = () => {
     }
   });
 
-  // Fetch Turf Details
   useEffect(() => {
     const fetchTurfDetails = async () => {
       setTurfLoading(true);
@@ -70,9 +73,8 @@ const SlotPickerPage = () => {
     setIsCheckoutOpen(true);
   };
 
-  const handleConfirmCheckout = async (slot, turfDetails) => {
+  const handleConfirmCheckout = async (slot) => {
     try {
-      // 1. Create PENDING Booking (this requests a lock under the hood)
       const response = await bookingService.create(slot.id, slot.price);
       if (response && response.success) {
         setActiveBooking(response.data);
@@ -89,29 +91,26 @@ const SlotPickerPage = () => {
 
   const handlePaymentComplete = async (booking) => {
     try {
-      // 1. Initiate Payment Session (Backend creates Razorpay Order)
       const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice);
       if (!initiateRes.success) {
         throw new Error(initiateRes.message || 'Payment initiation failed');
       }
-      
+
       const { transactionId, amount } = initiateRes.data;
 
-      // 2. Open Razorpay Checkout Widget
       return new Promise((resolve, reject) => {
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
-          amount: amount * 100, // Razorpay expects paise (but backend already sets it, though frontend just uses it for display)
-          currency: "INR",
-          name: "TurfConnect",
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: amount * 100,
+          currency: 'INR',
+          name: 'TurfConnect',
           description: `Booking for ${turf.name}`,
-          order_id: transactionId, 
-          handler: async function (response) {
+          order_id: transactionId,
+          handler: async function () {
             try {
-              // 3. Verify Payment with Backend
               const verifyRes = await paymentService.verifyPayment(transactionId);
               addToast('Booking confirmed successfully!', 'success');
-              
+
               setIsPaymentOpen(false);
               setSelectedSlot(null);
               setActiveBooking(null);
@@ -123,19 +122,19 @@ const SlotPickerPage = () => {
             }
           },
           prefill: {
-            name: "Test User",
-            email: "test@example.com",
-            contact: "9999999999"
+            name: 'Test User',
+            email: 'test@example.com',
+            contact: '9999999999',
           },
           theme: {
-            color: "#16a34a" // TurfConnect Primary Green
+            color: '#1b5e20',
           },
           modal: {
-            ondismiss: function() {
+            ondismiss: function () {
               addToast('Payment cancelled', 'warning');
               reject(new Error('Payment cancelled'));
-            }
-          }
+            },
+          },
         };
 
         const rzp = new window.Razorpay(options);
@@ -158,62 +157,99 @@ const SlotPickerPage = () => {
     navigate(ROUTES.BOOKINGS);
   };
 
+  const availableCount = slots?.filter((slot) => slot.status === 'AVAILABLE').length || 0;
+  const startingPrice = slots?.length ? Math.min(...slots.map((slot) => Number(slot.price || 0))) : turf?.hourlyRate;
+
   return (
-    <div className="space-y-6">
-      {/* Venue Header */}
+    <div className="space-y-6 pb-10">
       {turfLoading ? (
-        <div className="h-28 bg-gray-100 rounded-2xl animate-pulse" />
+        <div className="h-40 animate-pulse rounded-lg border border-primary/10 bg-white" />
       ) : turf && (
-        <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900">{turf.name}</h1>
-            <p className="text-gray-500 text-sm">📍 {turf.address}, {turf.city}</p>
-            <div className="flex gap-2 pt-2">
-              {turf.sportTypes?.map((sport) => (
-                <span key={sport} className="px-2 py-0.5 bg-green-50 text-green-700 border border-green-150 text-xs font-semibold rounded-full uppercase">
-                  {sport}
-                </span>
-              ))}
+        <section className="rounded-lg border border-primary/10 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.TURF_DETAILS.replace(':turfId', turfId))}
+                className="text-sm font-extrabold text-primary hover:text-primary-dark"
+              >
+                Back to venue details
+              </button>
+
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-accent">Book your slot</p>
+                <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-gray-950">{turf.name}</h1>
+                <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500">
+                  {turf.address}, {turf.city}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {turf.sportTypes?.map((sport) => (
+                  <span key={sport} className="rounded-full border border-primary/15 bg-primary-light px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-primary-dark">
+                    {sport}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3 lg:w-[28rem]">
+              <div className="rounded-lg border border-primary/10 bg-[#f4faff] p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Available</p>
+                <p className="mt-2 text-2xl font-extrabold text-primary-dark">{availableCount}</p>
+              </div>
+              <div className="rounded-lg border border-primary/10 bg-[#f4faff] p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Date</p>
+                <p className="mt-2 text-sm font-extrabold text-gray-950">{date}</p>
+              </div>
+              <div className="rounded-lg border border-primary/10 bg-[#f4faff] p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-500">From</p>
+                <p className="mt-2 text-lg font-extrabold text-primary-dark">{formatCurrency(startingPrice)}</p>
+              </div>
             </div>
           </div>
-          <div>
-            <Button variant="outline" onClick={() => navigate(ROUTES.DASHBOARD)}>
-              ← Back to Venues
-            </Button>
-          </div>
-        </div>
+        </section>
       )}
 
-      {/* Date Picker Selector */}
-      <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-primary/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Select Timeslot</h2>
-            <p className="text-xs text-gray-400 font-medium">Slots generated daily. Timeslots are in Asia/Kolkata timezone.</p>
+            <h2 className="text-xl font-extrabold tracking-tight text-gray-950">Select Timeslot</h2>
+            <p className="mt-1 text-sm font-medium text-gray-500">Live slot status updates in Asia/Kolkata timezone.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <label htmlFor="slotDatePicker" className="text-sm font-semibold text-gray-700">Date:</label>
+
+          <div className="flex flex-col gap-3 sm:items-end">
+            <label htmlFor="slotDatePicker" className="text-xs font-extrabold uppercase tracking-wide text-gray-500">
+              Booking Date
+            </label>
             <input
               type="date"
               id="slotDatePicker"
               value={date}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setDate(e.target.value)}
-              className="px-3 py-1.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary font-medium"
+              className="h-11 rounded-lg border border-primary/15 bg-[#f4faff] px-3 text-sm font-bold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
 
-        {/* Slot Grid display */}
+        <div className="mt-5 flex flex-wrap gap-3">
+          {statusItems.map(([label, className]) => (
+            <div key={label} className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+              <span className={`h-2.5 w-2.5 rounded-full ${className}`} />
+              {label}
+            </div>
+          ))}
+        </div>
+
         <SlotGrid
           slots={slots}
           loading={slotsLoading}
           error={slotsError}
           onSelectSlot={handleSelectSlot}
         />
-      </div>
+      </section>
 
-      {/* Checkout and Payment Dialog Popups */}
       {isCheckoutOpen && (
         <CheckoutModal
           isOpen={isCheckoutOpen}

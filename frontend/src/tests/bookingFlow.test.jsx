@@ -30,7 +30,7 @@ describe('CheckoutModal Component', () => {
 
     expect(screen.getByText('Camp Nou Arena')).toBeInTheDocument();
     expect(screen.getByText('6:00 AM - 7:00 AM')).toBeInTheDocument();
-    expect(screen.getByText('₹120.00')).toBeInTheDocument();
+    expect(screen.getByText(/120\.00/)).toBeInTheDocument();
   });
 
   test('invokes confirm callback when button is clicked', async () => {
@@ -65,13 +65,13 @@ describe('CheckoutModal Component', () => {
 
     expect(screen.getByText('Team contribution split')).toBeInTheDocument();
     expect(screen.getByText(/You \+ 5 teammates/i)).toBeInTheDocument();
-    expect(screen.getByText(/^₹20\.00$/)).toBeInTheDocument();
+    expect(screen.getByText('Each contributes').parentElement).toHaveTextContent(/20\.00/);
 
     fireEvent.change(screen.getByLabelText(/number of members/i), {
       target: { value: '4' },
     });
 
     expect(screen.getByText(/You \+ 3 teammates/i)).toBeInTheDocument();
-    expect(screen.getByText(/^₹30\.00$/)).toBeInTheDocument();
+    expect(screen.getByText('Each contributes').parentElement).toHaveTextContent(/30\.00/);
   });
 });

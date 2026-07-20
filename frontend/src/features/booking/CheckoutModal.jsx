@@ -35,31 +35,31 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Checkout Confirmation">
       <div className="space-y-5">
-        <div className="bg-primary-light rounded-xl p-4 border border-green-100 flex flex-col gap-2">
-          <div className="flex justify-between items-start">
-            <span className="text-gray-500 font-semibold text-xs uppercase tracking-wide">Arena</span>
-            <span className="text-gray-900 font-bold text-sm">{turf.name}</span>
+        <div className="flex flex-col gap-2 rounded-xl border border-green-100 bg-primary-light p-4">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Arena</span>
+            <span className="text-sm font-bold text-gray-900">{turf.name}</span>
           </div>
-          <div className="flex justify-between items-start">
-            <span className="text-gray-500 font-semibold text-xs uppercase tracking-wide">Date</span>
-            <span className="text-gray-900 font-bold text-sm">{formatDate(slot.date)}</span>
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Date</span>
+            <span className="text-sm font-bold text-gray-900">{formatDate(slot.date)}</span>
           </div>
-          <div className="flex justify-between items-start">
-            <span className="text-gray-500 font-semibold text-xs uppercase tracking-wide">Time Slot</span>
-            <span className="text-gray-900 font-bold text-sm">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Time Slot</span>
+            <span className="text-sm font-bold text-gray-900">
               {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
             </span>
           </div>
         </div>
 
-        <div className="border-t border-dashed pt-4 flex justify-between items-center">
-          <span className="text-gray-700 font-bold text-base">Total Amount</span>
-          <span className="text-primary font-extrabold text-xl">
+        <div className="flex items-center justify-between border-t border-dashed pt-4">
+          <span className="text-base font-bold text-gray-700">Total Amount</span>
+          <span className="text-xl font-extrabold text-primary">
             {formatCurrency(slot.price)}
           </span>
         </div>
 
-        <div className="rounded-xl border border-orange-100 bg-orange-50/70 p-4 space-y-4">
+        <div className="space-y-4 rounded-xl border border-orange-100 bg-orange-50/70 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h4 className="text-sm font-extrabold text-gray-900">Team contribution split</h4>
@@ -105,11 +105,11 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg bg-white/80 border border-orange-100 p-3">
+            <div className="rounded-lg border border-orange-100 bg-white/80 p-3">
               <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Members</span>
               <span className="text-lg font-extrabold text-gray-900">{memberCount}</span>
             </div>
-            <div className="rounded-lg bg-white/80 border border-orange-100 p-3">
+            <div className="rounded-lg border border-orange-100 bg-white/80 p-3">
               <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Each contributes</span>
               <span className="text-lg font-extrabold text-accent">
                 {formatCurrency(contributionAmount)}
@@ -119,8 +119,8 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 text-red-600 text-xs font-semibold rounded-lg border border-red-100">
-            ⚠️ {error}
+          <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-600">
+            Error: {error}
           </div>
         )}
 
@@ -130,7 +130,7 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
           </Button>
           <Button
             variant="accent"
-            className="flex-1 font-bold uppercase tracking-wider text-xs"
+            className="flex-1 text-xs font-bold uppercase tracking-wider"
             onClick={handleCheckout}
             isLoading={loading}
           >

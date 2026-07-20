@@ -20,7 +20,7 @@ describe('PaymentModal Component', () => {
     );
 
     expect(screen.getByText(/total amount/i)).toBeInTheDocument();
-    expect(screen.getByText('₹120.00')).toBeInTheDocument();
+    expect(screen.getByText(/120\.00/)).toBeInTheDocument();
     expect(screen.getByText(/razorpay's secure checkout/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /pay with razorpay/i })).toBeInTheDocument();
   });

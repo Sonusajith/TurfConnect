@@ -5,9 +5,9 @@ import Skeleton from '../../components/ui/Skeleton';
 const SlotGrid = ({ slots, loading, error, onSelectSlot }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {Array.from({ length: 10 }).map((_, idx) => (
-          <Skeleton key={idx} className="h-20 w-full rounded-xl" />
+          <Skeleton key={idx} className="h-24 w-full rounded-lg" />
         ))}
       </div>
     );
@@ -15,24 +15,24 @@ const SlotGrid = ({ slots, loading, error, onSelectSlot }) => {
 
   if (error) {
     return (
-      <div className="text-center py-10 bg-red-50/50 rounded-2xl border border-red-100 mt-6 shadow-sm">
-        <p className="text-red-700 font-bold mb-1">Failed to load slots</p>
-        <p className="text-sm text-red-600/80">{error}</p>
+      <div className="mt-6 rounded-lg border border-red-100 bg-red-50/70 py-10 text-center shadow-sm">
+        <p className="mb-1 font-extrabold text-red-700">Failed to load slots</p>
+        <p className="text-sm font-medium text-red-600/80">{error}</p>
       </div>
     );
   }
 
   if (!slots || slots.length === 0) {
     return (
-      <div className="text-center py-16 bg-gray-50/80 rounded-3xl border border-dashed border-gray-200 mt-6">
-        <p className="text-gray-600 font-bold text-lg mb-1">No slots available</p>
-        <p className="text-sm text-gray-500">Please select another date or check back later.</p>
+      <div className="mt-6 rounded-lg border border-dashed border-primary/20 bg-[#f4faff] py-16 text-center">
+        <p className="mb-1 text-lg font-extrabold text-gray-700">No slots available</p>
+        <p className="text-sm font-medium text-gray-500">Please select another date or check back later.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6 animate-fade-in">
+    <div className="mt-6 grid animate-fade-in grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {slots.map((slot) => (
         <SlotCard
           key={slot.id}

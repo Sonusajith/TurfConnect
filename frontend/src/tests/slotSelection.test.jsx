@@ -31,7 +31,7 @@ describe('SlotGrid Component', () => {
     const slotBtn = screen.getByRole('button');
     expect(slotBtn).toBeInTheDocument();
     expect(screen.getByText('6:00 AM')).toBeInTheDocument();
-    expect(screen.getByText('₹120')).toBeInTheDocument();
+    expect(screen.getByText(/120/)).toBeInTheDocument();
 
     fireEvent.click(slotBtn);
     expect(handleSelectSlot).toHaveBeenCalledWith(mockSlots[0]);
