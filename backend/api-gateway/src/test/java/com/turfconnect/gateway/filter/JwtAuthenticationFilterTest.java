@@ -63,6 +63,16 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void filter_PublicTurfSearch_ShouldPassWithoutToken() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/turfs").build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, filterChain).block();
+
+        verify(filterChain, times(1)).filter(exchange);
+    }
+
+    @Test
     void filter_SecuredEndpointMissingAuthHeader_ShouldReturnUnauthorized() {
         MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/turfs").build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);
@@ -102,5 +112,20 @@ class JwtAuthenticationFilterTest {
                    "PLAYER".equals(headers.getFirst("X-User-Role")) &&
                    "test@test.com".equals(headers.getFirst("X-User-Email"));
         }));
+    }
+
+    @Test
+    void filter_MyTurfsEndpointValidToken_ShouldForwardWithMutatedHeaders() {
+        String token = generateValidToken();
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/turfs/my-turfs")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, filterChain).block();
+
+        verify(filterChain, times(1)).filter(argThat(ex ->
+                "user-123".equals(ex.getRequest().getHeaders().getFirst("X-User-Id"))
+        ));
     }
 }

@@ -40,6 +40,7 @@ public class AuthService {
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final long LOCK_TIME_DURATION_MINUTES = 15;
+    private static final java.util.Set<String> REGISTRATION_ROLES = java.util.Set.of("PLAYER", "TURF_OWNER");
 
     public AuthResponse register(RegisterRequest request) {
         log.info("Attempting to register user with email: {}", request.getEmail());
@@ -48,11 +49,19 @@ public class AuthService {
             throw new BadRequestException("Email already in use");
         }
 
+        String requestedRole = request.getRole() == null || request.getRole().isBlank()
+                ? "PLAYER"
+                : request.getRole().trim().toUpperCase();
+
+        if (!REGISTRATION_ROLES.contains(requestedRole)) {
+            throw new BadRequestException("Unsupported registration role: " + requestedRole);
+        }
+
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role("PLAYER") // Default role
+                .role(requestedRole)
                 .accountStatus("ACTIVE")
                 .emailVerified(false)
                 .mobileVerified(false)

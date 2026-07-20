@@ -17,8 +17,14 @@ const TurfCard = ({ turf, onViewSlots }) => {
     coverImage,
     averageRating,
     totalReviews,
+    amenities,
+    capacity,
+    surfaceType,
+    indoorOrOutdoor,
   } = turf;
   const rating = Number(averageRating || 4.8).toFixed(1);
+  const visibleAmenities = amenities?.slice(0, 3) || [];
+  const sportLabel = sportTypes?.[0] || 'TURF';
 
   return (
     <Card interactive={true} className="group flex h-full flex-col rounded-lg border border-primary/10 bg-white shadow-sm hover:border-primary/20 hover:shadow-xl">
@@ -31,13 +37,22 @@ const TurfCard = ({ turf, onViewSlots }) => {
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiLz48L3N2Zz4=')] bg-[length:20px_20px]" />
+            <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.26),transparent_28%),linear-gradient(135deg,#00450d,#1b5e20_48%,#ff6d00)]">
+              <span className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white backdrop-blur-sm">
+                {sportLabel}
+              </span>
+            </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-          <div className="absolute left-4 top-4 flex gap-2">
+          <div className="absolute left-4 top-4 flex flex-wrap gap-2">
             <Badge variant="primary" className="bg-white/90 font-bold text-primary-dark shadow-sm backdrop-blur-md">
               {`Rating ${rating}${totalReviews ? ` (${totalReviews})` : ''}`}
             </Badge>
+            {indoorOrOutdoor && (
+              <Badge variant="default" className="bg-black/45 font-bold text-white backdrop-blur-md">
+                {indoorOrOutdoor}
+              </Badge>
+            )}
           </div>
           <div className="absolute bottom-4 left-4 right-4">
             <h3 className="line-clamp-1 text-xl font-extrabold text-white drop-shadow-md">{name}</h3>
@@ -68,6 +83,17 @@ const TurfCard = ({ turf, onViewSlots }) => {
             <span className="font-medium">Open: {openTime} - {closeTime}</span>
           </div>
 
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-primary/10 bg-primary-light p-3">
+              <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-500">Capacity</p>
+              <p className="mt-1 text-sm font-extrabold text-primary-dark">{capacity || '-'} players</p>
+            </div>
+            <div className="rounded-lg border border-primary/10 bg-primary-light p-3">
+              <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-500">Surface</p>
+              <p className="mt-1 truncate text-sm font-extrabold text-primary-dark">{surfaceType || 'Turf'}</p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             {sportTypes?.map((sport) => (
               <Badge key={sport} variant="default" className="border border-gray-200 bg-gray-100 text-gray-600">
@@ -75,6 +101,16 @@ const TurfCard = ({ turf, onViewSlots }) => {
               </Badge>
             ))}
           </div>
+
+          {visibleAmenities.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {visibleAmenities.map((amenity) => (
+                <span key={amenity} className="rounded-full bg-accent-light px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-accent-dark">
+                  {amenity}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
 

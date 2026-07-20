@@ -81,24 +81,31 @@ public class TurfServiceTest {
                 .sportTypes(List.of("Football"))
                 .latitude(40.7128)
                 .longitude(-74.0060)
+                .coverImage("https://images.example/green-arena.jpg")
                 .openTime(LocalTime.of(8, 0))
                 .closeTime(LocalTime.of(22, 0))
                 .slotDurationMinutes(60)
                 .build();
 
-        when(turfRepository.save(any(Turf.class))).thenReturn(turf);
+        when(turfRepository.save(any(Turf.class))).thenAnswer(invocation -> {
+            Turf saved = invocation.getArgument(0);
+            saved.setId("turf-1");
+            return saved;
+        });
 
         TurfResponse response = turfService.createTurf(req, ownerId);
 
         assertNotNull(response);
         assertEquals("Green Arena", response.getName());
         assertEquals(ownerId, response.getOwnerId());
+        assertEquals("https://images.example/green-arena.jpg", response.getCoverImage());
     }
 
     @Test
     void updateTurf_Success() {
         TurfUpdateRequest req = TurfUpdateRequest.builder()
                 .name("Updated Arena")
+                .coverImage("https://images.example/updated-arena.jpg")
                 .build();
 
         when(turfRepository.findByIdAndDeletedFalse("turf-1")).thenReturn(Optional.of(turf));
@@ -107,6 +114,7 @@ public class TurfServiceTest {
         TurfResponse response = turfService.updateTurf("turf-1", req, ownerId);
 
         assertEquals("Updated Arena", response.getName());
+        assertEquals("https://images.example/updated-arena.jpg", response.getCoverImage());
         verify(turfRepository).save(any(Turf.class));
     }
 

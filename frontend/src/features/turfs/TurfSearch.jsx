@@ -4,6 +4,12 @@ import Button from '../../components/ui/Button';
 const TurfSearch = ({ onSearch }) => {
   const [city, setCity] = useState('');
   const [sport, setSport] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [minRating, setMinRating] = useState('');
+  const [indoorOrOutdoor, setIndoorOrOutdoor] = useState('');
+  const [floodlights, setFloodlights] = useState(false);
+  const [sort, setSort] = useState('createdAt:desc');
   const [isLocating, setIsLocating] = useState(false);
 
   const handleSearchSubmit = (e) => {
@@ -11,7 +17,27 @@ const TurfSearch = ({ onSearch }) => {
     const params = {};
     if (city.trim()) params.city = city.trim();
     if (sport.trim()) params.sport = sport.trim();
+    if (minPrice) params.minPrice = minPrice;
+    if (maxPrice) params.maxPrice = maxPrice;
+    if (minRating) params.minRating = minRating;
+    if (indoorOrOutdoor) params.indoorOrOutdoor = indoorOrOutdoor;
+    if (floodlights) params.floodlights = true;
+    const [sortBy, sortDirection] = sort.split(':');
+    params.sortBy = sortBy;
+    params.sortDirection = sortDirection;
     onSearch(params);
+  };
+
+  const handleClear = () => {
+    setCity('');
+    setSport('');
+    setMinPrice('');
+    setMaxPrice('');
+    setMinRating('');
+    setIndoorOrOutdoor('');
+    setFloodlights(false);
+    setSort('createdAt:desc');
+    onSearch({});
   };
 
   const handleGetLocation = () => {
@@ -55,7 +81,8 @@ const TurfSearch = ({ onSearch }) => {
 
   return (
     <div className="rounded-lg border border-primary/10 bg-[#dcebf3] p-2 shadow-sm">
-      <form onSubmit={handleSearchSubmit} className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_auto]">
+      <form onSubmit={handleSearchSubmit} className="space-y-2">
+        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_auto]">
         <div className="relative w-full">
           <label htmlFor="citySearch" className="sr-only">
             Location
@@ -128,6 +155,79 @@ const TurfSearch = ({ onSearch }) => {
         <Button type="submit" variant="primary" className="h-14 w-full rounded-lg px-8 text-sm font-extrabold shadow-md md:w-auto">
           Search
         </Button>
+        </div>
+
+        <div className="grid gap-2 md:grid-cols-5">
+          <input
+            type="number"
+            min="0"
+            placeholder="Min price"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+            aria-label="Minimum price"
+          />
+          <input
+            type="number"
+            min="0"
+            placeholder="Max price"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+            aria-label="Maximum price"
+          />
+          <select
+            value={minRating}
+            onChange={(e) => setMinRating(e.target.value)}
+            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+            aria-label="Minimum rating"
+          >
+            <option value="">Any rating</option>
+            <option value="3">3.0+</option>
+            <option value="4">4.0+</option>
+            <option value="4.5">4.5+</option>
+          </select>
+          <select
+            value={indoorOrOutdoor}
+            onChange={(e) => setIndoorOrOutdoor(e.target.value)}
+            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+            aria-label="Venue type"
+          >
+            <option value="">Any venue</option>
+            <option value="INDOOR">Indoor</option>
+            <option value="OUTDOOR">Outdoor</option>
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+            aria-label="Sort venues"
+          >
+            <option value="createdAt:desc">Newest</option>
+            <option value="hourlyRate:asc">Price low to high</option>
+            <option value="hourlyRate:desc">Price high to low</option>
+            <option value="averageRating:desc">Top rated</option>
+          </select>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-1">
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-primary-dark">
+            <input
+              type="checkbox"
+              checked={floodlights}
+              onChange={(e) => setFloodlights(e.target.checked)}
+              className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+            />
+            Floodlights available
+          </label>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-sm font-extrabold text-primary transition hover:text-primary-dark"
+          >
+            Clear filters
+          </button>
+        </div>
       </form>
     </div>
   );

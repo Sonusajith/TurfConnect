@@ -90,6 +90,7 @@ public class TurfService {
         if (request.getHourlyRate() != null) turf.setHourlyRate(request.getHourlyRate());
         if (request.getCurrency() != null) turf.setCurrency(request.getCurrency());
         if (request.getAmenities() != null) turf.setAmenities(request.getAmenities());
+        if (request.getCoverImage() != null) turf.setCoverImage(request.getCoverImage());
         
         if (request.getOpenTime() != null) turf.setOpenTime(request.getOpenTime());
         if (request.getCloseTime() != null) turf.setCloseTime(request.getCloseTime());

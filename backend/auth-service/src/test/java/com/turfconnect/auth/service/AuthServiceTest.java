@@ -52,7 +52,7 @@ class AuthServiceTest {
 
     @Test
     void register_NewUser_ShouldReturnTokens() {
-        RegisterRequest req = new RegisterRequest("Test User", "test@test.com", "Password@123");
+        RegisterRequest req = new RegisterRequest("Test User", "test@test.com", "Password@123", null);
 
         when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_pw");
@@ -75,8 +75,38 @@ class AuthServiceTest {
     }
 
     @Test
+    void register_TurfOwnerRole_ShouldPersistAllowedRole() {
+        RegisterRequest req = new RegisterRequest("Seed Owner", "owner@test.com", "Password@123", "TURF_OWNER");
+
+        when(userRepository.existsByEmail("owner@test.com")).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_pw");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId("owner-123");
+            return user;
+        });
+        when(jwtUtil.generateRefreshTokenId()).thenReturn("uuid-123");
+        when(jwtUtil.generateAccessToken(anyString(), anyString(), anyString(), anyString(), any(), any())).thenReturn("access_token");
+
+        AuthResponse resp = authService.register(req);
+
+        assertEquals("owner-123", resp.getUserId());
+        verify(userRepository).save(argThat(user -> "TURF_OWNER".equals(user.getRole())));
+    }
+
+    @Test
+    void register_UnsupportedRole_ShouldThrowException() {
+        RegisterRequest req = new RegisterRequest("Admin", "admin@test.com", "Password@123", "SUPER_ADMIN");
+
+        when(userRepository.existsByEmail("admin@test.com")).thenReturn(false);
+
+        assertThrows(BadRequestException.class, () -> authService.register(req));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void register_ExistingUser_ShouldThrowException() {
-        RegisterRequest req = new RegisterRequest("Test", "test@test.com", "Pass@123");
+        RegisterRequest req = new RegisterRequest("Test", "test@test.com", "Pass@123", null);
         when(userRepository.existsByEmail("test@test.com")).thenReturn(true);
 
         assertThrows(BadRequestException.class, () -> authService.register(req));

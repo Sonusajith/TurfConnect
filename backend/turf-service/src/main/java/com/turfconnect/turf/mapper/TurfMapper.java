@@ -32,6 +32,7 @@ public class TurfMapper {
                 .hourlyRate(request.getHourlyRate())
                 .currency(request.getCurrency() != null ? request.getCurrency() : "USD")
                 .amenities(request.getAmenities() != null ? request.getAmenities() : Collections.emptyList())
+                .coverImage(request.getCoverImage())
                 .openTime(request.getOpenTime())
                 .closeTime(request.getCloseTime())
                 .slotDurationMinutes(request.getSlotDurationMinutes() != null ? request.getSlotDurationMinutes() : 60)

@@ -59,6 +59,7 @@ public class TurfCreateRequest {
     private String currency;
     
     private List<String> amenities;
+    private String coverImage;
     
     @NotNull(message = "Open time is required")
     @JsonFormat(pattern = "HH:mm")

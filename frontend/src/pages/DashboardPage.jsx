@@ -20,11 +20,22 @@ const DashboardPage = () => {
     navigate(path);
   };
 
+  const startingPrice = turfs?.length
+    ? Math.min(...turfs.map((turf) => Number(turf.hourlyRate || 0)).filter(Boolean))
+    : 0;
+  const sportsCount = new Set((turfs || []).flatMap((turf) => turf.sportTypes || [])).size;
+  const topRating = turfs?.length
+    ? Math.max(...turfs.map((turf) => Number(turf.averageRating || 0)))
+    : 0;
+  const activeFilters = Object.entries(searchParams)
+    .filter(([key, value]) => value && !['sortBy', 'sortDirection'].includes(key))
+    .map(([key, value]) => `${key.replace(/([A-Z])/g, ' $1')}: ${value}`);
+
   const stats = [
     ['Available Venues', turfs?.length || 0],
-    ['Upcoming Matches', 3],
-    ['Reward Points', '2,450'],
-    ['Favorite Venues', 8],
+    ['Sports Covered', sportsCount || '-'],
+    ['Starting From', startingPrice ? `₹${startingPrice}` : '-'],
+    ['Top Rating', topRating ? topRating.toFixed(1) : '-'],
   ];
 
   return (
@@ -54,20 +65,20 @@ const DashboardPage = () => {
 
       <section className="rounded-lg border border-primary/10 bg-white/55 p-4 shadow-sm">
         <div className="flex flex-col gap-4 border-b border-primary/10 pb-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Filter by:</span>
-            {['Price Range', 'Rating', 'Amenities'].map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                className="rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-semibold text-gray-700 transition hover:border-primary hover:text-primary"
-              >
-                {filter}
-              </button>
-            ))}
-            <button type="button" className="text-sm font-bold text-primary hover:text-primary-dark">
-              Clear All
-            </button>
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Explore turfs</p>
+            <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-950">
+              {loading ? 'Finding venues...' : `${turfs?.length || 0} venue${turfs?.length === 1 ? '' : 's'} available`}
+            </h2>
+            {activeFilters.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {activeFilters.map((filter) => (
+                  <span key={filter} className="rounded-full border border-primary/10 bg-primary-light px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-primary-dark">
+                    {filter}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="inline-flex w-fit rounded-full border border-primary/10 bg-[#e3f0f8] p-1">

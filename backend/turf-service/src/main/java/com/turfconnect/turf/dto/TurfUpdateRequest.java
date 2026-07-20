@@ -49,6 +49,7 @@ public class TurfUpdateRequest {
 
     private String currency;
     private List<String> amenities;
+    private String coverImage;
     
     @JsonFormat(pattern = "HH:mm")
     private LocalTime openTime;
