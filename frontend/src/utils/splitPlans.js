@@ -70,3 +70,30 @@ export const saveBookingSplitPlan = (bookingId, splitPlan) => {
     [bookingId]: splitPlan,
   }));
 };
+
+export const toSplitContributionRequest = (splitPlan) => {
+  if (!splitPlan?.members?.length) return null;
+
+  return {
+    members: splitPlan.members.map((member) => ({
+      id: member.id,
+      name: member.name,
+      amount: member.amount,
+      status: member.status || 'PENDING',
+    })),
+  };
+};
+
+export const updateMemberStatus = (splitPlan, memberId, status) => {
+  if (!splitPlan?.members?.length) return splitPlan;
+
+  return createSplitPlan({
+    totalAmount: splitPlan.totalAmount,
+    memberCount: splitPlan.members.length,
+    memberNames: splitPlan.members.map((member) => member.name),
+    paidMemberIds: splitPlan.members
+      .map((member) => (member.id === memberId ? { ...member, status } : member))
+      .filter((member) => member.status === 'PAID')
+      .map((member) => member.id),
+  });
+};

@@ -1,6 +1,7 @@
 package com.turfconnect.booking.model;
 
 import com.turfconnect.shared.dto.booking.BookingStatus;
+import com.turfconnect.shared.dto.booking.SplitContributionResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,6 +43,8 @@ public class Booking {
 
     @Indexed
     private BookingStatus status;
+
+    private SplitContributionResponse splitContribution;
 
     private String lockToken; // Stores the UUID generated for the Redis lock
 

@@ -24,6 +24,7 @@ public class BookingResponse {
     private LocalTime endTime;
     private BigDecimal totalPrice;
     private BookingStatus status;
+    private SplitContributionResponse splitContribution;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

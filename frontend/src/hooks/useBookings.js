@@ -27,6 +27,16 @@ export const useBookings = () => {
     fetchBookings();
   }, [fetchBookings]);
 
-  return { bookings, loading, error, refetch: fetchBookings };
+  const cancelBooking = useCallback(async (bookingId) => {
+    await bookingService.cancel(bookingId);
+    await fetchBookings();
+  }, [fetchBookings]);
+
+  const updateSplitContribution = useCallback(async (bookingId, splitContribution) => {
+    await bookingService.updateSplitContribution(bookingId, splitContribution);
+    await fetchBookings();
+  }, [fetchBookings]);
+
+  return { bookings, loading, error, refetch: fetchBookings, cancelBooking, updateSplitContribution };
 };
 export default useBookings;

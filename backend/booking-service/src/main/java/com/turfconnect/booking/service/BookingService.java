@@ -5,11 +5,16 @@ import com.turfconnect.booking.repository.BookingRepository;
 import com.turfconnect.shared.dto.booking.BookingCreateRequest;
 import com.turfconnect.shared.dto.booking.BookingResponse;
 import com.turfconnect.shared.dto.booking.BookingStatus;
+import com.turfconnect.shared.dto.booking.SplitContributionMember;
+import com.turfconnect.shared.dto.booking.SplitContributionRequest;
+import com.turfconnect.shared.dto.booking.SplitContributionResponse;
+import com.turfconnect.shared.dto.booking.SplitContributionStatus;
 import com.turfconnect.shared.dto.payment.PaymentStatus;
 import com.turfconnect.shared.dto.payment.RefundRequest;
 import com.turfconnect.shared.dto.turf.SlotDTO;
 import com.turfconnect.shared.dto.turf.SlotStatus;
 import com.turfconnect.shared.exception.BadRequestException;
+import com.turfconnect.shared.exception.ForbiddenException;
 import com.turfconnect.shared.exception.ResourceNotFoundException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +101,7 @@ public class BookingService {
                 .endTime(slot.getEndTime())
                 .totalPrice(slot.getPrice())
                 .status(BookingStatus.PENDING)
+                .splitContribution(buildSplitContribution(slot.getPrice(), request.getSplitContribution()))
                 .lockToken(lockToken)
                 .build();
 
@@ -159,6 +167,8 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
 
+        requireBookingOwner(booking, userId);
+
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new BadRequestException("Booking is already cancelled.");
         }
@@ -189,6 +199,22 @@ public class BookingService {
         return toBookingResponse(saved);
     }
 
+    public SplitContributionResponse updateSplitContribution(String bookingId, String userId, SplitContributionRequest request) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        requireBookingOwner(booking, userId);
+
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BadRequestException("Cannot update split contributions for a cancelled booking.");
+        }
+
+        SplitContributionResponse splitContribution = buildSplitContribution(booking.getTotalPrice(), request);
+        booking.setSplitContribution(splitContribution);
+        Booking saved = bookingRepository.save(booking);
+        return saved.getSplitContribution();
+    }
+
     /**
      * Checks whether a successful payment exists for this booking and, if so,
      * calls payment-service to initiate a refund.
@@ -210,7 +236,7 @@ public class BookingService {
             ResponseEntity<PaymentStatusWrapper> paymentResponse =
                     restTemplate.exchange(paymentCheckUrl, HttpMethod.GET, entity, PaymentStatusWrapper.class);
 
-            if (paymentResponse.getBody() == null || !paymentResponse.getBody().isSuccess()
+            if (paymentResponse == null || paymentResponse.getBody() == null || !paymentResponse.getBody().isSuccess()
                     || paymentResponse.getBody().getData() == null) {
                 log.info("No payment record found for bookingId={}. Skipping refund.", bookingId);
                 return;
@@ -267,8 +293,71 @@ public class BookingService {
                 .endTime(booking.getEndTime())
                 .totalPrice(booking.getTotalPrice())
                 .status(booking.getStatus())
+                .splitContribution(booking.getSplitContribution())
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
+                .build();
+    }
+
+    private void requireBookingOwner(Booking booking, String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new ForbiddenException("User identity is required for this booking action.");
+        }
+        if (!booking.getUserId().equals(userId)) {
+            throw new ForbiddenException("You can only modify your own bookings.");
+        }
+    }
+
+    private SplitContributionResponse buildSplitContribution(BigDecimal totalAmount, SplitContributionRequest request) {
+        if (request == null || request.getMembers() == null || request.getMembers().isEmpty()) {
+            return null;
+        }
+
+        int memberCount = request.getMembers().size();
+        if (memberCount > 30) {
+            throw new BadRequestException("Split contributions cannot include more than 30 members.");
+        }
+
+        BigDecimal normalizedTotal = totalAmount.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal perMember = normalizedTotal.divide(BigDecimal.valueOf(memberCount), 2, RoundingMode.DOWN);
+        BigDecimal assignedTotal = BigDecimal.ZERO;
+        List<SplitContributionMember> members = new ArrayList<>();
+
+        for (int i = 0; i < memberCount; i++) {
+            SplitContributionMember input = request.getMembers().get(i);
+            String name = input.getName() != null ? input.getName().trim() : "";
+            if (name.isBlank()) {
+                throw new BadRequestException("Split member name is required.");
+            }
+
+            BigDecimal memberAmount = i == memberCount - 1
+                    ? normalizedTotal.subtract(assignedTotal)
+                    : perMember;
+            assignedTotal = assignedTotal.add(memberAmount);
+
+            members.add(SplitContributionMember.builder()
+                    .id(input.getId() != null && !input.getId().isBlank() ? input.getId() : "member-" + (i + 1))
+                    .name(name)
+                    .amount(memberAmount)
+                    .status(input.getStatus() != null ? input.getStatus() : SplitContributionStatus.PENDING)
+                    .build());
+        }
+
+        BigDecimal collectedAmount = members.stream()
+                .filter(member -> member.getStatus() == SplitContributionStatus.PAID)
+                .map(SplitContributionMember::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal pendingAmount = normalizedTotal.subtract(collectedAmount).max(BigDecimal.ZERO);
+
+        return SplitContributionResponse.builder()
+                .totalAmount(normalizedTotal)
+                .perMemberAmount(perMember)
+                .collectedAmount(collectedAmount)
+                .pendingAmount(pendingAmount)
+                .memberCount(memberCount)
+                .members(members)
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 
