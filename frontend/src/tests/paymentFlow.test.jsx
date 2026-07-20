@@ -25,6 +25,21 @@ describe('PaymentModal Component', () => {
     expect(screen.getByRole('button', { name: /pay with razorpay/i })).toBeInTheDocument();
   });
 
+  test('renders local test gateway payment prompt', () => {
+    render(
+      <PaymentModal
+        isOpen={true}
+        onClose={vi.fn()}
+        booking={mockBooking}
+        onPaymentComplete={vi.fn()}
+        paymentProvider="MOCK"
+      />
+    );
+
+    expect(screen.getByText(/local test gateway/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /complete test payment/i })).toBeInTheDocument();
+  });
+
   test('triggers callback when Razorpay payment button is clicked', async () => {
     const handleComplete = vi.fn().mockResolvedValue({ success: true });
     

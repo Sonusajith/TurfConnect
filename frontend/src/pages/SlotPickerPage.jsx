@@ -23,6 +23,7 @@ const SlotPickerPage = () => {
   const { turfId } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const paymentProvider = paymentService.getConfiguredProvider();
 
   const [date, setDate] = useState(() => {
     const today = new Date();
@@ -91,12 +92,28 @@ const SlotPickerPage = () => {
 
   const handlePaymentComplete = async (booking) => {
     try {
-      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice);
+      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', paymentProvider);
       if (!initiateRes.success) {
         throw new Error(initiateRes.message || 'Payment initiation failed');
       }
 
-      const { transactionId, amount } = initiateRes.data;
+      const { transactionId, amount, provider } = initiateRes.data;
+      const activeProvider = provider || paymentProvider;
+
+      if (activeProvider === 'MOCK') {
+        const verifyRes = await paymentService.verifyPayment(transactionId);
+        addToast('Booking confirmed successfully!', 'success');
+
+        setIsPaymentOpen(false);
+        setSelectedSlot(null);
+        setActiveBooking(null);
+        navigate(ROUTES.BOOKINGS);
+        return verifyRes.data;
+      }
+
+      if (!import.meta.env.VITE_RAZORPAY_KEY_ID || !window.Razorpay) {
+        throw new Error('Razorpay checkout is unavailable. Add VITE_RAZORPAY_KEY_ID or use VITE_PAYMENT_PROVIDER=MOCK.');
+      }
 
       return new Promise((resolve, reject) => {
         const options = {
@@ -266,6 +283,7 @@ const SlotPickerPage = () => {
           onClose={handlePaymentModalClose}
           booking={activeBooking}
           onPaymentComplete={handlePaymentComplete}
+          paymentProvider={paymentProvider}
         />
       )}
     </div>

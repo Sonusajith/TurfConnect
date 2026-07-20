@@ -3,12 +3,25 @@ import Modal from '../../components/Modal';
 import Button from '../../components/Button';
 import { formatCurrency } from '../../utils/formatters';
 
-const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete }) => {
+const providerContent = {
+  MOCK: {
+    body: 'Complete this booking with the local test gateway.',
+    button: 'Complete Test Payment',
+  },
+  RAZORPAY: {
+    body: "You will be redirected to Razorpay's secure checkout to complete your payment.",
+    button: 'Pay with Razorpay',
+  },
+};
+
+const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete, paymentProvider = 'RAZORPAY' }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   if (!booking) return null;
+
+  const content = providerContent[paymentProvider] || providerContent.RAZORPAY;
 
   const handlePayment = async (e) => {
     e.preventDefault();
@@ -48,7 +61,7 @@ const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete }) => {
 
           <div className="px-4 text-center">
             <p className="mb-4 text-sm text-gray-500">
-              You will be redirected to Razorpay's secure checkout to complete your payment.
+              {content.body}
             </p>
           </div>
 
@@ -68,7 +81,7 @@ const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete }) => {
               className="flex-1 text-sm font-bold uppercase tracking-wider"
               isLoading={loading}
             >
-              Pay with Razorpay
+              {content.button}
             </Button>
           </div>
         </form>
