@@ -132,10 +132,28 @@ const AppLayout = () => {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+        <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10 pb-24 lg:pb-8">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-primary/10 bg-white/95 pb-safe pt-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur lg:hidden">
+        {navItems.slice(0, 5).map((item) => (
+          <Link
+            key={item.id}
+            to={item.path}
+            className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[64px] ${
+              isActive(item) ? 'text-primary-dark' : 'text-gray-500 hover:text-primary-dark'
+            }`}
+          >
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isActive(item) ? 'bg-[#8bf28a]' : ''}`}>
+              {item.icon}
+            </div>
+            <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 };
