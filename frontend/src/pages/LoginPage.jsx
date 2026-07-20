@@ -26,9 +26,7 @@ const LoginPage = () => {
 
   return (
     <div>
-      <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-        Sign in to your account
-      </h3>
+      <h3 className="sr-only">Sign in to your TurfConnect account</h3>
       <LoginForm onSubmit={handleLoginSubmit} isLoading={loading} />
     </div>
   );

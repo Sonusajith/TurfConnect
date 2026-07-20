@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import AuthLayout from './layouts/AuthLayout';
@@ -7,6 +7,7 @@ import AppLayout from './layouts/AppLayout';
 import ProtectedRoute from './router/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import TurfDetailsPage from './pages/TurfDetailsPage';
 import SlotPickerPage from './pages/SlotPickerPage';
 import BookingHistoryPage from './pages/BookingHistoryPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -27,6 +28,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+                <Route path={ROUTES.TURF_DETAILS} element={<TurfDetailsPage />} />
                 <Route path={ROUTES.SLOT_PICKER} element={<SlotPickerPage />} />
                 <Route path={ROUTES.BOOKINGS} element={<BookingHistoryPage />} />
               </Route>

@@ -15,57 +15,79 @@ const DashboardPage = () => {
     refetch(params);
   };
 
-  const handleViewSlots = (turfId) => {
-    const path = ROUTES.SLOT_PICKER.replace(':turfId', turfId);
+  const handleViewDetails = (turfId) => {
+    const path = ROUTES.TURF_DETAILS.replace(':turfId', turfId);
     navigate(path);
   };
 
+  const stats = [
+    ['Available Venues', turfs?.length || 0],
+    ['Upcoming Matches', 3],
+    ['Reward Points', '2,450'],
+    ['Favorite Venues', 8],
+  ];
+
   return (
-    <div className="space-y-12 animate-fade-in pb-12">
-      {/* Premium Hero Section */}
-      <div className="bg-gradient-to-r from-primary-dark via-primary to-secondary rounded-[2.5rem] p-10 md:p-16 text-white shadow-2xl relative overflow-hidden">
-        {/* Abstract Background Patterns */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-accent/20 rounded-full blur-2xl translate-y-1/2"></div>
-        
-        <div className="max-w-2xl space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-sm font-semibold tracking-wide uppercase text-white/90">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse-subtle"></span>
-            Book Instantly
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-sm">
-            Find & Book Your <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-200 to-white">Next Arena</span>
-          </h1>
-          <p className="text-lg md:text-xl text-green-50 font-medium max-w-xl leading-relaxed">
-            Discover premium local sports pitches, view real-time availability, and reserve yours in seconds.
-          </p>
-        </div>
-        
-        {/* Subtle Pitch Decoration */}
-        <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-20 pointer-events-none hidden lg:block border-l-4 border-dashed border-white rounded-l-[100%] transform translate-x-12"></div>
-      </div>
-
-      {/* Floating Search Bar */}
-      <div className="px-2 md:px-0">
-        <TurfSearch onSearch={handleSearch} />
-      </div>
-
-      {/* Venues Listing */}
-      <section className="px-2 md:px-0 pt-4">
-        <div className="flex justify-between items-end mb-8">
+    <div className="animate-fade-in space-y-8 pb-12">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="space-y-5">
           <div>
-            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Explore Venues</h2>
-            <p className="text-gray-500 mt-1 font-medium">Find the perfect pitch for your next game.</p>
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-primary-dark sm:text-5xl">
+              Discover Venues
+            </h1>
+            <p className="mt-2 max-w-xl text-base font-medium text-gray-600">
+              Find and book the best sports facilities near you.
+            </p>
+          </div>
+          <TurfSearch onSearch={handleSearch} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {stats.map(([label, value]) => (
+            <div key={label} className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm">
+              <p className="text-sm font-semibold text-gray-500">{label}</p>
+              <p className="mt-4 text-3xl font-extrabold text-gray-950">{value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-primary/10 bg-white/55 p-4 shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-primary/10 pb-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Filter by:</span>
+            {['Price Range', 'Rating', 'Amenities'].map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                className="rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-semibold text-gray-700 transition hover:border-primary hover:text-primary"
+              >
+                {filter}
+              </button>
+            ))}
+            <button type="button" className="text-sm font-bold text-primary hover:text-primary-dark">
+              Clear All
+            </button>
+          </div>
+
+          <div className="inline-flex w-fit rounded-full border border-primary/10 bg-[#e3f0f8] p-1">
+            <button type="button" className="rounded-full bg-white px-5 py-2 text-sm font-extrabold text-primary shadow-sm">
+              List
+            </button>
+            <button type="button" className="px-5 py-2 text-sm font-semibold text-gray-600">
+              Show Map
+            </button>
           </div>
         </div>
-        
-        <TurfList
-          turfs={turfs}
-          loading={loading}
-          error={error}
-          onViewSlots={handleViewSlots}
-        />
+
+        <div className="pt-8">
+          <TurfList
+            turfs={turfs}
+            loading={loading}
+            error={error}
+            onViewSlots={handleViewDetails}
+          />
+        </div>
       </section>
     </div>
   );

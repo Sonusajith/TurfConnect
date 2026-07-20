@@ -59,6 +59,6 @@ describe('TurfList Component', () => {
 
     expect(screen.getByText('Camp Nou Sports Arena')).toBeInTheDocument();
     expect(screen.getByText(/120.00/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /check availability/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view details/i })).toBeInTheDocument();
   });
 });
