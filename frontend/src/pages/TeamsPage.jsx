@@ -4,7 +4,7 @@ import TeamList from '../features/teams/TeamList';
 import TeamCreateModal from '../features/teams/TeamCreateModal';
 
 const TeamsPage = () => {
-  const { teams, loading, error, fetchTeams, createTeam } = useTeams();
+  const { teams, loading, error, fetchTeams, createTeam, updateTeam, sendInvitation } = useTeams();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const TeamsPage = () => {
         </button>
       </div>
 
-      <TeamList teams={teams} loading={loading} error={error} />
+      <TeamList teams={teams} loading={loading} error={error} onSendInvite={sendInvitation} onUpdateTeam={updateTeam} />
 
       <TeamCreateModal 
         isOpen={isModalOpen} 

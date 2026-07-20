@@ -19,6 +19,28 @@ const ProtectedRoute = () => {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
+  // Handle Root Path Redirects
+  const currentPath = window.location.pathname;
+  if (currentPath === ROUTES.DASHBOARD) {
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ORG_ADMIN') {
+      return <Navigate to={ROUTES.ADMIN_ANALYTICS} replace />;
+    }
+    if (user.role === 'TURF_OWNER') {
+      return <Navigate to={ROUTES.OWNER_DASHBOARD} replace />;
+    }
+  }
+
+  // Handle Unauthorized Access
+  const isOwnerRoute = currentPath.startsWith('/owner');
+  const isAdminRoute = currentPath.startsWith('/admin');
+  
+  if (isOwnerRoute && user.role !== 'TURF_OWNER') {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+  if (isAdminRoute && user.role !== 'SUPER_ADMIN' && user.role !== 'ORG_ADMIN') {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
   return <Outlet />;
 };
 

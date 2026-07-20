@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
 import Modal from '../../components/Modal';
+import { useToast } from '../../hooks/useToast';
 
-const ReviewFormModal = ({ isOpen, onClose, onSubmit }) => {
+const ReviewFormModal = ({ isOpen, onClose, onSubmit, bookingId }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [bookingId, setBookingId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rating === 0) return alert('Please select a rating');
+    if (rating === 0) {
+      addToast('Please select a rating', 'error');
+      return;
+    }
+    if (!bookingId) {
+      addToast('Booking ID is missing', 'error');
+      return;
+    }
     setIsSubmitting(true);
-    await onSubmit({ bookingId, rating, comment });
-    setIsSubmitting(false);
-    setRating(0);
-    setComment('');
-    setBookingId('');
-    onClose();
+    try {
+      await onSubmit({ bookingId, rating, comment });
+      addToast('Review submitted successfully!', 'success');
+      setRating(0);
+      setComment('');
+      onClose();
+    } catch (err) {
+      addToast(err.message || 'Failed to submit review', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -30,23 +43,12 @@ const ReviewFormModal = ({ isOpen, onClose, onSubmit }) => {
                 key={star} 
                 type="button" 
                 onClick={() => setRating(star)}
-                className={`material-symbols-outlined text-3xl ${rating >= star ? 'text-accent' : 'text-gray-300'}`}
+                className={`material-symbols-outlined text-3xl transition-colors ${rating >= star ? 'text-accent' : 'text-gray-300 hover:text-accent/50'}`}
               >
                 star
               </button>
             ))}
           </div>
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Booking ID</label>
-          <input
-            required
-            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
-            placeholder="Paste a completed booking ID"
-            value={bookingId}
-            onChange={(e) => setBookingId(e.target.value)}
-          />
-          <p className="mt-1 text-xs font-medium text-gray-500">Required by the backend for verified reviews.</p>
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">Comment</label>
@@ -60,9 +62,9 @@ const ReviewFormModal = ({ isOpen, onClose, onSubmit }) => {
           ></textarea>
         </div>
         <div className="flex justify-end gap-3 mt-6">
-          <button type="button" onClick={onClose} className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-50 rounded-lg">Cancel</button>
-          <button type="submit" disabled={isSubmitting} className="px-4 py-2 font-bold text-white bg-primary hover:bg-primary-dark rounded-lg disabled:opacity-50">
-            {isSubmitting ? 'Submitting...' : 'Submit Review'}
+          <button type="button" onClick={onClose} disabled={isSubmitting} className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-50 rounded-lg disabled:opacity-50">Cancel</button>
+          <button type="submit" disabled={isSubmitting || rating === 0} className="px-4 py-2 font-bold text-white bg-primary hover:bg-primary-dark rounded-lg disabled:opacity-50 flex items-center gap-2">
+            {isSubmitting ? <><span className="material-symbols-outlined animate-spin text-sm">progress_activity</span> Submitting</> : 'Submit Review'}
           </button>
         </div>
       </form>

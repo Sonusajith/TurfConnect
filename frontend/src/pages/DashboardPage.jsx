@@ -1,16 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { Card, CardContent } from '../components/ui/Card';
+import useBookings from '../hooks/useBookings';
+import useTeams from '../hooks/useTeams';
+import BookingTable from '../features/booking/BookingTable';
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const { bookings, loading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useBookings();
+  const { teams, invitations, loading: teamsLoading, fetchTeams, fetchInvitations } = useTeams();
+
+  useEffect(() => {
+    refetchBookings();
+    fetchTeams();
+    fetchInvitations();
+  }, [refetchBookings, fetchTeams, fetchInvitations]);
+
+  const upcomingBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
 
   const stats = [
-    { label: 'Upcoming Matches', value: '2', icon: 'sports_soccer' },
-    { label: 'Active Teams', value: '1', icon: 'groups' },
-    { label: 'Pending Invites', value: '3', icon: 'mail' },
+    { label: 'Upcoming Matches', value: bookingsLoading ? '-' : upcomingBookings.length, icon: 'sports_soccer' },
+    { label: 'Active Teams', value: teamsLoading ? '-' : (teams?.length || 0), icon: 'groups' },
+    { label: 'Pending Invites', value: teamsLoading ? '-' : (invitations?.length || 0), icon: 'mail' },
   ];
 
   return (
@@ -55,6 +68,11 @@ const DashboardPage = () => {
             Explore Turfs
           </Link>
         </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Upcoming Bookings</h2>
+        <BookingTable bookings={upcomingBookings} loading={bookingsLoading} error={bookingsError} />
       </section>
     </div>
   );

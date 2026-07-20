@@ -33,15 +33,20 @@ export const API_ENDPOINTS = {
     LIST: '/api/v1/teams',
     CREATE: '/api/v1/teams',
     GET: '/api/v1/teams/:teamId',
+    JOIN: '/api/v1/teams/:teamId/join',
   },
   INVITATIONS: {
     LIST: '/api/v1/invitations/me',
+    SEND: '/api/v1/invitations/teams/:teamId',
     ACCEPT: '/api/v1/invitations/:invitationId/accept',
     DECLINE: '/api/v1/invitations/:invitationId/decline',
   },
   OWNER: {
     STATS: '/api/v1/analytics/platform',
     TURFS: '/api/v1/turfs/my-turfs',
+  },
+  ADMIN: {
+    USERS: '/api/v1/auth/admin/users',
   }
 };
 

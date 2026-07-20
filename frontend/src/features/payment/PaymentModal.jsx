@@ -14,7 +14,7 @@ const providerContent = {
   },
 };
 
-const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete, paymentProvider = 'RAZORPAY' }) => {
+const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete, paymentProvider = 'RAZORPAY', onSwitchToMock }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -66,8 +66,18 @@ const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete, paymentProv
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-600">
-              Error: {error}
+            <div className="rounded-lg border border-red-100 bg-red-50 p-4">
+              <p className="text-sm font-semibold text-red-600 mb-2">Payment Error</p>
+              <p className="text-xs text-red-500">{error}</p>
+              {paymentProvider !== 'MOCK' && onSwitchToMock && (
+                <button
+                  type="button"
+                  onClick={onSwitchToMock}
+                  className="mt-3 text-xs font-bold text-primary hover:text-primary-dark underline"
+                >
+                  Gateway failing? Retry with Mock Test Payment
+                </button>
+              )}
             </div>
           )}
 

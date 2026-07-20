@@ -6,6 +6,8 @@ import { formatCurrency, formatTime, formatDate } from '../../utils/formatters';
 import { ROUTES } from '../../constants/routes';
 import SplitContributionPanel from './SplitContributionPanel';
 import { createSplitPlan, getBookingSplitPlan } from '../../utils/splitPlans';
+import ReviewFormModal from '../reviews/ReviewFormModal';
+import { useReviews } from '../../hooks/useReviews';
 
 const BookingTable = ({ bookings, loading, error }) => {
   if (loading) {
@@ -58,6 +60,9 @@ const BookingCard = ({ booking }) => {
     ? ROUTES.TURF_DETAILS.replace(':turfId', booking.turfId)
     : ROUTES.EXPLORE;
 
+  const [isReviewOpen, setIsReviewOpen] = React.useState(false);
+  const { submitReview } = useReviews(booking.turfId);
+
   return (
     <article className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm transition hover:border-primary/20 hover:shadow-md">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -97,13 +102,30 @@ const BookingCard = ({ booking }) => {
         <p className="text-xs font-medium text-gray-500">
           Split plans are stored on this browser until backend split persistence is added.
         </p>
-        <Link
-          to={turfDetailsPath}
-          className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-        >
-          View Turf
-        </Link>
+        <div className="flex items-center gap-3">
+          {booking.status === 'CONFIRMED' && (
+            <button
+              onClick={() => setIsReviewOpen(true)}
+              className="inline-flex items-center justify-center rounded-lg bg-accent px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-accent/90 focus:outline-none"
+            >
+              Leave Review
+            </button>
+          )}
+          <Link
+            to={turfDetailsPath}
+            className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          >
+            View Turf
+          </Link>
+        </div>
       </div>
+
+      <ReviewFormModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        onSubmit={submitReview}
+        bookingId={booking.id}
+      />
     </article>
   );
 };

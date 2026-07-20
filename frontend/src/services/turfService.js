@@ -10,4 +10,8 @@ export const turfService = {
   get: async (turfId) => {
     return apiClient.get(`${API_ENDPOINTS.TURFS.GET}/${turfId}`);
   },
+
+  create: async (turfData) => {
+    return apiClient.post(API_ENDPOINTS.TURFS.LIST, turfData);
+  },
 };

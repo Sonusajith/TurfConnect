@@ -22,12 +22,18 @@ start "Turf Service" cmd /k ".\mvnw.cmd spring-boot:run -pl turf-service"
 echo [4/5] Starting Booking Service...
 start "Booking Service" cmd /k ".\mvnw.cmd spring-boot:run -pl booking-service"
 
-echo [5/5] Starting Payment Service...
+echo [5/7] Starting Payment Service...
 start "Payment Service" cmd /k ".\mvnw.cmd spring-boot:run -pl payment-service"
+
+echo [6/7] Starting Review Service...
+start "Review Service" cmd /k ".\mvnw.cmd spring-boot:run -pl review-service"
+
+echo [7/7] Starting Community Service...
+start "Community Service" cmd /k ".\mvnw.cmd spring-boot:run -pl community-service"
 
 echo.
 echo All core services are starting in separate windows.
-echo Wait about 30 seconds for them to fully initialize.
+echo Wait about 45 seconds for them to fully initialize.
 echo API Gateway will be available at http://localhost:8080
 cd ..
 pause

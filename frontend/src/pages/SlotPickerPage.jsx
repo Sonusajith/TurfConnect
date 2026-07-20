@@ -9,6 +9,7 @@ import { useToast } from '../hooks/useToast';
 import SlotGrid from '../features/slots/SlotGrid';
 import CheckoutModal from '../features/booking/CheckoutModal';
 import PaymentModal from '../features/payment/PaymentModal';
+import DatePicker from '../components/ui/DatePicker';
 import { ROUTES } from '../constants/routes';
 import { formatCurrency } from '../utils/formatters';
 import { saveBookingSplitPlan } from '../utils/splitPlans';
@@ -23,7 +24,7 @@ const SlotPickerPage = () => {
   const { turfId } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const paymentProvider = paymentService.getConfiguredProvider();
+  const [activePaymentProvider, setActivePaymentProvider] = useState(paymentService.getConfiguredProvider());
 
   const [date, setDate] = useState(() => {
     const today = new Date();
@@ -93,13 +94,13 @@ const SlotPickerPage = () => {
 
   const handlePaymentComplete = async (booking) => {
     try {
-      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', paymentProvider);
+      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', activePaymentProvider);
       if (!initiateRes.success) {
-        throw new Error(initiateRes.message || 'Payment initiation failed');
+        throw new Error(initiateRes.message || 'Payment initiation failed on the server. Please try a different method.');
       }
 
       const { transactionId, amount, provider } = initiateRes.data;
-      const activeProvider = provider || paymentProvider;
+      const activeProvider = provider || activePaymentProvider;
 
       if (activeProvider === 'MOCK') {
         const verifyRes = await paymentService.verifyPayment(transactionId);
@@ -240,13 +241,12 @@ const SlotPickerPage = () => {
             <label htmlFor="slotDatePicker" className="text-xs font-extrabold uppercase tracking-wide text-gray-500">
               Booking Date
             </label>
-            <input
-              type="date"
+            <DatePicker
               id="slotDatePicker"
               value={date}
               min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-11 rounded-lg border border-primary/15 bg-[#f4faff] px-3 text-sm font-bold text-gray-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              onChange={setDate}
+              className="w-40 sm:w-48"
             />
           </div>
         </div>
@@ -284,7 +284,11 @@ const SlotPickerPage = () => {
           onClose={handlePaymentModalClose}
           booking={activeBooking}
           onPaymentComplete={handlePaymentComplete}
-          paymentProvider={paymentProvider}
+          paymentProvider={activePaymentProvider}
+          onSwitchToMock={() => {
+            setActivePaymentProvider('MOCK');
+            addToast('Switched to Mock Test Payment. Please retry.', 'info');
+          }}
         />
       )}
     </div>

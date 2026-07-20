@@ -9,7 +9,7 @@ const OwnerStats = ({ stats, loading, error }) => {
   const displayStats = [
     { label: 'Total Revenue', value: formatCurrency(stats?.totalRevenue || 0), icon: 'account_balance_wallet', color: 'text-primary', bg: 'bg-primary-light' },
     { label: 'Total Bookings', value: stats?.totalBookings || '0', icon: 'receipt_long', color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Avg Occupancy', value: stats?.avgOccupancy ? `${stats.avgOccupancy}%` : '0%', icon: 'pie_chart', color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Confirmation Rate', value: stats?.confirmationRate ? `${(stats.confirmationRate * 100).toFixed(1)}%` : '0%', icon: 'pie_chart', color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Active Turfs', value: stats?.activeTurfs || '0', icon: 'stadium', color: 'text-accent', bg: 'bg-accent-light' },
   ];
 

@@ -25,31 +25,55 @@ export const useOwner = () => {
       const turfsData = await turfsRes.json();
       const ownerTurfs = turfsData.data?.content || turfsData.data || turfsData || [];
       setTurfs(ownerTurfs);
+
+      const statsRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.OWNER.STATS}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      let fetchedStats = {};
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        fetchedStats = statsData.data || statsData || {};
+      }
+
       setStats({
-        totalRevenue: 0,
-        totalBookings: 0,
-        avgOccupancy: 0,
+        ...fetchedStats,
         activeTurfs: ownerTurfs.filter((turf) => turf.status === 'ACTIVE' || turf.active).length,
       });
     } catch (e) {
-      console.warn("Owner API failed, using mock data:", e.message);
-      setStats({
-        totalRevenue: 45000,
-        totalBookings: 128,
-        avgOccupancy: 64,
-        activeTurfs: 2
-      });
-      setTurfs([
-        { id: 't1', name: 'Elite Park Stadium', location: 'Downtown', sportTypes: ['Football'], hourlyRate: 1500, active: true, images: [] },
-        { id: 't2', name: 'City Sports Hub', location: 'Westside', sportTypes: ['Badminton', 'Tennis'], hourlyRate: 800, active: true, images: [] }
-      ]);
-      setError(null);
+      console.error("Owner API failed:", e.message);
+      setError(e.message || 'Failed to load owner data');
     } finally {
       setLoading(false);
     }
   }, [token, user?.role]);
 
-  return { stats, turfs, loading, error, fetchDashboardData };
+  const addTurf = async (turfData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TURFS.LIST}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(turfData)
+      });
+      
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to create venue');
+      }
+      
+      const newTurfData = await response.json();
+      const newTurf = newTurfData.data || newTurfData;
+      setTurfs((prev) => [...prev, newTurf]);
+      return newTurf;
+    } catch (err) {
+      console.error("Failed to add turf:", err);
+      throw err;
+    }
+  };
+
+  return { stats, turfs, loading, error, fetchDashboardData, addTurf };
 };
 
 export default useOwner;

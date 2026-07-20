@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
+import { useAnalytics } from '../hooks/useAnalytics';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { formatCurrency } from '../utils/formatters';
 
 const StatCard = ({ title, value, icon, trend, colorClass }) => (
   <Card className="hover:shadow-md transition-shadow border border-outline-variant/30">
@@ -21,19 +24,41 @@ const StatCard = ({ title, value, icon, trend, colorClass }) => (
 );
 
 const AdminAnalyticsPage = () => {
+  const { data, loading, error, fetchPlatformAnalytics } = useAnalytics();
+
+  useEffect(() => {
+    // Fetch last 30 days of data
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    fetchPlatformAnalytics(startDate, endDate);
+  }, [fetchPlatformAnalytics]);
+
   return (
     <div className="p-margin-mobile md:p-margin-desktop animate-fade-in max-w-7xl mx-auto pb-24 md:pb-8">
       <div className="mb-8 border-b border-outline-variant/30 pb-6">
         <h1 className="font-headline-lg text-headline-lg text-on-surface">Admin Dashboard</h1>
-        <p className="text-on-surface-variant mt-2">Franchise overview and revenue analytics.</p>
+        <p className="text-on-surface-variant mt-2">Franchise overview and revenue analytics (Last 30 Days).</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-8">
-        <StatCard title="Total Revenue" value="₹1.4M" icon="account_balance_wallet" trend={12} colorClass="bg-green-100 text-green-700" />
-        <StatCard title="Total Bookings" value="1,248" icon="event_available" trend={8} colorClass="bg-blue-100 text-blue-700" />
-        <StatCard title="Avg Occupancy" value="68%" icon="pie_chart" trend={-2} colorClass="bg-purple-100 text-purple-700" />
-        <StatCard title="Active Turfs" value="14" icon="stadium" colorClass="bg-orange-100 text-orange-700" />
-      </div>
+      {error && (
+        <div className="mb-6 rounded-lg bg-error/10 p-4 text-error">
+          <p className="font-bold">Failed to load analytics</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-8">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-28"><LoadingSkeleton variant="rectangular" className="h-full rounded-xl" /></div>)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-8">
+          <StatCard title="Total Revenue" value={data ? formatCurrency(data.totalRevenue) : '₹0'} icon="account_balance_wallet" colorClass="bg-green-100 text-green-700" />
+          <StatCard title="Total Bookings" value={data?.totalBookings || '0'} icon="event_available" colorClass="bg-blue-100 text-blue-700" />
+          <StatCard title="Conf. Rate" value={data ? `${(data.confirmationRate * 100).toFixed(1)}%` : '0%'} icon="pie_chart" colorClass="bg-purple-100 text-purple-700" />
+          <StatCard title="Avg Rev / Booking" value={data ? formatCurrency(data.averageRevenuePerBooking) : '₹0'} icon="payments" colorClass="bg-orange-100 text-orange-700" />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
         <div className="lg:col-span-2">

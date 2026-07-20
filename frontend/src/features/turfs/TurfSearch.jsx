@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../../components/ui/Button';
+import Select from '../../components/ui/Select';
 
 const TurfSearch = ({ onSearch }) => {
   const [city, setCity] = useState('');
@@ -96,7 +97,7 @@ const TurfSearch = ({ onSearch }) => {
           <input
             id="citySearch"
             type="text"
-            placeholder="Location"
+            placeholder="Search by city (e.g. Mumbai, Bengaluru)"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             className="block h-14 w-full rounded-lg border border-transparent bg-transparent pl-12 pr-12 text-sm font-semibold text-gray-800 placeholder-gray-600 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -122,34 +123,27 @@ const TurfSearch = ({ onSearch }) => {
           </button>
         </div>
 
-        <div className="relative w-full">
-          <label htmlFor="sportSelect" className="sr-only">
-            Sport Type
-          </label>
-          <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168 11.555 9.036A1 1 0 0 0 10 9.87v4.263a1 1 0 0 0 1.555.832l3.197-2.132a1 1 0 0 0 0-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-            </svg>
-          </div>
-          <select
-            id="sportSelect"
+        <div className="relative w-full h-14">
+          <Select
             value={sport}
-            onChange={(e) => setSport(e.target.value)}
-            className="block h-14 w-full appearance-none rounded-lg border border-transparent bg-transparent pl-12 pr-10 text-sm font-semibold text-gray-800 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-            aria-label="Sport Type"
-          >
-            <option value="">Sport</option>
-            <option value="FOOTBALL">Football</option>
-            <option value="CRICKET">Cricket</option>
-            <option value="BADMINTON">Badminton</option>
-            <option value="TENNIS">Tennis</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-            <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7" />
-            </svg>
-          </div>
+            onChange={(val) => setSport(val)}
+            placeholder="Sport"
+            options={[
+              { value: '', label: 'Any Sport' },
+              { value: 'FOOTBALL', label: 'Football' },
+              { value: 'CRICKET', label: 'Cricket' },
+              { value: 'BADMINTON', label: 'Badminton' },
+              { value: 'TENNIS', label: 'Tennis' },
+            ]}
+            className="h-14"
+            buttonClassName="h-14 border-transparent bg-transparent pl-4 hover:bg-white focus:bg-white text-gray-800"
+            icon={
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168 11.555 9.036A1 1 0 0 0 10 9.87v4.263a1 1 0 0 0 1.555.832l3.197-2.132a1 1 0 0 0 0-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+              </svg>
+            }
+          />
         </div>
 
         <Button type="submit" variant="primary" className="h-14 w-full rounded-lg px-8 text-sm font-extrabold shadow-md md:w-auto">
@@ -161,7 +155,7 @@ const TurfSearch = ({ onSearch }) => {
           <input
             type="number"
             min="0"
-            placeholder="Min price"
+            placeholder="Min Rate (₹)"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
@@ -170,44 +164,47 @@ const TurfSearch = ({ onSearch }) => {
           <input
             type="number"
             min="0"
-            placeholder="Max price"
+            placeholder="Max Rate (₹)"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
             aria-label="Maximum price"
           />
-          <select
+          <Select
             value={minRating}
-            onChange={(e) => setMinRating(e.target.value)}
-            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
-            aria-label="Minimum rating"
-          >
-            <option value="">Any rating</option>
-            <option value="3">3.0+</option>
-            <option value="4">4.0+</option>
-            <option value="4.5">4.5+</option>
-          </select>
-          <select
+            onChange={setMinRating}
+            placeholder="Any rating"
+            buttonClassName="h-11 border-transparent bg-white/70 hover:bg-white focus:bg-white text-gray-800"
+            options={[
+              { value: '', label: 'Any rating' },
+              { value: '3', label: '3.0+' },
+              { value: '4', label: '4.0+' },
+              { value: '4.5', label: '4.5+' },
+            ]}
+          />
+          <Select
             value={indoorOrOutdoor}
-            onChange={(e) => setIndoorOrOutdoor(e.target.value)}
-            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
-            aria-label="Venue type"
-          >
-            <option value="">Any venue</option>
-            <option value="INDOOR">Indoor</option>
-            <option value="OUTDOOR">Outdoor</option>
-          </select>
-          <select
+            onChange={setIndoorOrOutdoor}
+            placeholder="Any venue"
+            buttonClassName="h-11 border-transparent bg-white/70 hover:bg-white focus:bg-white text-gray-800"
+            options={[
+              { value: '', label: 'Any venue' },
+              { value: 'INDOOR', label: 'Indoor' },
+              { value: 'OUTDOOR', label: 'Outdoor' },
+            ]}
+          />
+          <Select
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="h-11 rounded-lg border border-transparent bg-white/70 px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
-            aria-label="Sort venues"
-          >
-            <option value="createdAt:desc">Newest</option>
-            <option value="hourlyRate:asc">Price low to high</option>
-            <option value="hourlyRate:desc">Price high to low</option>
-            <option value="averageRating:desc">Top rated</option>
-          </select>
+            onChange={setSort}
+            placeholder="Sort by"
+            buttonClassName="h-11 border-transparent bg-white/70 hover:bg-white focus:bg-white text-gray-800"
+            options={[
+              { value: 'createdAt:desc', label: 'Newest' },
+              { value: 'hourlyRate:asc', label: 'Price low to high' },
+              { value: 'hourlyRate:desc', label: 'Price high to low' },
+              { value: 'averageRating:desc', label: 'Top rated' },
+            ]}
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-1">

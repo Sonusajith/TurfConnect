@@ -1,16 +1,31 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import useOwner from '../hooks/useOwner';
 import OwnerStats from '../features/owner/OwnerStats';
 import OwnerTurfList from '../features/owner/OwnerTurfList';
+import AddTurfModal from '../features/owner/AddTurfModal';
+import { useToast } from '../hooks/useToast';
 
 const ownerRoles = ['TURF_OWNER', 'ORG_ADMIN', 'FRANCHISE_ADMIN', 'SUPER_ADMIN'];
 
 const OwnerDashboardPage = () => {
   const { user } = useAuth();
-  const { stats, turfs, loading, error, fetchDashboardData } = useOwner();
+  const { stats, turfs, loading, error, fetchDashboardData, addTurf } = useOwner();
+  const { addToast } = useToast();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleAddTurf = async (turfData) => {
+    try {
+      await addTurf(turfData);
+      addToast('Venue successfully added!', 'success');
+      setIsAddModalOpen(false);
+    } catch (err) {
+      addToast(err.message || 'Failed to add venue', 'error');
+      throw err;
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -33,12 +48,21 @@ const OwnerDashboardPage = () => {
       <div className="mt-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Your Venues</h2>
-          <button className="bg-primary hover:bg-primary-dark text-white px-5 py-2 rounded-lg font-bold shadow-sm transition">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-primary hover:bg-primary-dark text-white px-5 py-2 rounded-lg font-bold shadow-sm transition"
+          >
             Add New Venue
           </button>
         </div>
         <OwnerTurfList turfs={turfs} loading={loading} error={error} />
       </div>
+
+      <AddTurfModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSubmit={handleAddTurf} 
+      />
     </div>
   );
 };

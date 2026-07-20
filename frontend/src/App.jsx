@@ -6,6 +6,8 @@ import AuthLayout from './layouts/AuthLayout';
 import AppLayout from './layouts/AppLayout';
 import ProtectedRoute from './router/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AdminSecretLogin from './pages/AdminSecretLogin';
 import DashboardPage from './pages/DashboardPage';
 import ExplorePage from './pages/ExplorePage';
 import TurfDetailsPage from './pages/TurfDetailsPage';
@@ -18,6 +20,8 @@ import MatchesPage from './pages/MatchesPage';
 import TournamentsPage from './pages/TournamentsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import JoinTeamPage from './pages/JoinTeamPage';
 import OwnerDashboardPage from './pages/OwnerDashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -32,10 +36,15 @@ function App() {
             {/* Public/Auth Routes */}
             <Route element={<AuthLayout />}>
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+              <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+              <Route path={ROUTES.ADMIN_LOGIN} element={<AdminSecretLogin />} />
             </Route>
 
             {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
+            {/* Public Join Team Route */}
+        <Route path="/join-team/:teamId" element={<JoinTeamPage />} />
+
+        <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
                 <Route path={ROUTES.EXPLORE} element={<ExplorePage />} />
@@ -49,6 +58,7 @@ function App() {
                 <Route path={ROUTES.TOURNAMENTS} element={<TournamentsPage />} />
                 <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
                 <Route path={ROUTES.ADMIN_ANALYTICS} element={<AdminAnalyticsPage />} />
+                <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
                 <Route path={ROUTES.OWNER_DASHBOARD} element={<OwnerDashboardPage />} />
                 <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
               </Route>

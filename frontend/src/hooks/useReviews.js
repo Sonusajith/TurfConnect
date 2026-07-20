@@ -17,16 +17,18 @@ export const useReviews = (turfId) => {
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to fetch reviews');
+      if (!res.ok) {
+        if (res.status === 404) {
+          setReviews([]);
+          return;
+        }
+        throw new Error('Failed to fetch reviews');
+      }
       const data = await res.json();
-      setReviews(data.data || data);
+      setReviews(data.data || data || []);
     } catch (e) {
-      console.warn("Reviews API failed, using mock data:", e.message);
-      setReviews([
-        { id: 'r1', userName: 'John Doe', rating: 5, comment: 'Great turf, very well maintained!', createdAt: new Date().toISOString() },
-        { id: 'r2', userName: 'Alice Smith', rating: 4, comment: 'Good lighting, but parking is a bit tight.', createdAt: new Date(Date.now() - 86400000).toISOString() }
-      ]);
-      setError(null);
+      console.error("Reviews API failed:", e.message);
+      setError(e.message || 'Failed to load reviews');
     } finally {
       setLoading(false);
     }
@@ -47,9 +49,8 @@ export const useReviews = (turfId) => {
       await fetchReviews();
       return true;
     } catch (e) {
-      console.warn("Submit Review API failed, simulating success:", e.message);
-      setReviews(prev => [{ id: Date.now().toString(), userName: 'You', rating: reviewData.rating, comment: reviewData.comment, createdAt: new Date().toISOString() }, ...prev]);
-      return true;
+      console.error("Submit Review API failed:", e.message);
+      throw e;
     }
   };
 

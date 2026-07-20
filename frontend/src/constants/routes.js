@@ -1,5 +1,7 @@
 export const ROUTES = {
   LOGIN: '/login',
+  REGISTER: '/register',
+  ADMIN_LOGIN: '/super-secret-admin',
   DASHBOARD: '/',
   EXPLORE: '/explore',
   TURF_DETAILS: '/turfs/:turfId',
@@ -12,6 +14,7 @@ export const ROUTES = {
   TOURNAMENTS: '/tournaments',
   LEADERBOARD: '/leaderboard',
   ADMIN_ANALYTICS: '/admin-analytics',
+  ADMIN_USERS: '/admin-users',
   OWNER_DASHBOARD: '/owner',
   SETTINGS: '/settings',
 };

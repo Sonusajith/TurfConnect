@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TournamentCard from '../features/community/TournamentCard';
+import TournamentRegistrationModal from '../features/community/TournamentRegistrationModal';
+import TournamentDetailsModal from '../features/community/TournamentDetailsModal';
+import { useToast } from '../hooks/useToast';
 
 const MOCK_TOURNAMENTS = [
   {
@@ -27,6 +30,25 @@ const MOCK_TOURNAMENTS = [
 ];
 
 const TournamentsPage = () => {
+  const [tournaments, setTournaments] = useState(MOCK_TOURNAMENTS);
+  const [registrationModalData, setRegistrationModalData] = useState({ isOpen: false, tournament: null });
+  const [detailsModalData, setDetailsModalData] = useState({ isOpen: false, tournament: null });
+  const { addToast } = useToast();
+
+  const handleRegister = async (tournamentId, teamId) => {
+    // Simulate an API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Update local mock state to show registered
+    setTournaments(prev => prev.map(t => {
+      if (t.id === tournamentId) {
+        return { ...t, status: 'REGISTERED', teamsRegistered: t.teamsRegistered + 1 };
+      }
+      return t;
+    }));
+    
+    addToast('Successfully registered for tournament!', 'success');
+  };
   return (
     <div className="p-margin-mobile md:p-margin-desktop animate-fade-in max-w-7xl mx-auto pb-24 md:pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -37,15 +59,28 @@ const TournamentsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-        {MOCK_TOURNAMENTS.map(tournament => (
+        {tournaments.map(tournament => (
           <TournamentCard 
             key={tournament.id} 
             tournament={tournament} 
-            onRegister={() => console.log('Register for tournament', tournament.id)}
-            onView={() => console.log('View tournament', tournament.id)}
+            onRegister={() => setRegistrationModalData({ isOpen: true, tournament })}
+            onView={() => setDetailsModalData({ isOpen: true, tournament })}
           />
         ))}
       </div>
+
+      <TournamentRegistrationModal 
+        isOpen={registrationModalData.isOpen}
+        onClose={() => setRegistrationModalData({ isOpen: false, tournament: null })}
+        tournament={registrationModalData.tournament}
+        onRegister={handleRegister}
+      />
+
+      <TournamentDetailsModal
+        isOpen={detailsModalData.isOpen}
+        onClose={() => setDetailsModalData({ isOpen: false, tournament: null })}
+        tournament={detailsModalData.tournament}
+      />
     </div>
   );
 };

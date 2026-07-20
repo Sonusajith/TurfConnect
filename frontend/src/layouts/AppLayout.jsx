@@ -34,18 +34,33 @@ const AppLayout = () => {
     navigate(ROUTES.LOGIN);
   };
 
-  const navItems = [
-    { id: 'home', label: 'Home', path: ROUTES.DASHBOARD, icon: <MiniIcon>H</MiniIcon> },
-    { id: 'explore', label: 'Explore Turfs', path: ROUTES.EXPLORE, icon: <BallIcon /> },
-    { id: 'bookings', label: 'My Bookings', path: ROUTES.BOOKINGS, icon: <MiniIcon>B</MiniIcon> },
-    { id: 'reviews', label: 'Reviews', path: ROUTES.REVIEWS, icon: <MiniIcon>R</MiniIcon> },
-    { id: 'teams', label: 'Teams', path: ROUTES.TEAMS, icon: <MiniIcon>T</MiniIcon> },
-    { id: 'matches', label: 'Matches', path: ROUTES.MATCHES, icon: <MiniIcon>M</MiniIcon> },
-    { id: 'tournaments', label: 'Tournaments', path: ROUTES.TOURNAMENTS, icon: <MiniIcon>C</MiniIcon> },
-    { id: 'analytics', label: 'Analytics', path: ROUTES.ADMIN_ANALYTICS, icon: <MiniIcon>A</MiniIcon> },
-    { id: 'owner', label: 'Owner', path: ROUTES.OWNER_DASHBOARD, icon: <MiniIcon>O</MiniIcon>, ownerOnly: true },
-    { id: 'settings', label: 'Settings', path: ROUTES.SETTINGS, icon: <MiniIcon>S</MiniIcon> },
-  ].filter((item) => !item.ownerOnly || ownerRoles.includes(user?.role));
+  let navItems = [];
+  if (user?.role === 'SUPER_ADMIN' || user?.role === 'ORG_ADMIN') {
+    navItems = [
+      { id: 'analytics', label: 'Platform Analytics', path: ROUTES.ADMIN_ANALYTICS, icon: <MiniIcon>A</MiniIcon> },
+      { id: 'users', label: 'User Management', path: ROUTES.ADMIN_USERS, icon: <MiniIcon>U</MiniIcon> },
+      { id: 'settings', label: 'Settings', path: ROUTES.SETTINGS, icon: <MiniIcon>S</MiniIcon> },
+    ];
+  } else if (user?.role === 'TURF_OWNER') {
+    navItems = [
+      { id: 'owner', label: 'Owner Dashboard', path: ROUTES.OWNER_DASHBOARD, icon: <MiniIcon>O</MiniIcon> },
+      { id: 'reviews', label: 'Reviews', path: ROUTES.REVIEWS, icon: <MiniIcon>R</MiniIcon> },
+      { id: 'settings', label: 'Settings', path: ROUTES.SETTINGS, icon: <MiniIcon>S</MiniIcon> },
+    ];
+  } else {
+    // Player
+    navItems = [
+      { id: 'home', label: 'Home', path: ROUTES.DASHBOARD, icon: <MiniIcon>H</MiniIcon> },
+      { id: 'explore', label: 'Explore Turfs', path: ROUTES.EXPLORE, icon: <BallIcon /> },
+      { id: 'bookings', label: 'My Bookings', path: ROUTES.BOOKINGS, icon: <MiniIcon>B</MiniIcon> },
+      { id: 'teams', label: 'Teams', path: ROUTES.TEAMS, icon: <MiniIcon>T</MiniIcon> },
+      { id: 'matches', label: 'Matches', path: ROUTES.MATCHES, icon: <MiniIcon>M</MiniIcon> },
+      { id: 'tournaments', label: 'Tournaments', path: ROUTES.TOURNAMENTS, icon: <MiniIcon>C</MiniIcon> },
+      { id: 'leaderboard', label: 'Leaderboard', path: ROUTES.LEADERBOARD, icon: <MiniIcon>L</MiniIcon> },
+      { id: 'reviews', label: 'My Reviews', path: ROUTES.REVIEWS, icon: <MiniIcon>R</MiniIcon> },
+      { id: 'settings', label: 'Settings', path: ROUTES.SETTINGS, icon: <MiniIcon>S</MiniIcon> },
+    ];
+  }
 
   const isActive = (item) => {
     if (item.id === 'home') return location.pathname === ROUTES.DASHBOARD;
@@ -108,17 +123,21 @@ const AppLayout = () => {
             </Link>
 
             <div className="hidden lg:block">
-              <p className="text-sm font-semibold text-gray-500">Welcome back, Athlete</p>
+              <p className="text-sm font-semibold text-gray-500">
+                Welcome back, {user?.role === 'SUPER_ADMIN' ? 'Admin' : (user?.role === 'TURF_OWNER' ? 'Owner' : 'Athlete')}
+              </p>
               <h1 className="text-2xl font-extrabold tracking-tight text-gray-950">TurfConnect Pro</h1>
             </div>
 
             <div className="flex items-center gap-3">
-              <Link
-                to={ROUTES.DASHBOARD}
-                className="hidden rounded-lg bg-accent px-5 py-3 text-sm font-extrabold text-white shadow-sm shadow-accent/20 transition hover:bg-accent-dark sm:inline-flex"
-              >
-                Book a Turf
-              </Link>
+              {user?.role === 'PLAYER' && (
+                <Link
+                  to={ROUTES.EXPLORE}
+                  className="hidden rounded-lg bg-accent px-5 py-3 text-sm font-extrabold text-white shadow-sm shadow-accent/20 transition hover:bg-accent-dark sm:inline-flex"
+                >
+                  Book a Turf
+                </Link>
+              )}
               <div className="hidden text-right sm:block">
                 <p className="max-w-52 truncate text-sm font-bold text-gray-900">{user?.email}</p>
                 <p className="text-xs font-semibold capitalize text-gray-500">{user?.role?.replace('_', ' ')}</p>

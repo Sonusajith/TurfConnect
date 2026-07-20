@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { formatCurrency } from '../../utils/formatters';
@@ -14,7 +15,7 @@ const OwnerTurfList = ({ turfs, loading, error }) => {
       <div className="rounded-2xl border border-primary/10 bg-white py-16 text-center shadow-sm">
         <span className="material-symbols-outlined mb-3 text-5xl text-gray-300">stadium</span>
         <p className="font-medium text-gray-500">You haven't listed any venues yet.</p>
-        <button className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white">Add Your First Venue</button>
+        <button title="Managing venues requires the Owner Admin App" className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white opacity-50 cursor-not-allowed">Add Your First Venue</button>
       </div>
     );
   }
@@ -58,9 +59,9 @@ const OwnerTurfList = ({ turfs, loading, error }) => {
                   <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Hourly Rate</p>
                   <p className="font-extrabold text-primary-dark">{formatCurrency(turf.hourlyRate || 0, turf.currency)}</p>
                 </div>
-                <button className="text-sm font-bold text-accent transition-colors hover:text-accent-dark">
+                <Link to={`/turfs/${turf.id}/slots`} className="text-sm font-bold text-accent transition-colors hover:text-accent-dark">
                   Manage Slots
-                </button>
+                </Link>
               </div>
             </CardContent>
           </Card>
