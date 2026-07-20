@@ -43,6 +43,12 @@
             <artifactId>stripe-java</artifactId>
             <version>25.10.0</version>
         </dependency>
+        <!-- Razorpay Java SDK -->
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.4.6</version>
+        </dependency>
         <!-- RabbitMQ AMQP starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -12,6 +12,6 @@ export const bookingService = {
   },
 
   getMyBookings: async () => {
-    return apiClient.get(API_ENDPOINTS.BOOKINGS.MY);
+    return apiClient.get(API_ENDPOINTS.BOOKINGS.MY_BOOKINGS);
   },
 };

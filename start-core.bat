@@ -2,27 +2,28 @@
 echo ========================================================
 echo Starting TurfConnect Core Services (Low RAM Mode)
 echo ========================================================
-echo This script will start ONLY the 5 essential microservices
-echo needed for the main booking flow, keeping RAM usage low.
-echo Ensure MongoDB, Redis, and RabbitMQ are running.
+echo Loading environment variables from .env...
+for /f "usebackq tokens=1,* delims==" %%a in (`type ".env" ^| findstr /v "^#" ^| findstr /v "^$"`) do (
+    set "%%a=%%~b"
+)
+echo Environment variables loaded!
 echo.
-
 cd backend
 
 echo [1/5] Starting API Gateway...
-start "API Gateway" cmd /c ".\mvnw.cmd spring-boot:run -pl api-gateway"
+start "API Gateway" cmd /k ".\mvnw.cmd spring-boot:run -pl api-gateway"
 
 echo [2/5] Starting Auth Service...
-start "Auth Service" cmd /c ".\mvnw.cmd spring-boot:run -pl auth-service"
+start "Auth Service" cmd /k ".\mvnw.cmd spring-boot:run -pl auth-service"
 
 echo [3/5] Starting Turf Service...
-start "Turf Service" cmd /c ".\mvnw.cmd spring-boot:run -pl turf-service"
+start "Turf Service" cmd /k ".\mvnw.cmd spring-boot:run -pl turf-service"
 
 echo [4/5] Starting Booking Service...
-start "Booking Service" cmd /c ".\mvnw.cmd spring-boot:run -pl booking-service"
+start "Booking Service" cmd /k ".\mvnw.cmd spring-boot:run -pl booking-service"
 
 echo [5/5] Starting Payment Service...
-start "Payment Service" cmd /c ".\mvnw.cmd spring-boot:run -pl payment-service"
+start "Payment Service" cmd /k ".\mvnw.cmd spring-boot:run -pl payment-service"
 
 echo.
 echo All core services are starting in separate windows.

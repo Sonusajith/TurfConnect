@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
   BOOKINGS: {
     CREATE: '/api/v1/bookings',
     GET: '/api/v1/bookings/:bookingId',
-    MY: '/api/v1/bookings/my-bookings',
+    MY_BOOKINGS: '/api/v1/bookings/my-bookings',
   },
   PAYMENTS: {
     INITIATE: '/api/v1/payments/initiate',
