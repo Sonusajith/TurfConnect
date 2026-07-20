@@ -6,8 +6,19 @@ import { formatCurrency, formatTime, formatDate } from '../../utils/formatters';
 const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [memberCount, setMemberCount] = useState(6);
 
   if (!slot || !turf) return null;
+
+  const totalAmount = Number(slot.price || 0);
+  const contributionAmount = memberCount > 0 ? totalAmount / memberCount : totalAmount;
+  const teammateCount = Math.max(memberCount - 1, 0);
+
+  const updateMemberCount = (value) => {
+    const parsedValue = Number(value);
+    if (Number.isNaN(parsedValue)) return;
+    setMemberCount(Math.min(30, Math.max(1, parsedValue)));
+  };
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -46,6 +57,65 @@ const CheckoutModal = ({ isOpen, onClose, slot, turf, onConfirm }) => {
           <span className="text-primary font-extrabold text-xl">
             {formatCurrency(slot.price)}
           </span>
+        </div>
+
+        <div className="rounded-xl border border-orange-100 bg-orange-50/70 p-4 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 className="text-sm font-extrabold text-gray-900">Team contribution split</h4>
+              <p className="text-xs font-medium text-gray-500">
+                {memberCount === 1
+                  ? 'Solo booking, you cover the full slot amount.'
+                  : `You + ${teammateCount} teammate${teammateCount > 1 ? 's' : ''}`}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 w-9 px-0"
+                onClick={() => updateMemberCount(memberCount - 1)}
+                disabled={loading || memberCount <= 1}
+                aria-label="Decrease members"
+              >
+                -
+              </Button>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={memberCount}
+                onChange={(e) => updateMemberCount(e.target.value)}
+                disabled={loading}
+                aria-label="Number of members"
+                className="h-9 w-16 rounded-lg border border-orange-200 bg-white text-center text-sm font-bold text-gray-900 outline-none focus:border-accent focus:ring-2 focus:ring-orange-100"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 w-9 px-0"
+                onClick={() => updateMemberCount(memberCount + 1)}
+                disabled={loading || memberCount >= 30}
+                aria-label="Increase members"
+              >
+                +
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-lg bg-white/80 border border-orange-100 p-3">
+              <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Members</span>
+              <span className="text-lg font-extrabold text-gray-900">{memberCount}</span>
+            </div>
+            <div className="rounded-lg bg-white/80 border border-orange-100 p-3">
+              <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Each contributes</span>
+              <span className="text-lg font-extrabold text-accent">
+                {formatCurrency(contributionAmount)}
+              </span>
+            </div>
+          </div>
         </div>
 
         {error && (
