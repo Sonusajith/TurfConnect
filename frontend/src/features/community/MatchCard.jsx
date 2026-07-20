@@ -1,5 +1,5 @@
 import React from 'react';
-import Card, { CardContent } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 
 const MatchCard = ({ match, onViewDetails }) => {

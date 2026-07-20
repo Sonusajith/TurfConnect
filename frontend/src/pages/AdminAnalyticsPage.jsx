@@ -1,5 +1,5 @@
 import React from 'react';
-import Card, { CardContent } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 
 const StatCard = ({ title, value, icon, trend, colorClass }) => (
   <Card className="hover:shadow-md transition-shadow border border-outline-variant/30">
