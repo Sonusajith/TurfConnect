@@ -23,6 +23,23 @@ export const API_ENDPOINTS = {
     VERIFY: '/api/v1/payments/verify',
     WEBHOOK_MOCK: '/api/v1/payments/webhook/mock',
   },
+  REVIEWS: {
+    LIST: '/api/v1/turfs/:turfId/reviews',
+    CREATE: '/api/v1/turfs/:turfId/reviews',
+  },
+  TEAMS: {
+    LIST: '/api/v1/teams',
+    CREATE: '/api/v1/teams',
+    GET: '/api/v1/teams/:teamId',
+  },
+  INVITATIONS: {
+    LIST: '/api/v1/invitations',
+    RESPOND: '/api/v1/invitations/:invitationId/respond',
+  },
+  OWNER: {
+    STATS: '/api/v1/owner/stats',
+    TURFS: '/api/v1/owner/turfs',
+  }
 };
 
 export const WEBSOCKET_URL = `${API_BASE_URL}/ws`;

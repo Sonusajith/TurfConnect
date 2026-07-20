@@ -1,24 +1,38 @@
-import React from 'react';
-import RatingSummary from '../features/reviews/RatingSummary';
+import React, { useState, useEffect } from 'react';
+import useReviews from '../hooks/useReviews';
 import ReviewList from '../features/reviews/ReviewList';
+import RatingSummary from '../features/reviews/RatingSummary';
 import ReviewFormModal from '../features/reviews/ReviewFormModal';
 
-const ReviewsPage = () => {
-  return (
-    <div className="space-y-6 pb-10">
-      <section>
-        <p className="text-xs font-extrabold uppercase tracking-wider text-accent">Player trust</p>
-        <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-primary-dark">Reviews & Ratings</h1>
-        <p className="mt-2 max-w-2xl text-sm font-medium text-gray-600">
-          Skeleton route for review summaries, lists, and post-booking review submission.
-        </p>
-      </section>
+const ReviewsPage = ({ turfId }) => {
+  const { reviews, loading, error, fetchReviews, submitReview } = useReviews(turfId);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-      <RatingSummary />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-        <ReviewList />
-        <ReviewFormModal />
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Reviews & Ratings</h2>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-lg font-semibold transition"
+        >
+          Write a Review
+        </button>
       </div>
+      
+      <RatingSummary reviews={reviews} />
+      
+      <ReviewList reviews={reviews} loading={loading} error={error} />
+      
+      <ReviewFormModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSubmit={submitReview} 
+      />
     </div>
   );
 };

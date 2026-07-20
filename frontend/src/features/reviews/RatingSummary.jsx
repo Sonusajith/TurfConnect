@@ -1,22 +1,45 @@
 import React from 'react';
+import { Card, CardContent } from '../../components/ui/Card';
 
-const RatingSummary = () => {
+const RatingSummary = ({ reviews = [] }) => {
+  if (!reviews.length) return null;
+
+  const total = reviews.length;
+  const average = (reviews.reduce((acc, curr) => acc + curr.rating, 0) / total).toFixed(1);
+  const distribution = [5, 4, 3, 2, 1].map(stars => {
+    const count = reviews.filter(r => r.rating === stars).length;
+    return { stars, count, percentage: Math.round((count / total) * 100) };
+  });
+
   return (
-    <section className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-wider text-accent">Ratings</p>
-          <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-950">Venue Rating Summary</h2>
-          <p className="mt-2 text-sm font-medium text-gray-500">
-            Aggregate rating cards will connect to review summary APIs here.
-          </p>
+    <Card className="bg-white border border-gray-100 shadow-sm">
+      <CardContent className="p-6 flex flex-col sm:flex-row gap-8 items-center">
+        <div className="text-center flex-shrink-0">
+          <div className="text-5xl font-extrabold text-gray-900">{average}</div>
+          <div className="flex text-accent mt-2 justify-center">
+            {[1,2,3,4,5].map(i => (
+              <span key={i} className="material-symbols-outlined text-xl">
+                {i <= Math.round(average) ? 'star' : 'star_border'}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500 mt-1">{total} review{total !== 1 && 's'}</p>
         </div>
-        <div className="rounded-lg border border-primary/10 bg-primary-light px-5 py-4 text-right">
-          <p className="text-xs font-extrabold uppercase tracking-wide text-gray-500">Average</p>
-          <p className="mt-1 text-3xl font-extrabold text-primary-dark">--</p>
+        
+        <div className="flex-1 w-full space-y-2">
+          {distribution.map(({ stars, percentage }) => (
+            <div key={stars} className="flex items-center gap-3 text-sm font-semibold text-gray-600">
+              <span className="w-4">{stars}</span>
+              <span className="material-symbols-outlined text-sm text-gray-400">star</span>
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-accent rounded-full" style={{ width: `${percentage}%` }}></div>
+              </div>
+              <span className="w-8 text-right text-xs text-gray-400">{percentage}%</span>
+            </div>
+          ))}
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 };
 
