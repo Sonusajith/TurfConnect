@@ -2,6 +2,11 @@
 **/target/
 **/build/
 **/out/
+**/dist/
+
+# Frontend dependencies and tool caches
+**/node_modules/
+**/.vite/
 
 # Custom local Maven Wrapper directory
 **/backend/.maven/
