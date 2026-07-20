@@ -36,7 +36,7 @@ const AppLayout = () => {
 
   const navItems = [
     { id: 'home', label: 'Home', path: ROUTES.DASHBOARD, icon: <MiniIcon>H</MiniIcon> },
-    { id: 'book', label: 'Book Turf', path: ROUTES.DASHBOARD, icon: <BallIcon /> },
+    { id: 'explore', label: 'Explore Turfs', path: ROUTES.EXPLORE, icon: <BallIcon /> },
     { id: 'bookings', label: 'My Bookings', path: ROUTES.BOOKINGS, icon: <MiniIcon>B</MiniIcon> },
     { id: 'reviews', label: 'Reviews', path: ROUTES.REVIEWS, icon: <MiniIcon>R</MiniIcon> },
     { id: 'teams', label: 'Teams', path: ROUTES.TEAMS, icon: <MiniIcon>T</MiniIcon> },

@@ -7,6 +7,7 @@ import AppLayout from './layouts/AppLayout';
 import ProtectedRoute from './router/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import ExplorePage from './pages/ExplorePage';
 import TurfDetailsPage from './pages/TurfDetailsPage';
 import SlotPickerPage from './pages/SlotPickerPage';
 import BookingHistoryPage from './pages/BookingHistoryPage';
@@ -37,6 +38,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+                <Route path={ROUTES.EXPLORE} element={<ExplorePage />} />
                 <Route path={ROUTES.TURF_DETAILS} element={<TurfDetailsPage />} />
                 <Route path={ROUTES.SLOT_PICKER} element={<SlotPickerPage />} />
                 <Route path={ROUTES.BOOKINGS} element={<BookingHistoryPage />} />

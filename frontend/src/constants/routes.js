@@ -1,6 +1,7 @@
 export const ROUTES = {
   LOGIN: '/login',
   DASHBOARD: '/',
+  EXPLORE: '/explore',
   TURF_DETAILS: '/turfs/:turfId',
   SLOT_PICKER: '/turfs/:turfId/slots',
   BOOKINGS: '/bookings',

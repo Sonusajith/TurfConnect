@@ -1,103 +1,59 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import TurfSearch from '../features/turfs/TurfSearch';
-import TurfList from '../features/turfs/TurfList';
-import useTurfs from '../hooks/useTurfs';
+import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
+import { Card, CardContent } from '../components/ui/Card';
 
 const DashboardPage = () => {
-  const [searchParams, setSearchParams] = useState({});
-  const { turfs, loading, error, refetch } = useTurfs(searchParams);
-  const navigate = useNavigate();
-
-  const handleSearch = (params) => {
-    setSearchParams(params);
-    refetch(params);
-  };
-
-  const handleViewDetails = (turfId) => {
-    const path = ROUTES.TURF_DETAILS.replace(':turfId', turfId);
-    navigate(path);
-  };
-
-  const startingPrice = turfs?.length
-    ? Math.min(...turfs.map((turf) => Number(turf.hourlyRate || 0)).filter(Boolean))
-    : 0;
-  const sportsCount = new Set((turfs || []).flatMap((turf) => turf.sportTypes || [])).size;
-  const topRating = turfs?.length
-    ? Math.max(...turfs.map((turf) => Number(turf.averageRating || 0)))
-    : 0;
-  const activeFilters = Object.entries(searchParams)
-    .filter(([key, value]) => value && !['sortBy', 'sortDirection'].includes(key))
-    .map(([key, value]) => `${key.replace(/([A-Z])/g, ' $1')}: ${value}`);
+  const { user } = useAuth();
 
   const stats = [
-    ['Available Venues', turfs?.length || 0],
-    ['Sports Covered', sportsCount || '-'],
-    ['Starting From', startingPrice ? `₹${startingPrice}` : '-'],
-    ['Top Rating', topRating ? topRating.toFixed(1) : '-'],
+    { label: 'Upcoming Matches', value: '2', icon: 'sports_soccer' },
+    { label: 'Active Teams', value: '1', icon: 'groups' },
+    { label: 'Pending Invites', value: '3', icon: 'mail' },
   ];
 
   return (
     <div className="animate-fade-in space-y-8 pb-12">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
-        <div className="space-y-5">
-          <div>
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-primary-dark sm:text-5xl">
-              Discover Venues
-            </h1>
-            <p className="mt-2 max-w-xl text-base font-medium text-gray-600">
-              Find and book the best sports facilities near you.
-            </p>
-          </div>
-          <TurfSearch onSearch={handleSearch} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {stats.map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">{label}</p>
-              <p className="mt-4 text-3xl font-extrabold text-gray-950">{value}</p>
-            </div>
-          ))}
-        </div>
+      <section className="space-y-4">
+        <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-primary-dark sm:text-5xl">
+          Welcome back, {user?.name || 'Athlete'}
+        </h1>
+        <p className="max-w-xl text-base font-medium text-gray-600">
+          Here's a quick overview of your sports activities.
+        </p>
       </section>
 
-      <section className="rounded-lg border border-primary/10 bg-white/55 p-4 shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-primary/10 pb-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Explore turfs</p>
-            <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-gray-950">
-              {loading ? 'Finding venues...' : `${turfs?.length || 0} venue${turfs?.length === 1 ? '' : 's'} available`}
-            </h2>
-            {activeFilters.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {activeFilters.map((filter) => (
-                  <span key={filter} className="rounded-full border border-primary/10 bg-primary-light px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-primary-dark">
-                    {filter}
-                  </span>
-                ))}
+      <section className="grid gap-6 sm:grid-cols-3">
+        {stats.map(({ label, value, icon }) => (
+          <Card key={label} className="border border-outline-variant/30 hover:shadow-md transition-all">
+            <CardContent className="flex items-center p-6 gap-4">
+              <div className="bg-primary/10 text-primary rounded-full p-4 flex items-center justify-center">
+                <span className="material-symbols-outlined text-2xl">{icon}</span>
               </div>
-            )}
-          </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-500">{label}</p>
+                <p className="mt-1 text-3xl font-extrabold text-gray-950">{value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
 
-          <div className="inline-flex w-fit rounded-full border border-primary/10 bg-[#e3f0f8] p-1">
-            <button type="button" className="rounded-full bg-white px-5 py-2 text-sm font-extrabold text-primary shadow-sm">
-              List
-            </button>
-            <button type="button" className="px-5 py-2 text-sm font-semibold text-gray-600">
-              Show Map
-            </button>
+      <section className="mt-8 rounded-2xl bg-gradient-to-r from-primary to-primary-dark p-8 text-white shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Ready to play?</h2>
+            <p className="text-primary-100 max-w-md text-sm leading-relaxed">
+              Discover top-rated sports venues near you, invite your friends, and book your slot in seconds.
+            </p>
           </div>
-        </div>
-
-        <div className="pt-8">
-          <TurfList
-            turfs={turfs}
-            loading={loading}
-            error={error}
-            onViewSlots={handleViewDetails}
-          />
+          <Link 
+            to={ROUTES.EXPLORE}
+            className="inline-block bg-white text-primary font-bold px-8 py-3 rounded-full hover:bg-gray-50 transition-colors shadow-sm text-center"
+          >
+            Explore Turfs
+          </Link>
         </div>
       </section>
     </div>
