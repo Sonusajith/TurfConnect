@@ -11,7 +11,7 @@ import CheckoutModal from '../features/booking/CheckoutModal';
 import PaymentModal from '../features/payment/PaymentModal';
 import { ROUTES } from '../constants/routes';
 import { formatCurrency } from '../utils/formatters';
-import { saveBookingSplitPlan } from '../utils/splitPlans';
+import { saveBookingSplitPlan, toSplitContributionRequest } from '../utils/splitPlans';
 
 const statusItems = [
   ['Available', 'bg-primary text-white'],
@@ -76,9 +76,9 @@ const SlotPickerPage = () => {
 
   const handleConfirmCheckout = async (slot, _turfDetails, splitPlan) => {
     try {
-      const response = await bookingService.create(slot.id, slot.price);
+      const response = await bookingService.create(slot.id, slot.price, toSplitContributionRequest(splitPlan));
       if (response && response.success) {
-        saveBookingSplitPlan(response.data.id, splitPlan);
+        saveBookingSplitPlan(response.data.id, response.data.splitContribution || splitPlan);
         setActiveBooking(response.data);
         setIsCheckoutOpen(false);
         setIsPaymentOpen(true);

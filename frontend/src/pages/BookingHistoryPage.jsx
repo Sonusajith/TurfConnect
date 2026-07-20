@@ -3,7 +3,7 @@ import useBookings from '../hooks/useBookings';
 import BookingTable from '../features/booking/BookingTable';
 
 const BookingHistoryPage = () => {
-  const { bookings, loading, error } = useBookings();
+  const { bookings, loading, error, cancelBooking, updateSplitContribution } = useBookings();
   const totalBookings = bookings?.length || 0;
   const confirmedBookings = bookings?.filter((booking) => booking.status === 'CONFIRMED').length || 0;
 
@@ -36,6 +36,8 @@ const BookingHistoryPage = () => {
         bookings={bookings}
         loading={loading}
         error={error}
+        onCancelBooking={cancelBooking}
+        onUpdateSplitContribution={updateSplitContribution}
       />
     </div>
   );

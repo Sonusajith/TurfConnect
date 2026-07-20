@@ -18,6 +18,8 @@ export const API_ENDPOINTS = {
     CREATE: '/api/v1/bookings',
     GET: '/api/v1/bookings/:bookingId',
     MY_BOOKINGS: '/api/v1/bookings/my-bookings',
+    CANCEL: '/api/v1/bookings/:bookingId/cancel',
+    UPDATE_SPLIT: '/api/v1/bookings/:bookingId/split',
   },
   PAYMENTS: {
     INITIATE: '/api/v1/payments/initiate',

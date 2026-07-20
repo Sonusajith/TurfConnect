@@ -3,6 +3,8 @@ package com.turfconnect.booking.controller;
 import com.turfconnect.shared.dto.ApiResponse;
 import com.turfconnect.shared.dto.booking.BookingCreateRequest;
 import com.turfconnect.shared.dto.booking.BookingResponse;
+import com.turfconnect.shared.dto.booking.SplitContributionRequest;
+import com.turfconnect.shared.dto.booking.SplitContributionResponse;
 import com.turfconnect.booking.service.BookingService;
 import com.turfconnect.shared.exception.ForbiddenException;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,11 +72,20 @@ public class BookingController {
     @AuditLog(action = "CANCEL_BOOKING", resource = "BOOKING")
     public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
             @PathVariable String id,
-            @RequestHeader(value = "X-User-Id", required = false) String userId,
-            @RequestHeader(value = "X-Internal-Token", required = false) String internalToken) {
-        
-        verifyInternalToken(internalToken);
+            @RequestHeader("X-User-Id") String userId) {
+
         BookingResponse response = bookingService.cancelBooking(id, userId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/{id}/split")
+    @AuditLog(action = "UPDATE_BOOKING_SPLIT", resource = "BOOKING")
+    public ResponseEntity<ApiResponse<SplitContributionResponse>> updateSplitContribution(
+            @PathVariable String id,
+            @RequestHeader("X-User-Id") String userId,
+            @Valid @RequestBody SplitContributionRequest request) {
+
+        SplitContributionResponse response = bookingService.updateSplitContribution(id, userId, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import BookingTable from '../features/booking/BookingTable';
 import { createSplitPlan, saveBookingSplitPlan } from '../utils/splitPlans';
 
@@ -50,5 +50,41 @@ describe('BookingTable split contributions', () => {
     expect(screen.getByText('Asha')).toBeInTheDocument();
     expect(screen.getByText('Rohit')).toBeInTheDocument();
     expect(screen.getByText('1/3 paid')).toBeInTheDocument();
+  });
+
+  test('sends updated split contribution when a member is marked paid', async () => {
+    const onUpdateSplitContribution = vi.fn().mockResolvedValue({});
+    const bookingWithSplit = {
+      ...booking,
+      splitContribution: createSplitPlan({
+        totalAmount: 1200,
+        memberCount: 3,
+        memberNames: ['You', 'Asha', 'Rohit'],
+      }),
+    };
+
+    render(
+      <MemoryRouter>
+        <BookingTable
+          bookings={[bookingWithSplit]}
+          loading={false}
+          error={null}
+          onUpdateSplitContribution={onUpdateSplitContribution}
+        />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getAllByRole('button', { name: /mark paid/i })[0]);
+
+    await waitFor(() => {
+      expect(onUpdateSplitContribution).toHaveBeenCalledWith(
+        'booking-1',
+        expect.objectContaining({
+          members: expect.arrayContaining([
+            expect.objectContaining({ name: 'Asha', status: 'PAID' }),
+          ]),
+        })
+      );
+    });
   });
 });

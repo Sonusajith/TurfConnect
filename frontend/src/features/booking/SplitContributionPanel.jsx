@@ -8,6 +8,8 @@ const SplitContributionPanel = ({
   subtitle,
   editable = false,
   onMemberNameChange,
+  onMemberStatusChange,
+  updatingMemberId,
 }) => {
   if (!splitPlan) return null;
 
@@ -58,7 +60,18 @@ const SplitContributionPanel = ({
               <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">Contribution</p>
             </div>
 
-            <Badge status={member.status}>{member.status}</Badge>
+            {onMemberStatusChange ? (
+              <button
+                type="button"
+                disabled={updatingMemberId === member.id}
+                onClick={() => onMemberStatusChange(member.id, member.status === 'PAID' ? 'PENDING' : 'PAID')}
+                className="rounded-full border border-orange-100 bg-white px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-primary transition hover:border-primary disabled:opacity-50"
+              >
+                {updatingMemberId === member.id ? 'Saving' : member.status === 'PAID' ? 'Mark pending' : 'Mark paid'}
+              </button>
+            ) : (
+              <Badge status={member.status}>{member.status}</Badge>
+            )}
           </div>
         ))}
       </div>
