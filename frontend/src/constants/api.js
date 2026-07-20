@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://localhost:8080'; // API Gateway URL
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export const API_ENDPOINTS = {
   AUTH: {
@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
   BOOKINGS: {
     CREATE: '/api/v1/bookings',
     GET: '/api/v1/bookings/:bookingId',
-    MY: '/api/v1/bookings/my',
+    MY: '/api/v1/bookings/my-bookings',
   },
   PAYMENTS: {
     INITIATE: '/api/v1/payments/initiate',

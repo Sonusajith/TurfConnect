@@ -51,4 +51,27 @@ describe('CheckoutModal Component', () => {
       expect(handleConfirm).toHaveBeenCalledWith(mockSlot, mockTurf);
     });
   });
+
+  test('shows member contribution split and recalculates per member amount', () => {
+    render(
+      <CheckoutModal
+        isOpen={true}
+        onClose={vi.fn()}
+        slot={mockSlot}
+        turf={mockTurf}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Team contribution split')).toBeInTheDocument();
+    expect(screen.getByText(/You \+ 5 teammates/i)).toBeInTheDocument();
+    expect(screen.getByText(/^₹20\.00$/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/number of members/i), {
+      target: { value: '4' },
+    });
+
+    expect(screen.getByText(/You \+ 3 teammates/i)).toBeInTheDocument();
+    expect(screen.getByText(/^₹30\.00$/)).toBeInTheDocument();
+  });
 });
