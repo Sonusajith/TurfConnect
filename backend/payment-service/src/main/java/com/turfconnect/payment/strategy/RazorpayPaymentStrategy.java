@@ -1,5 +1,9 @@
 package com.turfconnect.payment.strategy;
 
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import com.razorpay.RazorpayException;
+import org.json.JSONObject;
 import com.turfconnect.shared.dto.payment.PaymentInitiateRequest;
 import com.turfconnect.shared.dto.payment.PaymentResponse;
 import com.turfconnect.shared.dto.payment.PaymentStatus;
@@ -12,7 +16,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Component("RAZORPAY")
 @Slf4j
@@ -35,7 +38,21 @@ public class RazorpayPaymentStrategy implements PaymentGatewayStrategy {
 
         // Razorpay expects amount in paise (e.g. ₹10.00 is 1000 paise)
         long amountPaise = request.getAmount().multiply(new BigDecimal("100")).longValue();
-        String orderId = "order_" + UUID.randomUUID().toString().substring(0, 14);
+        String orderId;
+
+        try {
+            RazorpayClient razorpay = new RazorpayClient(keyId, keySecret);
+            JSONObject orderRequest = new JSONObject();
+            orderRequest.put("amount", amountPaise);
+            orderRequest.put("currency", request.getCurrency());
+            orderRequest.put("receipt", request.getBookingId());
+
+            Order order = razorpay.orders.create(orderRequest);
+            orderId = order.get("id");
+        } catch (RazorpayException e) {
+            log.error("Failed to create Razorpay Order", e);
+            throw new RuntimeException("Payment initiation failed with Razorpay: " + e.getMessage());
+        }
 
         return PaymentResponse.builder()
                 .bookingId(request.getBookingId())

@@ -26,7 +26,8 @@ public class SecurityConfig {
             .cors(AbstractHttpConfigurer::disable) // In a real scenario, configure allowed origins
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/actuator/**").permitAll()
+                .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
+                .requestMatchers("/api/v1/auth/**", "/actuator/**", "/error").permitAll()
                 .anyRequest().authenticated()
             );
         

@@ -89,22 +89,62 @@ const SlotPickerPage = () => {
 
   const handlePaymentComplete = async (booking) => {
     try {
-      // 2. Initiate Payment Session
+      // 1. Initiate Payment Session (Backend creates Razorpay Order)
       const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice);
       if (!initiateRes.success) {
         throw new Error(initiateRes.message || 'Payment initiation failed');
       }
       
-      const { transactionId } = initiateRes.data;
+      const { transactionId, amount } = initiateRes.data;
 
-      // 3. Simulate Successful payment webhook
-      const webhookRes = await paymentService.simulateWebhookSuccess(transactionId);
-      
-      // Delay slightly for backend propagation
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      addToast('Booking confirmed successfully!', 'success');
-      return initiateRes.data;
+      // 2. Open Razorpay Checkout Widget
+      return new Promise((resolve, reject) => {
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+          amount: amount * 100, // Razorpay expects paise (but backend already sets it, though frontend just uses it for display)
+          currency: "INR",
+          name: "TurfConnect",
+          description: `Booking for ${turf.name}`,
+          order_id: transactionId, 
+          handler: async function (response) {
+            try {
+              // 3. Verify Payment with Backend
+              const verifyRes = await paymentService.verifyPayment(transactionId);
+              addToast('Booking confirmed successfully!', 'success');
+              
+              setIsPaymentOpen(false);
+              setSelectedSlot(null);
+              setActiveBooking(null);
+              navigate(ROUTES.BOOKINGS);
+              resolve(verifyRes.data);
+            } catch (err) {
+              addToast('Payment verification failed on server', 'error');
+              reject(err);
+            }
+          },
+          prefill: {
+            name: "Test User",
+            email: "test@example.com",
+            contact: "9999999999"
+          },
+          theme: {
+            color: "#16a34a" // TurfConnect Primary Green
+          },
+          modal: {
+            ondismiss: function() {
+              addToast('Payment cancelled', 'warning');
+              reject(new Error('Payment cancelled'));
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          addToast(response.error.description || 'Payment failed', 'error');
+          reject(new Error('Payment failed'));
+        });
+        rzp.open();
+      });
     } catch (e) {
       addToast(e.message || 'Checkout payment flow failed', 'error');
       throw e;
@@ -115,7 +155,6 @@ const SlotPickerPage = () => {
     setIsPaymentOpen(false);
     setSelectedSlot(null);
     setActiveBooking(null);
-    // Redirect to bookings list to verify status
     navigate(ROUTES.BOOKINGS);
   };
 
