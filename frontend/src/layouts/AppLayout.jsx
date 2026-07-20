@@ -22,6 +22,8 @@ const MiniIcon = ({ children }) => (
   </span>
 );
 
+const ownerRoles = ['TURF_OWNER', 'ORG_ADMIN', 'FRANCHISE_ADMIN', 'SUPER_ADMIN'];
+
 const AppLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -36,12 +38,14 @@ const AppLayout = () => {
     { id: 'home', label: 'Home', path: ROUTES.DASHBOARD, icon: <MiniIcon>H</MiniIcon> },
     { id: 'book', label: 'Book Turf', path: ROUTES.DASHBOARD, icon: <BallIcon /> },
     { id: 'bookings', label: 'My Bookings', path: ROUTES.BOOKINGS, icon: <MiniIcon>B</MiniIcon> },
+    { id: 'reviews', label: 'Reviews', path: ROUTES.REVIEWS, icon: <MiniIcon>R</MiniIcon> },
     { id: 'teams', label: 'Teams', path: ROUTES.TEAMS, icon: <MiniIcon>T</MiniIcon> },
     { id: 'matches', label: 'Matches', path: ROUTES.MATCHES, icon: <MiniIcon>M</MiniIcon> },
     { id: 'tournaments', label: 'Tournaments', path: ROUTES.TOURNAMENTS, icon: <MiniIcon>C</MiniIcon> },
     { id: 'analytics', label: 'Analytics', path: ROUTES.ADMIN_ANALYTICS, icon: <MiniIcon>A</MiniIcon> },
+    { id: 'owner', label: 'Owner', path: ROUTES.OWNER_DASHBOARD, icon: <MiniIcon>O</MiniIcon>, ownerOnly: true },
     { id: 'settings', label: 'Settings', path: ROUTES.SETTINGS, icon: <MiniIcon>S</MiniIcon> },
-  ];
+  ].filter((item) => !item.ownerOnly || ownerRoles.includes(user?.role));
 
   const isActive = (item) => {
     if (item.id === 'home') return location.pathname === ROUTES.DASHBOARD;
@@ -64,7 +68,7 @@ const AppLayout = () => {
           </Link>
         </div>
 
-        <nav className="flex-1 space-y-2 px-4 pt-8">
+        <nav className="flex-1 space-y-2 overflow-y-auto px-4 pt-4">
           {navItems.map((item) => (
             <Link
               key={item.id}
