@@ -2,7 +2,6 @@ package com.turfconnect.gateway.filter;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ class JwtAuthenticationFilterTest {
                 .claim("orgId", "org-123")
                 .claim("franchiseId", "fran-123")
                 .setExpiration(new Date(System.currentTimeMillis() + 3600000))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(testSecret)), SignatureAlgorithm.HS256)
+                .signWith(Keys.hmacShaKeyFor(testSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
 

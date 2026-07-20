@@ -22,7 +22,7 @@ describe('TurfList Component', () => {
         onViewSlots={vi.fn()}
       />
     );
-    expect(screen.getByText(/failed to load turfs/i)).toBeInTheDocument();
+    expect(screen.getByText(/failed to load venues/i)).toBeInTheDocument();
     expect(screen.getByText(/network error encountered/i)).toBeInTheDocument();
   });
 
@@ -30,7 +30,7 @@ describe('TurfList Component', () => {
     render(
       <TurfList turfs={[]} loading={false} error={null} onViewSlots={vi.fn()} />
     );
-    expect(screen.getByText(/no turfs found/i)).toBeInTheDocument();
+    expect(screen.getByText(/no venues found/i)).toBeInTheDocument();
   });
 
   test('renders lists of turf cards with titles and buttons', () => {
@@ -59,6 +59,6 @@ describe('TurfList Component', () => {
 
     expect(screen.getByText('Camp Nou Sports Arena')).toBeInTheDocument();
     expect(screen.getByText(/120.00/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /book now/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /check availability/i })).toBeInTheDocument();
   });
 });

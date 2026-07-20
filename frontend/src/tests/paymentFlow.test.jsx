@@ -9,7 +9,7 @@ describe('PaymentModal Component', () => {
     totalPrice: 120.0,
   };
 
-  test('validates inputs fields before simulation payment requests', async () => {
+  test('renders Razorpay checkout prompt with booking amount', () => {
     render(
       <PaymentModal
         isOpen={true}
@@ -19,11 +19,13 @@ describe('PaymentModal Component', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /simulate pay/i }));
-    expect(await screen.findByText(/please fill in all mock card fields/i)).toBeInTheDocument();
+    expect(screen.getByText(/total amount/i)).toBeInTheDocument();
+    expect(screen.getByText('₹120.00')).toBeInTheDocument();
+    expect(screen.getByText(/razorpay's secure checkout/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /pay with razorpay/i })).toBeInTheDocument();
   });
 
-  test('triggers callback upon filling input values and clicking button', async () => {
+  test('triggers callback when Razorpay payment button is clicked', async () => {
     const handleComplete = vi.fn().mockResolvedValue({ success: true });
     
     render(
@@ -35,11 +37,7 @@ describe('PaymentModal Component', () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText(/card number/i), { target: { value: '4111222233334444' } });
-    fireEvent.change(screen.getByLabelText(/expiry date/i), { target: { value: '12/28' } });
-    fireEvent.change(screen.getByLabelText(/cvv/i), { target: { value: '123' } });
-
-    fireEvent.click(screen.getByRole('button', { name: /simulate pay/i }));
+    fireEvent.click(screen.getByRole('button', { name: /pay with razorpay/i }));
 
     await waitFor(() => {
       expect(handleComplete).toHaveBeenCalledWith(mockBooking);
