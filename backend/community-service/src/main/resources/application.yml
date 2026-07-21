@@ -47,4 +47,4 @@ auth:
 
 booking:
   service:
-    url: ${BOOKING_SERVICE_URL:http://localhost:8084}
+    url: ${BOOKING_SERVICE_URL:http://localhost:8083}

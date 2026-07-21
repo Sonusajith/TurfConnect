@@ -28,7 +28,8 @@ export const useReviews = (turfId) => {
       setReviews(data.data || data || []);
     } catch (e) {
       console.error("Reviews API failed:", e.message);
-      setError(e.message || 'Failed to load reviews');
+      setReviews([]);
+      setError('Review service is unavailable. Start review-service and refresh this page.');
     } finally {
       setLoading(false);
     }

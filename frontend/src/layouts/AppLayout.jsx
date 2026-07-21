@@ -22,8 +22,6 @@ const MiniIcon = ({ children }) => (
   </span>
 );
 
-const ownerRoles = ['TURF_OWNER', 'ORG_ADMIN', 'FRANCHISE_ADMIN', 'SUPER_ADMIN'];
-
 const AppLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -119,14 +117,14 @@ const AppLayout = () => {
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
                 <BallIcon />
               </span>
-              <span className="text-lg font-extrabold">TurfConnect Pro</span>
+              <span className="text-lg font-extrabold">TurfConnect</span>
             </Link>
 
             <div className="hidden lg:block">
               <p className="text-sm font-semibold text-gray-500">
                 Welcome back, {user?.role === 'SUPER_ADMIN' ? 'Admin' : (user?.role === 'TURF_OWNER' ? 'Owner' : 'Athlete')}
               </p>
-              <h1 className="text-2xl font-extrabold tracking-tight text-gray-950">TurfConnect Pro</h1>
+              <h1 className="text-2xl font-extrabold tracking-tight text-gray-950">TurfConnect</h1>
             </div>
 
             <div className="flex items-center gap-3">

@@ -47,8 +47,11 @@ const TournamentCard = ({ tournament, onRegister, onView }) => {
             </button>
           )}
           {isRegistrationOpen && onRegister && (
-            <button onClick={onRegister} className="flex-1 py-2 bg-action-orange hover:bg-accent-hover text-white rounded-lg font-label-md shadow-sm transition-colors">
-              Register
+            <button
+              onClick={onRegister}
+              className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              Participate
             </button>
           )}
         </div>

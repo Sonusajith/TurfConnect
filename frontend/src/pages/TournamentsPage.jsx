@@ -35,7 +35,7 @@ const TournamentsPage = () => {
   const [detailsModalData, setDetailsModalData] = useState({ isOpen: false, tournament: null });
   const { addToast } = useToast();
 
-  const handleRegister = async (tournamentId, teamId) => {
+  const handleRegister = async (tournamentId, _teamId) => {
     // Simulate an API call
     await new Promise(resolve => setTimeout(resolve, 800));
     

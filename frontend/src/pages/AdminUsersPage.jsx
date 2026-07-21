@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api';
@@ -35,7 +35,7 @@ const AdminUsersPage = () => {
     role: 'PLAYER'
   });
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN.USERS}?page=${page}&size=${size}&search=${encodeURIComponent(searchTerm)}`, {
@@ -52,21 +52,23 @@ const AdminUsersPage = () => {
       } else {
         addToast(data.message || 'Failed to fetch users', 'error');
       }
-    } catch (err) {
+    } catch {
       addToast('Network error while fetching users', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast, page, searchTerm, token]);
 
   useEffect(() => {
     fetchUsers();
-  }, [page]); // Search will be triggered manually
+  }, [fetchUsers]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(0);
-    fetchUsers();
+    if (page === 0) {
+      fetchUsers();
+    }
   };
 
   const handleCreateUser = async (e) => {
@@ -94,7 +96,7 @@ const AdminUsersPage = () => {
       } else {
         addToast(data.message || 'Failed to create user', 'error');
       }
-    } catch (err) {
+    } catch {
       addToast('Network error while creating user', 'error');
     } finally {
       setCreateLoading(false);
@@ -138,7 +140,7 @@ const AdminUsersPage = () => {
       } else {
         addToast(data.message || 'Action failed', 'error');
       }
-    } catch (err) {
+    } catch {
       addToast('Network error during action', 'error');
     } finally {
       setActionLoading(false);

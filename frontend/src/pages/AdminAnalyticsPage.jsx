@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { useAnalytics } from '../hooks/useAnalytics';
 import LoadingSkeleton from '../components/LoadingSkeleton';

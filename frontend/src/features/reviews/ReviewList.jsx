@@ -3,7 +3,13 @@ import { Card, CardContent } from '../../components/ui/Card';
 
 const ReviewList = ({ reviews, loading, error }) => {
   if (loading) return <div className="text-gray-500 animate-pulse">Loading reviews...</div>;
-  if (error) return <div className="text-red-500">Error loading reviews: {error}</div>;
+  if (error) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-800">
+        {error}
+      </div>
+    );
+  }
   if (!reviews || reviews.length === 0) {
     return (
       <div className="text-center py-8 bg-white rounded-xl border border-gray-100">

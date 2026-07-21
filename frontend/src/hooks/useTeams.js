@@ -2,30 +2,56 @@ import { useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { API_ENDPOINTS, API_BASE_URL } from '../constants/api';
 
+const COMMUNITY_DIRECT_URL = import.meta.env.VITE_COMMUNITY_SERVICE_URL || 'http://localhost:8087';
+
+const getJson = async (res) => {
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+};
+
+const communityFetch = async (endpoint, options = {}) => {
+  const gatewayUrl = `${API_BASE_URL}${endpoint}`;
+  const directUrl = `${COMMUNITY_DIRECT_URL}${endpoint}`;
+  const res = await fetch(gatewayUrl, options);
+
+  if (res.status !== 503) {
+    return res;
+  }
+
+  return fetch(directUrl, options);
+};
+
 export const useTeams = () => {
   const [teams, setTeams] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { token, user } = useAuth();
+  const buildAuthHeaders = useCallback((extraHeaders = {}) => ({
+    ...extraHeaders,
+    Authorization: `Bearer ${token}`,
+    'X-User-Id': user?.userId || '',
+    'X-User-Role': user?.role || '',
+  }), [token, user?.role, user?.userId]);
 
   const fetchTeams = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEAMS.LIST}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await communityFetch(API_ENDPOINTS.TEAMS.LIST, {
+        headers: buildAuthHeaders()
       });
       if (!res.ok) {
         let errMsg = `HTTP Error ${res.status}`;
         try {
-          const errData = await res.json();
+          const errData = await getJson(res);
           errMsg = errData.message || errMsg;
-        } catch (e) {
+        } catch {
           // ignore json parse error
         }
         throw new Error(errMsg);
       }
-      const data = await res.json();
+      const data = await getJson(res);
       let rawTeams = data.data || data || [];
       if (!Array.isArray(rawTeams)) {
         rawTeams = [];
@@ -41,24 +67,24 @@ export const useTeams = () => {
       setTeams(processedTeams);
     } catch (e) {
       console.error("Teams API failed:", e.message);
-      setError(e.message || 'Failed to load teams');
+      setTeams([]);
+      setError('Team service is unavailable. Start community-service and refresh this page.');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [buildAuthHeaders, user?.userId]);
 
   const createTeam = async (teamData) => {
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEAMS.CREATE}`, {
+      const res = await communityFetch(API_ENDPOINTS.TEAMS.CREATE, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
         },
         body: JSON.stringify(teamData)
       });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
+        const errorData = await getJson(res).catch(() => ({}));
         throw new Error(errorData.message || 'Failed to create team');
       }
       await fetchTeams();
@@ -71,16 +97,15 @@ export const useTeams = () => {
 
   const updateTeam = async (teamId, teamData) => {
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEAMS.LIST}/${teamId}`, {
+      const res = await communityFetch(`${API_ENDPOINTS.TEAMS.LIST}/${teamId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
         },
         body: JSON.stringify(teamData)
       });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
+        const errorData = await getJson(res).catch(() => ({}));
         throw new Error(errorData.message || 'Failed to update team');
       }
       await fetchTeams();
@@ -93,30 +118,28 @@ export const useTeams = () => {
 
   const fetchInvitations = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.INVITATIONS.LIST}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await communityFetch(API_ENDPOINTS.INVITATIONS.LIST, {
+        headers: buildAuthHeaders()
       });
       if (res.ok) {
-        const data = await res.json();
+        const data = await getJson(res);
         setInvitations(data.data || data || []);
       }
     } catch (e) {
       console.error("Invitations API failed:", e.message);
       setError(e.message || 'Failed to load invitations');
     }
-  }, [token]);
+  }, [buildAuthHeaders]);
 
   const respondToInvitation = async (invitationId, status) => {
     try {
       const endpoint = status === 'ACCEPTED'
         ? API_ENDPOINTS.INVITATIONS.ACCEPT
         : API_ENDPOINTS.INVITATIONS.DECLINE;
-      const url = `${API_BASE_URL}${endpoint.replace(':invitationId', invitationId)}`;
-      const res = await fetch(url, {
+      const res = await communityFetch(endpoint.replace(':invitationId', invitationId), {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
         }
       });
       if (res.ok) {
@@ -131,20 +154,19 @@ export const useTeams = () => {
 
   const sendInvitation = async (teamId, email, message = '') => {
     try {
-      const url = `${API_BASE_URL}${API_ENDPOINTS.INVITATIONS.SEND.replace(':teamId', teamId)}`;
-      const res = await fetch(url, {
+      const endpoint = API_ENDPOINTS.INVITATIONS.SEND.replace(':teamId', teamId);
+      const res = await communityFetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
         },
         body: JSON.stringify({ inviteeEmail: email, message })
       });
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
+        const errorData = await getJson(res).catch(() => ({}));
         throw new Error(errorData.message || 'Failed to send invitation');
       }
-      return await res.json();
+      return await getJson(res);
     } catch (e) {
       console.error("Send Invitation API failed:", e.message);
       throw e;

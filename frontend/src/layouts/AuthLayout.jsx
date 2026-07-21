@@ -48,7 +48,7 @@ const AuthLayout = () => {
         </div>
 
         <p className="mt-8 text-center text-sm font-semibold text-white/70">
-          (c) 2026 TurfConnect Pro Field Management. All rights reserved.
+          (c) 2026 TurfConnect Field Management. All rights reserved.
         </p>
       </div>
     </div>

@@ -34,7 +34,13 @@ const TeamList = ({ teams, loading, error, onSendInvite, onUpdateTeam }) => {
   };
 
   if (loading) return <div className="text-gray-500 font-medium">Loading teams...</div>;
-  if (error) return <div className="text-red-500 font-medium">Error: {error}</div>;
+  if (error) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-800">
+        {error}
+      </div>
+    );
+  }
   
   if (!teams || teams.length === 0) {
     return (
