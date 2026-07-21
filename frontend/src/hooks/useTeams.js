@@ -30,9 +30,7 @@ export const useTeams = () => {
   const buildAuthHeaders = useCallback((extraHeaders = {}) => ({
     ...extraHeaders,
     Authorization: `Bearer ${token}`,
-    'X-User-Id': user?.userId || '',
-    'X-User-Role': user?.role || '',
-  }), [token, user?.role, user?.userId]);
+  }), [token]);
 
   const fetchTeams = useCallback(async () => {
     setLoading(true);

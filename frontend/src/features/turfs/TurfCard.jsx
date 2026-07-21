@@ -27,7 +27,11 @@ const TurfCard = ({ turf, onViewSlots }) => {
   const sportLabel = sportTypes?.[0] || 'TURF';
 
   return (
-    <Card interactive={true} className="group flex h-full flex-col rounded-lg border border-primary/10 bg-white shadow-sm hover:border-primary/20 hover:shadow-xl">
+    <Card 
+      interactive={true} 
+      onClick={onViewSlots}
+      className="group flex h-full flex-col rounded-lg border border-primary/10 bg-white shadow-sm hover:border-primary/20 hover:shadow-xl cursor-pointer"
+    >
       <CardContent className="flex-1 p-0">
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary-dark via-primary to-secondary">
           {coverImage ? (
