@@ -29,8 +29,19 @@ export const useTeams = () => {
   const { token, user } = useAuth();
   const buildAuthHeaders = useCallback((extraHeaders = {}) => ({
     ...extraHeaders,
-    Authorization: `Bearer ${token}`,
-  }), [token]);
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(user?.userId ? { 'X-User-Id': user.userId } : {}),
+    ...(user?.role ? { 'X-User-Role': user.role } : {}),
+  }), [token, user?.role, user?.userId]);
+
+  const withTeamMeta = useCallback((team) => {
+    const myMembership = team.members?.find((member) => member.userId === user?.userId);
+    return {
+      ...team,
+      role: myMembership?.role,
+      memberCount: team.members?.length || 0,
+    };
+  }, [user?.userId]);
 
   const fetchTeams = useCallback(async () => {
     setLoading(true);
@@ -54,14 +65,7 @@ export const useTeams = () => {
       if (!Array.isArray(rawTeams)) {
         rawTeams = [];
       }
-      const processedTeams = rawTeams.map(t => {
-        const myMembership = t.members?.find(m => m.userId === user?.userId);
-        return {
-          ...t,
-          role: myMembership?.role,
-          memberCount: t.members?.length || 0
-        };
-      });
+      const processedTeams = rawTeams.map(withTeamMeta);
       setTeams(processedTeams);
     } catch (e) {
       console.error("Teams API failed:", e.message);
@@ -70,7 +74,7 @@ export const useTeams = () => {
     } finally {
       setLoading(false);
     }
-  }, [buildAuthHeaders, user?.userId]);
+  }, [buildAuthHeaders, withTeamMeta]);
 
   const createTeam = async (teamData) => {
     try {
@@ -85,7 +89,12 @@ export const useTeams = () => {
         const errorData = await getJson(res).catch(() => ({}));
         throw new Error(errorData.message || 'Failed to create team');
       }
-      await fetchTeams();
+      const data = await getJson(res);
+      const createdTeam = data.data || data;
+      if (createdTeam?.id) {
+        setTeams((current) => [withTeamMeta(createdTeam), ...current.filter((team) => team.id !== createdTeam.id)]);
+      }
+      void fetchTeams();
       return true;
     } catch (e) {
       console.error("Create Team API failed:", e.message);
