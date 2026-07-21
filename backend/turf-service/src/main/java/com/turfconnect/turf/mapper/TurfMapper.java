@@ -50,7 +50,7 @@ public class TurfMapper {
                 .equipmentRentalAvailable(request.isEquipmentRentalAvailable())
                 .foodAvailable(request.isFoodAvailable())
                 .coachingAvailable(request.isCoachingAvailable())
-                .status("PENDING_APPROVAL") // Initial status before manual review
+                .status("ACTIVE")
                 .deleted(false)
                 .averageRating(0.0)
                 .totalReviews(0)

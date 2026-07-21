@@ -98,6 +98,7 @@ public class TurfServiceTest {
         assertNotNull(response);
         assertEquals("Green Arena", response.getName());
         assertEquals(ownerId, response.getOwnerId());
+        assertEquals("ACTIVE", response.getStatus());
         assertEquals("https://images.example/green-arena.jpg", response.getCoverImage());
     }
 

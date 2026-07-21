@@ -37,7 +37,27 @@ describe('PaymentModal Component', () => {
     );
 
     expect(screen.getByText(/local test gateway/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /complete test payment/i })).toBeInTheDocument();
+    expect(screen.getByText(/sonusajith02@oksbi/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /complete upi demo payment/i })).toBeInTheDocument();
+  });
+
+  test('shows demo card details after selecting card payment', () => {
+    render(
+      <PaymentModal
+        isOpen={true}
+        onClose={vi.fn()}
+        booking={mockBooking}
+        onPaymentComplete={vi.fn()}
+        paymentProvider="MOCK"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /demo card/i }));
+
+    expect(screen.getAllByText(/4111 1111 1111 1111/i)).toHaveLength(2);
+    expect(screen.getByText(/12\/30/i)).toBeInTheDocument();
+    expect(screen.getByText(/123456/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /complete card demo payment/i })).toBeInTheDocument();
   });
 
   test('triggers callback when Razorpay payment button is clicked', async () => {
