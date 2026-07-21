@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import BookingTable from '../features/booking/BookingTable';
+import { AuthProvider } from '../contexts/AuthContext';
+import { ToastProvider } from '../contexts/ToastContext';
 import { createSplitPlan, saveBookingSplitPlan } from '../utils/splitPlans';
 
 describe('BookingTable split contributions', () => {
@@ -20,12 +22,18 @@ describe('BookingTable split contributions', () => {
     window.localStorage.clear();
   });
 
+  const renderBookingTable = (ui) => render(
+    <AuthProvider value={{ user: { userId: 'user-1', role: 'PLAYER' }, token: 'test-token', loading: false }}>
+      <ToastProvider>
+        <MemoryRouter>
+          {ui}
+        </MemoryRouter>
+      </ToastProvider>
+    </AuthProvider>
+  );
+
   test('shows suggested member contributions when no saved split exists', () => {
-    render(
-      <MemoryRouter>
-        <BookingTable bookings={[booking]} loading={false} error={null} />
-      </MemoryRouter>
-    );
+    renderBookingTable(<BookingTable bookings={[booking]} loading={false} error={null} />);
 
     expect(screen.getByText('Suggested split contributions')).toBeInTheDocument();
     expect(screen.getByText('No saved split yet, showing a 6-player planning split')).toBeInTheDocument();
@@ -40,11 +48,7 @@ describe('BookingTable split contributions', () => {
       memberNames: ['You', 'Asha', 'Rohit'],
     }));
 
-    render(
-      <MemoryRouter>
-        <BookingTable bookings={[booking]} loading={false} error={null} />
-      </MemoryRouter>
-    );
+    renderBookingTable(<BookingTable bookings={[booking]} loading={false} error={null} />);
 
     expect(screen.getByText('Saved split contributions')).toBeInTheDocument();
     expect(screen.getByText('Asha')).toBeInTheDocument();
@@ -63,15 +67,13 @@ describe('BookingTable split contributions', () => {
       }),
     };
 
-    render(
-      <MemoryRouter>
-        <BookingTable
-          bookings={[bookingWithSplit]}
-          loading={false}
-          error={null}
-          onUpdateSplitContribution={onUpdateSplitContribution}
-        />
-      </MemoryRouter>
+    renderBookingTable(
+      <BookingTable
+        bookings={[bookingWithSplit]}
+        loading={false}
+        error={null}
+        onUpdateSplitContribution={onUpdateSplitContribution}
+      />
     );
 
     fireEvent.click(screen.getAllByRole('button', { name: /mark paid/i })[0]);
