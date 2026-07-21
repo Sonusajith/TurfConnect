@@ -1,6 +1,7 @@
 package com.turfconnect.booking;
 
 import com.turfconnect.shared.audit.AuditAspect;
+import com.turfconnect.shared.exception.GlobalExceptionHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-@Import(AuditAspect.class)
+@Import({AuditAspect.class, GlobalExceptionHandler.class})
 public class BookingApplication {
     public static void main(String[] args) {
         SpringApplication.run(BookingApplication.class, args);

@@ -64,7 +64,8 @@ apiClient.interceptors.response.use(
     }
 
     // Extract error message safely
-    const errorMessage = error.response?.data?.message || 'Something went wrong';
+    const errorData = error.response?.data;
+    const errorMessage = errorData?.message || errorData?.error || error.message || 'Something went wrong';
     return Promise.reject(new Error(errorMessage));
   }
 );

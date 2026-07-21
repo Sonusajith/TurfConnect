@@ -97,7 +97,23 @@ const SlotPickerPage = () => {
   const handlePaymentComplete = async (booking, options = {}) => {
     try {
       const providerToUse = options.demoPayment ? 'MOCK' : activePaymentProvider;
-      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', providerToUse);
+      let initiateRes;
+      try {
+        initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', providerToUse);
+      } catch (initiateError) {
+        if (providerToUse === 'RAZORPAY') {
+          addToast('Razorpay test gateway is unavailable. Completing this as a dummy Razorpay payment.', 'warning');
+          const fallbackRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', 'MOCK');
+          const verifyRes = await paymentService.verifyPayment(fallbackRes.data.transactionId);
+
+          setIsPaymentOpen(false);
+          setSelectedSlot(null);
+          setActiveBooking(null);
+          navigate(ROUTES.BOOKINGS);
+          return verifyRes.data;
+        }
+        throw initiateError;
+      }
       if (!initiateRes.success) {
         throw new Error(initiateRes.message || 'Payment initiation failed on the server. Please try a different method.');
       }

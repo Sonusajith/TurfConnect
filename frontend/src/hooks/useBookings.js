@@ -28,8 +28,17 @@ export const useBookings = () => {
   }, [fetchBookings]);
 
   const cancelBooking = useCallback(async (bookingId) => {
-    await bookingService.cancel(bookingId);
-    await fetchBookings();
+    const response = await bookingService.cancel(bookingId);
+    if (response && response.success && response.data) {
+      setBookings((current) => current.map((booking) => (
+        booking.id === bookingId ? response.data : booking
+      )));
+    }
+    try {
+      await fetchBookings();
+    } catch {
+      // Keep the optimistic cancellation result if a background refresh fails.
+    }
   }, [fetchBookings]);
 
   const updateSplitContribution = useCallback(async (bookingId, splitContribution) => {
