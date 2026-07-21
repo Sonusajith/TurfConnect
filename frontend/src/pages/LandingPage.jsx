@@ -34,6 +34,24 @@ const steps = [
   'Track bookings, teams, splits, and reviews',
 ];
 
+const contactDetails = [
+  {
+    label: 'General support',
+    value: 'support@turfconnect.test',
+    href: 'mailto:support@turfconnect.test',
+  },
+  {
+    label: 'Owner onboarding',
+    value: 'owners@turfconnect.test',
+    href: 'mailto:owners@turfconnect.test',
+  },
+  {
+    label: 'Call for details',
+    value: '+91 98765 43210',
+    href: 'tel:+919876543210',
+  },
+];
+
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-[#f3f8fb] text-gray-950">
@@ -52,6 +70,12 @@ const LandingPage = () => {
           </Link>
 
           <nav className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="#contact"
+              className="hidden rounded-lg px-3 py-2 text-sm font-extrabold text-white transition hover:bg-white/10 sm:inline-flex"
+            >
+              Contact
+            </a>
             <Link
               to={ROUTES.LOGIN}
               className="rounded-lg px-3 py-2 text-sm font-extrabold text-white transition hover:bg-white/10 sm:px-4"
@@ -182,7 +206,32 @@ const LandingPage = () => {
           </div>
         </section>
 
-        <section className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+        <section id="contact" className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-20">
+          <div className="max-w-xl">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-accent">Contact us</p>
+            <h2 className="mt-3 text-3xl font-black tracking-normal text-gray-950 sm:text-4xl">
+              Need help with a booking or venue setup?
+            </h2>
+            <p className="mt-4 text-base font-semibold leading-7 text-gray-600">
+              Reach the TurfConnect team for player support, owner onboarding, demo testing, or project walkthrough details.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            {contactDetails.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="rounded-lg border border-primary/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+              >
+                <span className="text-xs font-black uppercase tracking-[0.16em] text-gray-500">{item.label}</span>
+                <span className="mt-3 block break-words text-lg font-black leading-6 text-primary-dark">{item.value}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-primary/10 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <div>
             <h2 className="text-3xl font-black tracking-normal text-gray-950">Ready to test the platform?</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-gray-600">
