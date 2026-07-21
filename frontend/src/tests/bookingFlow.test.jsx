@@ -83,4 +83,25 @@ describe('CheckoutModal Component', () => {
     expect(screen.getByText(/You \+ 3 teammates/i)).toBeInTheDocument();
     expect(screen.getByText('Each contributes').parentElement).toHaveTextContent(/30\.00/);
   });
+
+  test('allows a default player name to be cleared before typing a custom name', () => {
+    render(
+      <CheckoutModal
+        isOpen={true}
+        onClose={vi.fn()}
+        slot={mockSlot}
+        turf={mockTurf}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    const secondMemberName = screen.getByLabelText(/member 2 name/i);
+    expect(secondMemberName).toHaveValue('Player 2');
+
+    fireEvent.change(secondMemberName, { target: { value: '' } });
+    expect(secondMemberName).toHaveValue('');
+
+    fireEvent.change(secondMemberName, { target: { value: 'Saif' } });
+    expect(secondMemberName).toHaveValue('Saif');
+  });
 });

@@ -8,12 +8,14 @@ import com.turfconnect.turf.dto.TurfResponse;
 import com.turfconnect.turf.dto.TurfSearchCriteria;
 import com.turfconnect.turf.dto.TurfUpdateRequest;
 import com.turfconnect.turf.mapper.TurfMapper;
+import com.turfconnect.turf.model.Slot;
 import com.turfconnect.turf.model.Turf;
 import com.turfconnect.turf.repository.TurfRepository;
 import java.time.LocalTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -100,6 +102,11 @@ public class TurfServiceTest {
         assertEquals(ownerId, response.getOwnerId());
         assertEquals("ACTIVE", response.getStatus());
         assertEquals("https://images.example/green-arena.jpg", response.getCoverImage());
+
+        ArgumentCaptor<List<Slot>> slotsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(slotRepository).saveAll(slotsCaptor.capture());
+        assertFalse(slotsCaptor.getValue().isEmpty());
+        assertTrue(slotsCaptor.getValue().stream().allMatch(slot -> "turf-1".equals(slot.getTurfId())));
     }
 
     @Test

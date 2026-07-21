@@ -39,6 +39,8 @@ import java.time.LocalDateTime;
 @Slf4j
 public class TurfService {
 
+    private static final int INITIAL_SLOT_GENERATION_DAYS = 45;
+
     private final TurfRepository turfRepository;
     private final SlotRepository slotRepository;
     private final TurfMapper turfMapper;
@@ -49,6 +51,7 @@ public class TurfService {
         validateSlotConfiguration(request.getOpenTime(), request.getCloseTime(), request.getSlotDurationMinutes());
         Turf turf = turfMapper.toEntity(request, ownerId);
         Turf savedTurf = turfRepository.save(turf);
+        generateInitialSlots(savedTurf);
 
         // New turf affects search result pages — evict all search caches
         turfCacheService.evictAllTurfPages();
@@ -250,30 +253,7 @@ public class TurfService {
             // JVM-level lock to prevent concurrent generation on the same node
             synchronized (turfId.intern()) {
                 if (!slotRepository.existsByTurfIdAndDate(turfId, date)) {
-                    List<Slot> slots = new ArrayList<>();
-                    LocalTime current = turf.getOpenTime();
-                    LocalTime end = turf.getCloseTime();
-                    int duration = turf.getSlotDurationMinutes();
-
-                    while (current.plusMinutes(duration).isBefore(end) || current.plusMinutes(duration).equals(end)) {
-                        LocalTime slotEnd = current.plusMinutes(duration);
-                        Slot slot = Slot.builder()
-                                .turfId(turfId)
-                                .date(date)
-                                .startTime(current)
-                                .endTime(slotEnd)
-                                .price(turf.getHourlyRate())
-                                .status(SlotStatus.AVAILABLE)
-                                .build();
-                        slots.add(slot);
-                        current = slotEnd;
-                    }
-
-                    try {
-                        slotRepository.saveAll(slots);
-                    } catch (DuplicateKeyException e) {
-                        // Another thread/instance generated them concurrently, safe to ignore
-                    }
+                    saveGeneratedSlots(buildSlotsForDate(turf, date));
                 }
             }
         }
@@ -306,30 +286,7 @@ public class TurfService {
                 final LocalDate dateToGen = current;
                 synchronized (turfId.intern()) {
                     if (!slotRepository.existsByTurfIdAndDate(turfId, dateToGen)) {
-                        List<Slot> slots = new ArrayList<>();
-                        LocalTime timeCursor = turf.getOpenTime();
-                        LocalTime end = turf.getCloseTime();
-                        int duration = turf.getSlotDurationMinutes();
-
-                        while (timeCursor.plusMinutes(duration).isBefore(end) || timeCursor.plusMinutes(duration).equals(end)) {
-                            LocalTime slotEnd = timeCursor.plusMinutes(duration);
-                            Slot slot = Slot.builder()
-                                    .turfId(turfId)
-                                    .date(dateToGen)
-                                    .startTime(timeCursor)
-                                    .endTime(slotEnd)
-                                    .price(turf.getHourlyRate())
-                                    .status(SlotStatus.AVAILABLE)
-                                    .build();
-                            slots.add(slot);
-                            timeCursor = slotEnd;
-                        }
-
-                        try {
-                            slotRepository.saveAll(slots);
-                        } catch (DuplicateKeyException e) {
-                            // Concurrency safeguard
-                        }
+                        saveGeneratedSlots(buildSlotsForDate(turf, dateToGen));
                     }
                 }
             }
@@ -365,6 +322,56 @@ public class TurfService {
             }
         }
         return false;
+    }
+
+    private void generateInitialSlots(Turf turf) {
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = startDate.plusDays(INITIAL_SLOT_GENERATION_DAYS);
+        List<Slot> slots = new ArrayList<>();
+
+        LocalDate current = startDate;
+        while (!current.isAfter(endDate)) {
+            if (isDayAvailable(turf, current)) {
+                slots.addAll(buildSlotsForDate(turf, current));
+            }
+            current = current.plusDays(1);
+        }
+
+        saveGeneratedSlots(slots);
+    }
+
+    private List<Slot> buildSlotsForDate(Turf turf, LocalDate date) {
+        List<Slot> slots = new ArrayList<>();
+        LocalTime current = turf.getOpenTime();
+        LocalTime end = turf.getCloseTime();
+        int duration = turf.getSlotDurationMinutes();
+
+        while (current.plusMinutes(duration).isBefore(end) || current.plusMinutes(duration).equals(end)) {
+            LocalTime slotEnd = current.plusMinutes(duration);
+            slots.add(Slot.builder()
+                    .turfId(turf.getId())
+                    .date(date)
+                    .startTime(current)
+                    .endTime(slotEnd)
+                    .price(turf.getHourlyRate())
+                    .status(SlotStatus.AVAILABLE)
+                    .build());
+            current = slotEnd;
+        }
+
+        return slots;
+    }
+
+    private void saveGeneratedSlots(List<Slot> slots) {
+        if (slots.isEmpty()) {
+            return;
+        }
+
+        try {
+            slotRepository.saveAll(slots);
+        } catch (DuplicateKeyException e) {
+            // Another request generated this date concurrently; keep the existing slots.
+        }
     }
 
     public SlotDTO getSlotById(String slotId) {

@@ -20,10 +20,11 @@ export const createSplitPlan = ({
   const members = Array.from({ length: normalizedCount }, (_, index) => {
     const id = `member-${index + 1}`;
     const defaultName = index === 0 ? payerName : `Player ${index + 1}`;
+    const hasCustomName = Object.prototype.hasOwnProperty.call(memberNames, index);
 
     return {
       id,
-      name: memberNames[index]?.trim() || defaultName,
+      name: hasCustomName ? memberNames[index] : defaultName,
       amount: baseShare,
       status: paidIds.has(id) ? 'PAID' : 'PENDING',
     };
