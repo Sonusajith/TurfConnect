@@ -9,10 +9,13 @@ public class CorsConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        // Commented out to prevent duplicate CORS headers (API Gateway handles it)
+        /*
         registry.addMapping("/api/v1/**")
                 .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
+        */
     }
 }

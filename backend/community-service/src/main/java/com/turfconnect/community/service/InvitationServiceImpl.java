@@ -56,19 +56,18 @@ public class InvitationServiceImpl implements InvitationService {
 
         // 3. Resolve the invitee email to a userId via auth-service
         UserDTO invitee = authServiceClient.getUserByEmail(request.getInviteeEmail());
-        if (invitee == null) {
-            throw new BadRequestException("No user found with email: " + request.getInviteeEmail());
-        }
 
         // 4. Block inviting existing members
-        boolean alreadyMember = team.getMembers().stream()
-                .anyMatch(m -> m.getUserId().equals(invitee.getId()));
-        if (alreadyMember) {
-            throw new BadRequestException("User is already a member of this team");
+        if (invitee != null) {
+            boolean alreadyMember = team.getMembers().stream()
+                    .anyMatch(m -> m.getUserId().equals(invitee.getId()));
+            if (alreadyMember) {
+                throw new BadRequestException("User is already a member of this team");
+            }
         }
 
         // 5. Block duplicate pending invitations
-        if (invitationRepository.existsByTeamIdAndInviteeIdAndStatus(teamId, invitee.getId(), InvitationStatus.PENDING)) {
+        if (invitationRepository.existsByTeamIdAndInviteeEmailAndStatus(teamId, request.getInviteeEmail(), InvitationStatus.PENDING)) {
             throw new BadRequestException("A pending invitation already exists for this user");
         }
 
@@ -83,7 +82,7 @@ public class InvitationServiceImpl implements InvitationService {
                 .teamId(teamId)
                 .inviterId(inviterId)
                 .inviteeEmail(request.getInviteeEmail())
-                .inviteeId(invitee.getId())
+                .inviteeId(invitee != null ? invitee.getId() : null)
                 .message(request.getMessage())
                 .status(InvitationStatus.PENDING)
                 .createdBy(inviterId)
@@ -94,7 +93,7 @@ public class InvitationServiceImpl implements InvitationService {
                 .build();
 
         invitation = invitationRepository.save(invitation);
-        log.info("Invitation {} created for team {} to user {}", invitation.getId(), teamId, invitee.getId());
+        log.info("Invitation {} created for team {} to user {}", invitation.getId(), teamId, request.getInviteeEmail());
 
         // 8. Publish event to RabbitMQ for notification-service
         // Get inviter name from the team members list (or default to inviterId)
@@ -105,8 +104,8 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     @Override
-    public InvitationResponse acceptInvitation(String invitationId, String userId) {
-        TeamInvitation invitation = loadAndValidateInvitation(invitationId, userId);
+    public InvitationResponse acceptInvitation(String invitationId, String userId, String email) {
+        TeamInvitation invitation = loadAndValidateInvitation(invitationId, userId, email);
 
         // Add the user to the team as a PLAYER
         Team team = teamRepository.findById(invitation.getTeamId())
@@ -133,6 +132,9 @@ public class InvitationServiceImpl implements InvitationService {
         teamRepository.save(team);
 
         invitation.setStatus(InvitationStatus.ACCEPTED);
+        if (invitation.getInviteeId() == null) {
+            invitation.setInviteeId(userId); // Link user ID if they just signed up
+        }
         invitation.setRespondedAt(Instant.now());
         invitation.setUpdatedAt(Instant.now());
         invitationRepository.save(invitation);
@@ -142,10 +144,13 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     @Override
-    public InvitationResponse declineInvitation(String invitationId, String userId) {
-        TeamInvitation invitation = loadAndValidateInvitation(invitationId, userId);
+    public InvitationResponse declineInvitation(String invitationId, String userId, String email) {
+        TeamInvitation invitation = loadAndValidateInvitation(invitationId, userId, email);
 
         invitation.setStatus(InvitationStatus.DECLINED);
+        if (invitation.getInviteeId() == null) {
+            invitation.setInviteeId(userId);
+        }
         invitation.setRespondedAt(Instant.now());
         invitation.setUpdatedAt(Instant.now());
         invitationRepository.save(invitation);
@@ -155,9 +160,15 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     @Override
-    public List<InvitationResponse> getPendingInvitations(String userId) {
-        return invitationRepository.findByInviteeIdAndStatus(userId, InvitationStatus.PENDING)
-                .stream()
+    public List<InvitationResponse> getPendingInvitations(String userId, String email) {
+        java.util.Set<TeamInvitation> allInvites = new java.util.HashSet<>();
+        
+        allInvites.addAll(invitationRepository.findByInviteeIdAndStatus(userId, InvitationStatus.PENDING));
+        if (email != null && !email.isEmpty()) {
+            allInvites.addAll(invitationRepository.findByInviteeEmailAndStatus(email, InvitationStatus.PENDING));
+        }
+        
+        return allInvites.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -167,12 +178,18 @@ public class InvitationServiceImpl implements InvitationService {
     /**
      * Load an invitation and validate ownership + expiry before any state transition.
      */
-    private TeamInvitation loadAndValidateInvitation(String invitationId, String userId) {
+    private TeamInvitation loadAndValidateInvitation(String invitationId, String userId, String email) {
         TeamInvitation invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
 
-        if (!invitation.getInviteeId().equals(userId)) {
-            throw new ForbiddenException("This invitation does not belong to you");
+        if (invitation.getInviteeId() != null) {
+            if (!invitation.getInviteeId().equals(userId)) {
+                throw new ForbiddenException("This invitation does not belong to you");
+            }
+        } else {
+            if (email == null || !email.equalsIgnoreCase(invitation.getInviteeEmail())) {
+                throw new ForbiddenException("This invitation does not belong to you");
+            }
         }
 
         if (invitation.getStatus() != InvitationStatus.PENDING) {

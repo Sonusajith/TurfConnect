@@ -43,10 +43,11 @@ public class InvitationController {
     @PutMapping("/{invitationId}/accept")
     public ResponseEntity<ApiResponse<InvitationResponse>> acceptInvitation(
             @RequestHeader("X-User-Id") String userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
             @PathVariable String invitationId) {
 
         log.info("User {} accepting invitation {}", userId, invitationId);
-        InvitationResponse response = invitationService.acceptInvitation(invitationId, userId);
+        InvitationResponse response = invitationService.acceptInvitation(invitationId, userId, email);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -57,10 +58,11 @@ public class InvitationController {
     @PutMapping("/{invitationId}/decline")
     public ResponseEntity<ApiResponse<InvitationResponse>> declineInvitation(
             @RequestHeader("X-User-Id") String userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
             @PathVariable String invitationId) {
 
         log.info("User {} declining invitation {}", userId, invitationId);
-        InvitationResponse response = invitationService.declineInvitation(invitationId, userId);
+        InvitationResponse response = invitationService.declineInvitation(invitationId, userId, email);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -70,9 +72,10 @@ public class InvitationController {
      */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<List<InvitationResponse>>> getMyPendingInvitations(
-            @RequestHeader("X-User-Id") String userId) {
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
 
-        List<InvitationResponse> invitations = invitationService.getPendingInvitations(userId);
+        List<InvitationResponse> invitations = invitationService.getPendingInvitations(userId, email);
         return ResponseEntity.ok(ApiResponse.success(invitations));
     }
 }

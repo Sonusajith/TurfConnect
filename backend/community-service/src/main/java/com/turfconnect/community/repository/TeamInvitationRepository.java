@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface TeamInvitationRepository extends MongoRepository<TeamInvitation, String> {
-    boolean existsByTeamIdAndInviteeIdAndStatus(String teamId, String inviteeId, InvitationStatus status);
+    boolean existsByTeamIdAndInviteeEmailAndStatus(String teamId, String inviteeEmail, InvitationStatus status);
     List<TeamInvitation> findByInviteeIdAndStatus(String inviteeId, InvitationStatus status);
+    List<TeamInvitation> findByInviteeEmailAndStatus(String inviteeEmail, InvitationStatus status);
 }

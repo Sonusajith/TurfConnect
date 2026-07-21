@@ -104,7 +104,7 @@ class InvitationServiceImplTest {
     void sendInvitation_success() {
         when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(activeTeam));
         when(authServiceClient.getUserByEmail(INVITEE_EMAIL)).thenReturn(inviteeUser);
-        when(invitationRepository.existsByTeamIdAndInviteeIdAndStatus(TEAM_ID, INVITEE_ID, InvitationStatus.PENDING)).thenReturn(false);
+        when(invitationRepository.existsByTeamIdAndInviteeEmailAndStatus(TEAM_ID, INVITEE_EMAIL, InvitationStatus.PENDING)).thenReturn(false);
         when(invitationRepository.save(any(TeamInvitation.class))).thenReturn(pendingInvitation);
 
         InvitationResponse response = invitationService.sendInvitation(TEAM_ID, validInviteRequest, CAPTAIN_ID);
@@ -176,7 +176,7 @@ class InvitationServiceImplTest {
     void sendInvitation_duplicatePendingInvite() {
         when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(activeTeam));
         when(authServiceClient.getUserByEmail(INVITEE_EMAIL)).thenReturn(inviteeUser);
-        when(invitationRepository.existsByTeamIdAndInviteeIdAndStatus(TEAM_ID, INVITEE_ID, InvitationStatus.PENDING)).thenReturn(true);
+        when(invitationRepository.existsByTeamIdAndInviteeEmailAndStatus(TEAM_ID, INVITEE_EMAIL, InvitationStatus.PENDING)).thenReturn(true);
 
         assertThatThrownBy(() -> invitationService.sendInvitation(TEAM_ID, validInviteRequest, CAPTAIN_ID))
                 .isInstanceOf(BadRequestException.class)
@@ -190,7 +190,7 @@ class InvitationServiceImplTest {
         activeTeam.setMaxMembers(1); // max = 1 but captain already counts as 1
         when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(activeTeam));
         when(authServiceClient.getUserByEmail(INVITEE_EMAIL)).thenReturn(inviteeUser);
-        when(invitationRepository.existsByTeamIdAndInviteeIdAndStatus(anyString(), anyString(), any())).thenReturn(false);
+        when(invitationRepository.existsByTeamIdAndInviteeEmailAndStatus(anyString(), anyString(), any())).thenReturn(false);
 
         assertThatThrownBy(() -> invitationService.sendInvitation(TEAM_ID, validInviteRequest, CAPTAIN_ID))
                 .isInstanceOf(BadRequestException.class)
@@ -218,7 +218,7 @@ class InvitationServiceImplTest {
         when(invitationRepository.save(any())).thenReturn(pendingInvitation);
         when(teamRepository.save(any())).thenReturn(activeTeam);
 
-        InvitationResponse response = invitationService.acceptInvitation(INVITATION_ID, INVITEE_ID);
+        InvitationResponse response = invitationService.acceptInvitation(INVITATION_ID, INVITEE_ID, INVITEE_EMAIL);
 
         assertThat(response).isNotNull();
         verify(teamRepository).save(argThat(t -> t.getMembers().stream()
@@ -231,7 +231,7 @@ class InvitationServiceImplTest {
     void acceptInvitation_wrongUser() {
         when(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(pendingInvitation));
 
-        assertThatThrownBy(() -> invitationService.acceptInvitation(INVITATION_ID, "wrong-user"))
+        assertThatThrownBy(() -> invitationService.acceptInvitation(INVITATION_ID, "wrong-user", "wrong@example.com"))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessageContaining("does not belong to you");
     }
@@ -242,7 +242,7 @@ class InvitationServiceImplTest {
         pendingInvitation.setExpiresAt(Instant.now().minus(1, ChronoUnit.DAYS));
         when(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(pendingInvitation));
 
-        assertThatThrownBy(() -> invitationService.acceptInvitation(INVITATION_ID, INVITEE_ID))
+        assertThatThrownBy(() -> invitationService.acceptInvitation(INVITATION_ID, INVITEE_ID, INVITEE_EMAIL))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Invitation has expired");
 
@@ -256,7 +256,7 @@ class InvitationServiceImplTest {
         pendingInvitation.setStatus(InvitationStatus.ACCEPTED);
         when(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(pendingInvitation));
 
-        assertThatThrownBy(() -> invitationService.acceptInvitation(INVITATION_ID, INVITEE_ID))
+        assertThatThrownBy(() -> invitationService.acceptInvitation(INVITATION_ID, INVITEE_ID, INVITEE_EMAIL))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("no longer pending");
     }
@@ -279,7 +279,7 @@ class InvitationServiceImplTest {
         when(invitationRepository.findById(INVITATION_ID)).thenReturn(Optional.of(pendingInvitation));
         when(invitationRepository.save(any())).thenReturn(declinedInvitation);
 
-        InvitationResponse response = invitationService.declineInvitation(INVITATION_ID, INVITEE_ID);
+        InvitationResponse response = invitationService.declineInvitation(INVITATION_ID, INVITEE_ID, INVITEE_EMAIL);
 
         assertThat(response).isNotNull();
         verify(invitationRepository).save(argThat(i -> i.getStatus() == InvitationStatus.DECLINED));
@@ -294,7 +294,7 @@ class InvitationServiceImplTest {
         when(invitationRepository.findByInviteeIdAndStatus(INVITEE_ID, InvitationStatus.PENDING))
                 .thenReturn(List.of(pendingInvitation));
 
-        List<InvitationResponse> responses = invitationService.getPendingInvitations(INVITEE_ID);
+        List<InvitationResponse> responses = invitationService.getPendingInvitations(INVITEE_ID, INVITEE_EMAIL);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getStatus()).isEqualTo(InvitationStatus.PENDING);
@@ -306,7 +306,7 @@ class InvitationServiceImplTest {
         when(invitationRepository.findByInviteeIdAndStatus(INVITEE_ID, InvitationStatus.PENDING))
                 .thenReturn(List.of());
 
-        List<InvitationResponse> responses = invitationService.getPendingInvitations(INVITEE_ID);
+        List<InvitationResponse> responses = invitationService.getPendingInvitations(INVITEE_ID, INVITEE_EMAIL);
 
         assertThat(responses).isEmpty();
     }
@@ -316,7 +316,7 @@ class InvitationServiceImplTest {
     void sendInvitation_rabbitMQFailure_doesNotRollback() {
         when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(activeTeam));
         when(authServiceClient.getUserByEmail(INVITEE_EMAIL)).thenReturn(inviteeUser);
-        when(invitationRepository.existsByTeamIdAndInviteeIdAndStatus(TEAM_ID, INVITEE_ID, InvitationStatus.PENDING)).thenReturn(false);
+        when(invitationRepository.existsByTeamIdAndInviteeEmailAndStatus(TEAM_ID, INVITEE_EMAIL, InvitationStatus.PENDING)).thenReturn(false);
         when(invitationRepository.save(any(TeamInvitation.class))).thenReturn(pendingInvitation);
         // Simulate RabbitMQ failure
         doThrow(new RuntimeException("RabbitMQ connection refused"))
