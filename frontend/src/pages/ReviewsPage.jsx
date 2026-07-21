@@ -83,7 +83,7 @@ const ReviewsPage = ({ turfId }) => {
       
       <RatingSummary reviews={reviews} />
       
-      <ReviewList reviews={reviews} loading={loading} error={error} />
+      <ReviewList reviews={reviews} loading={loading} error={error} currentUser={user} />
       
       <ReviewFormModal 
         isOpen={isModalOpen} 

@@ -57,6 +57,16 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/turf/{turfId}")
+    public ResponseEntity<ApiResponse<List<BookingResponse>>> getBookingsForTurf(
+            @PathVariable String turfId,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+
+        List<BookingResponse> response = bookingService.getBookingsForOwnedTurf(turfId, userId, userRole);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PutMapping("/{id}/confirm")
     public ResponseEntity<ApiResponse<BookingResponse>> confirmBooking(
             @PathVariable String id,

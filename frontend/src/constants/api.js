@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
     CREATE: '/api/v1/bookings',
     GET: '/api/v1/bookings/:bookingId',
     MY_BOOKINGS: '/api/v1/bookings/my-bookings',
+    TURF_BOOKINGS: '/api/v1/bookings/turf/:turfId',
     CANCEL: '/api/v1/bookings/:bookingId/cancel',
     UPDATE_SPLIT: '/api/v1/bookings/:bookingId/split',
   },

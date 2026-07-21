@@ -52,6 +52,9 @@ public class BookingService {
     @Value("${services.payment-service.url:http://localhost:8084}")
     private String paymentServiceUrl;
 
+    @Value("${services.auth-service.url:http://localhost:8081}")
+    private String authServiceUrl;
+
     @Value("${spring.security.internal-token:internal-secret-token}")
     private String internalToken;
 
@@ -282,10 +285,27 @@ public class BookingService {
         return dtos;
     }
 
+    public List<BookingResponse> getBookingsForOwnedTurf(String turfId, String ownerId, String userRole) {
+        if (!isAdminRole(userRole)) {
+            requireTurfOwner(turfId, ownerId);
+        }
+
+        List<Booking> list = bookingRepository.findByTurfIdOrderByCreatedAtDesc(turfId);
+        List<BookingResponse> dtos = new ArrayList<>();
+        for (Booking b : list) {
+            dtos.add(toBookingResponse(b));
+        }
+        return dtos;
+    }
+
     private BookingResponse toBookingResponse(Booking booking) {
+        UserData user = fetchUserInfo(booking.getUserId());
         return BookingResponse.builder()
                 .id(booking.getId())
                 .userId(booking.getUserId())
+                .userName(user != null ? user.getName() : null)
+                .userEmail(user != null ? user.getEmail() : null)
+                .userMobileNumber(user != null ? user.getMobileNumber() : null)
                 .slotId(booking.getSlotId())
                 .turfId(booking.getTurfId())
                 .date(booking.getDate())
@@ -297,6 +317,21 @@ public class BookingService {
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .build();
+    }
+
+    private void requireTurfOwner(String turfId, String ownerId) {
+        if (ownerId == null || ownerId.isBlank()) {
+            throw new ForbiddenException("Owner identity is required to view turf bookings.");
+        }
+
+        TurfData turf = fetchTurfData(turfId);
+        if (turf == null || turf.getOwnerId() == null || !turf.getOwnerId().equals(ownerId)) {
+            throw new ForbiddenException("You can only view bookings for your own turfs.");
+        }
+    }
+
+    private boolean isAdminRole(String role) {
+        return "ORG_ADMIN".equals(role) || "FRANCHISE_ADMIN".equals(role) || "SUPER_ADMIN".equals(role);
     }
 
     private void requireBookingOwner(Booking booking, String userId) {
@@ -385,16 +420,39 @@ public class BookingService {
     }
 
     private String fetchTurfName(String turfId) {
+        TurfData turf = fetchTurfData(turfId);
+        return turf != null && turf.getName() != null ? turf.getName() : "Sports Venue";
+    }
+
+    private TurfData fetchTurfData(String turfId) {
         try {
             String url = turfServiceUrl + "/api/v1/turfs/" + turfId;
             ResponseEntity<TurfResponseWrapper> response = restTemplate.getForEntity(url, TurfResponseWrapper.class);
             if (response != null && response.getBody() != null && response.getBody().isSuccess() && response.getBody().getData() != null) {
-                return response.getBody().getData().getName();
+                return response.getBody().getData();
             }
         } catch (Exception e) {
-            log.warn("Failed to fetch turf name for turfId: " + turfId, e);
+            log.warn("Failed to fetch turf data for turfId: " + turfId, e);
         }
-        return "Sports Venue";
+        return null;
+    }
+
+    private UserData fetchUserInfo(String userId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Internal-Token", internalToken);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            String url = authServiceUrl + "/api/v1/auth/users/internal/" + userId;
+            ResponseEntity<UserResponseWrapper> response =
+                    restTemplate.exchange(url, HttpMethod.GET, entity, UserResponseWrapper.class);
+            if (response != null && response.getBody() != null && response.getBody().isSuccess() && response.getBody().getData() != null) {
+                return response.getBody().getData();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch user info for userId: " + userId, e);
+        }
+        return null;
     }
 
     // Static helper inner class to handle deserialization of ApiResponse wrapped SlotDTO
@@ -415,7 +473,24 @@ public class BookingService {
     @Data
     public static class TurfData {
         private String id;
+        private String ownerId;
         private String name;
+    }
+
+    @Data
+    public static class UserResponseWrapper {
+        private boolean success;
+        private UserData data;
+        private String message;
+    }
+
+    @Data
+    public static class UserData {
+        private String id;
+        private String email;
+        private String name;
+        private String mobileNumber;
+        private String role;
     }
 
     // Wrapper for deserializing payment status response from payment-service

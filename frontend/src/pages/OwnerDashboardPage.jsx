@@ -6,13 +6,14 @@ import useOwner from '../hooks/useOwner';
 import OwnerStats from '../features/owner/OwnerStats';
 import OwnerTurfList from '../features/owner/OwnerTurfList';
 import AddTurfModal from '../features/owner/AddTurfModal';
+import OwnerRecentBookings from '../features/owner/OwnerRecentBookings';
 import { useToast } from '../hooks/useToast';
 
 const ownerRoles = ['TURF_OWNER', 'ORG_ADMIN', 'FRANCHISE_ADMIN', 'SUPER_ADMIN'];
 
 const OwnerDashboardPage = () => {
   const { user } = useAuth();
-  const { stats, turfs, loading, error, fetchDashboardData, addTurf } = useOwner();
+  const { stats, turfs, bookings, loading, error, fetchDashboardData, addTurf } = useOwner();
   const { addToast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -44,6 +45,16 @@ const OwnerDashboardPage = () => {
       </div>
 
       <OwnerStats stats={stats} loading={loading} error={error} />
+
+      <div className="mt-12">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Recent Customer Bookings</h2>
+            <p className="mt-1 text-sm font-medium text-gray-500">See who booked your turfs, their contact details, slot time, and booking status.</p>
+          </div>
+        </div>
+        <OwnerRecentBookings bookings={bookings} loading={loading} error={error} />
+      </div>
       
       <div className="mt-12">
         <div className="flex justify-between items-center mb-6">

@@ -31,4 +31,17 @@ public class InternalUserController {
         UserDTO userDTO = authService.getUserByEmail(email);
         return ResponseEntity.ok(ApiResponse.success(userDTO));
     }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserDTO>> getUserById(
+            @RequestHeader("X-Internal-Token") String token,
+            @PathVariable String userId) {
+
+        if (!internalToken.equals(token)) {
+            throw new BadRequestException("Unauthorized: invalid internal service token");
+        }
+
+        UserDTO userDTO = authService.getUserById(userId);
+        return ResponseEntity.ok(ApiResponse.success(userDTO));
+    }
 }

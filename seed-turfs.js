@@ -4,6 +4,7 @@ const https = require('https');
 const API_GATEWAY = process.env.API_GATEWAY || process.env.API_BASE_URL || 'http://localhost:8080/api/v1';
 const OWNER_EMAIL = process.env.SEED_OWNER_EMAIL || 'Sonu.owner@turfconnect.test';
 const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD || 'Owner123!';
+const SLOT_SEED_DAYS = Number(process.env.SEED_SLOT_DAYS || 45);
 
 const allDays = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
@@ -150,7 +151,17 @@ const demoTurfs = [
   },
 ];
 
-async function request(method, path, data = null, token = null) {
+function formatDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+async function request(method, path, data = null, token = null, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(API_GATEWAY + path);
     const transport = url.protocol === 'https:' ? https : http;
@@ -161,6 +172,7 @@ async function request(method, path, data = null, token = null) {
       method,
       headers: {
         'Content-Type': 'application/json',
+        ...extraHeaders,
       },
     };
 
@@ -236,12 +248,29 @@ async function ensureOwner() {
     email: OWNER_EMAIL,
     password: OWNER_PASSWORD,
   });
-  return loginRes.data.accessToken;
+  return loginRes.data;
+}
+
+async function generateDemoSlots(turfId, auth) {
+  const startDate = formatDate(new Date());
+  const endDate = formatDate(addDays(new Date(), SLOT_SEED_DAYS));
+
+  await request(
+    'POST',
+    `/turfs/${turfId}/slots/generate`,
+    { startDate, endDate },
+    auth.accessToken,
+    {
+      'X-User-Id': auth.userId,
+      'X-User-Role': auth.role,
+    }
+  );
 }
 
 async function seed() {
   console.log(`Using API gateway: ${API_GATEWAY}`);
-  const token = await ensureOwner();
+  const auth = await ensureOwner();
+  const token = auth.accessToken;
   const myTurfsRes = await request('GET', '/turfs/my-turfs?size=100', null, token);
   const existingTurfs = myTurfsRes.data.content || [];
 
@@ -254,12 +283,14 @@ async function seed() {
 
     if (existing) {
       await request('PUT', `/turfs/${existing.id}`, { ...payload, status: 'ACTIVE' }, token);
+      await generateDemoSlots(existing.id, auth);
       console.log(`Updated ${payload.name} (${payload.city})`);
       continue;
     }
 
     const created = await request('POST', '/turfs', payload, token);
     await request('PUT', `/turfs/${created.data.id}`, { status: 'ACTIVE', coverImage: payload.coverImage }, token);
+    await generateDemoSlots(created.data.id, auth);
     console.log(`Created ${payload.name} (${payload.city})`);
   }
 

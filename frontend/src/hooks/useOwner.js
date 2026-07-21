@@ -5,6 +5,7 @@ import { API_ENDPOINTS, API_BASE_URL } from '../constants/api';
 export const useOwner = () => {
   const [stats, setStats] = useState(null);
   const [turfs, setTurfs] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { token, user } = useAuth();
@@ -26,6 +27,30 @@ export const useOwner = () => {
       const ownerTurfs = turfsData.data?.content || turfsData.data || turfsData || [];
       setTurfs(ownerTurfs);
 
+      const bookingResults = await Promise.allSettled(
+        ownerTurfs
+          .filter((turf) => turf.id)
+          .map(async (turf) => {
+            const endpoint = API_ENDPOINTS.BOOKINGS.TURF_BOOKINGS.replace(':turfId', turf.id);
+            const bookingsRes = await fetch(`${API_BASE_URL}${endpoint}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!bookingsRes.ok) throw new Error(`Failed to fetch bookings for ${turf.name || turf.id}`);
+            const bookingsData = await bookingsRes.json();
+            const turfBookings = bookingsData.data || bookingsData || [];
+            return turfBookings.map((booking) => ({
+              ...booking,
+              turfName: turf.name,
+            }));
+          })
+      );
+
+      const ownerBookings = bookingResults
+        .filter((result) => result.status === 'fulfilled')
+        .flatMap((result) => result.value)
+        .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
+      setBookings(ownerBookings);
+
       const statsRes = await fetch(`${API_BASE_URL}${API_ENDPOINTS.OWNER.STATS}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -38,6 +63,10 @@ export const useOwner = () => {
       setStats({
         ...fetchedStats,
         activeTurfs: ownerTurfs.filter((turf) => turf.status === 'ACTIVE' || turf.active).length,
+        totalBookings: fetchedStats.totalBookings ?? ownerBookings.length,
+        totalRevenue: fetchedStats.totalRevenue ?? ownerBookings
+          .filter((booking) => booking.status === 'CONFIRMED')
+          .reduce((sum, booking) => sum + Number(booking.totalPrice || 0), 0),
       });
     } catch (e) {
       console.error("Owner API failed:", e.message);
@@ -73,7 +102,7 @@ export const useOwner = () => {
     }
   };
 
-  return { stats, turfs, loading, error, fetchDashboardData, addTurf };
+  return { stats, turfs, bookings, loading, error, fetchDashboardData, addTurf };
 };
 
 export default useOwner;

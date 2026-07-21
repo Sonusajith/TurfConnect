@@ -17,6 +17,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -67,6 +72,10 @@ class BookingServiceSplitTest {
                 .status(BookingStatus.CONFIRMED)
                 .lockToken("lock-token")
                 .build();
+
+        ReflectionTestUtils.setField(bookingService, "turfServiceUrl", "http://turf-service");
+        ReflectionTestUtils.setField(bookingService, "authServiceUrl", "http://auth-service");
+        ReflectionTestUtils.setField(bookingService, "internalToken", "test-internal-token");
     }
 
     @Test
@@ -118,6 +127,36 @@ class BookingServiceSplitTest {
         verify(bookingRepository).save(any(Booking.class));
     }
 
+    @Test
+    void getBookingsForOwnedTurf_allowsOwnerAndIncludesCustomerInfo() {
+        when(restTemplate.getForEntity(eq("http://turf-service/api/v1/turfs/turf-1"), eq(BookingService.TurfResponseWrapper.class)))
+                .thenReturn(ResponseEntity.ok(turfWrapper("owner-1")));
+        when(restTemplate.exchange(
+                eq("http://auth-service/api/v1/auth/users/internal/user-1"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(BookingService.UserResponseWrapper.class)))
+                .thenReturn(ResponseEntity.ok(userWrapper("Saif Player", "saif.player@turfconnect.test")));
+        when(bookingRepository.findByTurfIdOrderByCreatedAtDesc("turf-1")).thenReturn(List.of(booking));
+
+        List<BookingResponse> response = bookingService.getBookingsForOwnedTurf("turf-1", "owner-1", "TURF_OWNER");
+
+        assertEquals(1, response.size());
+        assertEquals("Saif Player", response.get(0).getUserName());
+        assertEquals("saif.player@turfconnect.test", response.get(0).getUserEmail());
+        verify(bookingRepository).findByTurfIdOrderByCreatedAtDesc("turf-1");
+    }
+
+    @Test
+    void getBookingsForOwnedTurf_rejectsDifferentOwner() {
+        when(restTemplate.getForEntity(eq("http://turf-service/api/v1/turfs/turf-1"), eq(BookingService.TurfResponseWrapper.class)))
+                .thenReturn(ResponseEntity.ok(turfWrapper("owner-1")));
+
+        assertThrows(ForbiddenException.class,
+                () -> bookingService.getBookingsForOwnedTurf("turf-1", "other-owner", "TURF_OWNER"));
+        verify(bookingRepository, never()).findByTurfIdOrderByCreatedAtDesc("turf-1");
+    }
+
     private SplitContributionMember member(String id, String name, SplitContributionStatus status) {
         return SplitContributionMember.builder()
                 .id(id)
@@ -125,5 +164,29 @@ class BookingServiceSplitTest {
                 .amount(BigDecimal.ONE)
                 .status(status)
                 .build();
+    }
+
+    private BookingService.TurfResponseWrapper turfWrapper(String ownerId) {
+        BookingService.TurfData turf = new BookingService.TurfData();
+        turf.setId("turf-1");
+        turf.setName("GreenField Arena");
+        turf.setOwnerId(ownerId);
+
+        BookingService.TurfResponseWrapper wrapper = new BookingService.TurfResponseWrapper();
+        wrapper.setSuccess(true);
+        wrapper.setData(turf);
+        return wrapper;
+    }
+
+    private BookingService.UserResponseWrapper userWrapper(String name, String email) {
+        BookingService.UserData user = new BookingService.UserData();
+        user.setId("user-1");
+        user.setName(name);
+        user.setEmail(email);
+
+        BookingService.UserResponseWrapper wrapper = new BookingService.UserResponseWrapper();
+        wrapper.setSuccess(true);
+        wrapper.setData(user);
+        return wrapper;
     }
 }

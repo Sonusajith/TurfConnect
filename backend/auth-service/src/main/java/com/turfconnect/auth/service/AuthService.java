@@ -210,10 +210,21 @@ public class AuthService {
     public com.turfconnect.shared.dto.user.UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new com.turfconnect.shared.exception.ResourceNotFoundException("User not found for email: " + email));
+        return toUserDTO(user);
+    }
+
+    public com.turfconnect.shared.dto.user.UserDTO getUserById(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new com.turfconnect.shared.exception.ResourceNotFoundException("User not found with id: " + userId));
+        return toUserDTO(user);
+    }
+
+    private com.turfconnect.shared.dto.user.UserDTO toUserDTO(User user) {
         return com.turfconnect.shared.dto.user.UserDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
+                .mobileNumber(user.getMobileNumber())
                 .role(user.getRole())
                 .build();
     }
