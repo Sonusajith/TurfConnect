@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../constants/routes';
 
@@ -8,6 +8,8 @@ const HERO_IMAGE =
 
 const AuthLayout = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const isRegisterPage = location.pathname === ROUTES.REGISTER;
 
   if (loading) {
     return (
@@ -37,7 +39,7 @@ const AuthLayout = () => {
             TurfConnect
           </h2>
           <p className="mt-2 text-lg font-bold text-white">
-            Welcome Back, Athlete
+            {isRegisterPage ? 'Join the turf community' : 'Welcome Back, Athlete'}
           </p>
         </div>
 

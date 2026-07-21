@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import { ROUTES } from '../../constants/routes';
 import { validateEmail, validatePassword } from '../../utils/validators';
 
 const LoginForm = ({ onSubmit, isLoading }) => {
@@ -93,7 +94,7 @@ const LoginForm = ({ onSubmit, isLoading }) => {
       </button>
 
       <p className="pt-6 text-center text-sm font-semibold text-gray-500">
-        Do not have an account? <span className="font-extrabold text-primary">Sign Up</span>
+        Do not have an account? <a href={ROUTES.REGISTER} className="font-extrabold text-primary hover:underline">Sign Up</a>
       </p>
     </form>
   );

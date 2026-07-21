@@ -40,13 +40,33 @@ export const AuthProvider = ({ children, value }) => {
     }
   };
 
+  const register = async ({ name, email, password, role }) => {
+    setLoading(true);
+    try {
+      const response = await authService.register(name, email, password, role);
+      if (response && response.success) {
+        const { accessToken, refreshToken, userId, role: registeredRole } = response.data;
+        const userData = { userId, email, name, role: registeredRole };
+
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        return userData;
+      }
+      throw new Error(response?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
   };
 
   const token = localStorage.getItem('accessToken');
-  const providerValue = value || { user, loading, token, login, logout };
+  const providerValue = value || { user, loading, token, login, register, logout };
 
   return (
     <AuthContext.Provider value={providerValue}>
