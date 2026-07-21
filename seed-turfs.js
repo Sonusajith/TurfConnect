@@ -2,8 +2,8 @@ const http = require('http');
 const https = require('https');
 
 const API_GATEWAY = process.env.API_GATEWAY || process.env.API_BASE_URL || 'http://localhost:8090/api/v1';
-const OWNER_EMAIL = process.env.SEED_OWNER_EMAIL || 'seed.owner@turfconnect.test';
-const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD || 'Password123!';
+const OWNER_EMAIL = process.env.SEED_OWNER_EMAIL || 'Sonu.owner@turfconnect.test';
+const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD || 'Owner123!';
 
 const allDays = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
