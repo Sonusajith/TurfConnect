@@ -198,14 +198,35 @@ class InvitationServiceImplTest {
     }
 
     @Test
-    @DisplayName("sendInvitation: should throw BadRequestException when invitee email not found")
-    void sendInvitation_userNotFound() {
+    @DisplayName("sendInvitation: should create email-only invitation when invitee is not registered yet")
+    void sendInvitation_unregisteredInvitee_createsEmailOnlyInvite() {
+        TeamInvitation emailOnlyInvitation = TeamInvitation.builder()
+                .id(INVITATION_ID)
+                .teamId(TEAM_ID)
+                .inviterId(CAPTAIN_ID)
+                .inviteeEmail(INVITEE_EMAIL)
+                .inviteeId(null)
+                .message("Join us!")
+                .status(InvitationStatus.PENDING)
+                .invitedAt(Instant.now())
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
         when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(activeTeam));
         when(authServiceClient.getUserByEmail(INVITEE_EMAIL)).thenReturn(null);
+        when(invitationRepository.existsByTeamIdAndInviteeEmailAndStatus(TEAM_ID, INVITEE_EMAIL, InvitationStatus.PENDING)).thenReturn(false);
+        when(invitationRepository.save(any(TeamInvitation.class))).thenReturn(emailOnlyInvitation);
 
-        assertThatThrownBy(() -> invitationService.sendInvitation(TEAM_ID, validInviteRequest, CAPTAIN_ID))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("No user found with email");
+        InvitationResponse response = invitationService.sendInvitation(TEAM_ID, validInviteRequest, CAPTAIN_ID);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getInviteeEmail()).isEqualTo(INVITEE_EMAIL);
+        assertThat(response.getInviteeId()).isNull();
+        assertThat(response.getStatus()).isEqualTo(InvitationStatus.PENDING);
+        verify(invitationRepository).save(argThat(invitation -> invitation.getInviteeId() == null));
+        verify(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
     }
 
     // --- acceptInvitation ---
