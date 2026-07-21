@@ -86,6 +86,8 @@ public class ReviewServiceImpl implements ReviewService {
         // 4. Save Review
         Review review = Review.builder()
                 .userId(userId)
+                .userName(booking.getUserName())
+                .userEmail(booking.getUserEmail())
                 .bookingId(request.getBookingId())
                 .turfId(booking.getTurfId())
                 .rating(request.getRating())
@@ -286,6 +288,8 @@ public class ReviewServiceImpl implements ReviewService {
             return BookingData.builder()
                     .id(dataNode.path("id").asText())
                     .userId(dataNode.path("userId").asText())
+                    .userName(dataNode.path("userName").asText(null))
+                    .userEmail(dataNode.path("userEmail").asText(null))
                     .turfId(dataNode.path("turfId").asText())
                     .status(dataNode.path("status").asText())
                     .build();
@@ -318,9 +322,27 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private ReviewResponse toReviewResponse(Review review) {
+        BookingData booking = null;
+        if ((review.getUserName() == null || review.getUserName().isBlank()) && review.getBookingId() != null) {
+            booking = fetchBookingDetailsSafely(review.getBookingId());
+        }
+
+        String userName = review.getUserName();
+        String userEmail = review.getUserEmail();
+        if (booking != null) {
+            if (userName == null || userName.isBlank()) {
+                userName = booking.getUserName();
+            }
+            if (userEmail == null || userEmail.isBlank()) {
+                userEmail = booking.getUserEmail();
+            }
+        }
+
         return ReviewResponse.builder()
                 .id(review.getId())
                 .userId(review.getUserId())
+                .userName(userName)
+                .userEmail(userEmail)
                 .bookingId(review.getBookingId())
                 .turfId(review.getTurfId())
                 .rating(review.getRating())
@@ -334,12 +356,23 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
+    private BookingData fetchBookingDetailsSafely(String bookingId) {
+        try {
+            return fetchBookingDetails(bookingId);
+        } catch (Exception e) {
+            log.warn("Unable to enrich review with booking customer details for bookingId={}: {}", bookingId, e.getMessage());
+            return null;
+        }
+    }
+
     // Static helper models for deserialization & Mongo group aggregation mapping
     @Data
     @Builder
     public static class BookingData {
         private String id;
         private String userId;
+        private String userName;
+        private String userEmail;
         private String turfId;
         private String status;
     }

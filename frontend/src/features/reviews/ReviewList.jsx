@@ -14,6 +14,7 @@ const nameFromEmail = (email) => {
 const getReviewerName = (review, currentUser) => {
   if (review.userName) return review.userName;
   if (review.reviewerName) return review.reviewerName;
+  if (review.userEmail) return nameFromEmail(review.userEmail);
   if (review.userId && review.userId === currentUser?.userId) {
     return nameFromEmail(currentUser.email) || 'You';
   }

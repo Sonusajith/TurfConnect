@@ -146,13 +146,15 @@ public class ReviewServiceImplTest {
 
         when(reviewRepository.findByBookingId("b-1")).thenReturn(Optional.empty());
 
-        String bookingJson = "{\"success\":true,\"message\":\"Ok\",\"data\":{\"id\":\"b-1\",\"userId\":\"u-1\",\"turfId\":\"t-1\",\"status\":\"CONFIRMED\"}}";
+        String bookingJson = "{\"success\":true,\"message\":\"Ok\",\"data\":{\"id\":\"b-1\",\"userId\":\"u-1\",\"userName\":\"Saif Player\",\"userEmail\":\"saif.player@turfconnect.test\",\"turfId\":\"t-1\",\"status\":\"CONFIRMED\"}}";
         when(restTemplate.getForEntity(anyString(), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(bookingJson));
 
         Review saved = Review.builder()
                 .id("r-10")
                 .userId("u-1")
+                .userName("Saif Player")
+                .userEmail("saif.player@turfconnect.test")
                 .bookingId("b-1")
                 .turfId("t-1")
                 .rating(5)
@@ -181,6 +183,8 @@ public class ReviewServiceImplTest {
         assertNotNull(response);
         assertEquals("r-10", response.getId());
         assertEquals("u-1", response.getUserId());
+        assertEquals("Saif Player", response.getUserName());
+        assertEquals("saif.player@turfconnect.test", response.getUserEmail());
         assertEquals(5, response.getRating());
 
         verify(reviewRepository, times(1)).save(any(Review.class));

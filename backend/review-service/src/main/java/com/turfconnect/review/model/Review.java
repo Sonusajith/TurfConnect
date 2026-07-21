@@ -22,6 +22,8 @@ public class Review {
 
     @Indexed
     private String userId;
+    private String userName;
+    private String userEmail;
 
     @Indexed(unique = true)
     private String bookingId;
