@@ -9,16 +9,13 @@ const getJson = async (res) => {
   return text ? JSON.parse(text) : {};
 };
 
-const communityFetch = async (endpoint, options = {}) => {
-  const gatewayUrl = `${API_BASE_URL}${endpoint}`;
-  const directUrl = `${COMMUNITY_DIRECT_URL}${endpoint}`;
-  const res = await fetch(gatewayUrl, options);
-
-  if (res.status !== 503) {
-    return res;
+const getStoredUser = (fallbackUser) => {
+  try {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : fallbackUser;
+  } catch {
+    return fallbackUser;
   }
-
-  return fetch(directUrl, options);
 };
 
 export const useTeams = () => {
@@ -27,12 +24,92 @@ export const useTeams = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { token, user } = useAuth();
-  const buildAuthHeaders = useCallback((extraHeaders = {}) => ({
-    ...extraHeaders,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(user?.userId ? { 'X-User-Id': user.userId } : {}),
-    ...(user?.role ? { 'X-User-Role': user.role } : {}),
-  }), [token, user?.role, user?.userId]);
+  const buildAuthHeaders = useCallback((extraHeaders = {}) => {
+    const storedUser = getStoredUser(user);
+    const currentToken = localStorage.getItem('accessToken') || token;
+
+    return {
+      ...extraHeaders,
+      ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
+      ...(storedUser?.userId ? { 'X-User-Id': storedUser.userId } : {}),
+      ...(storedUser?.role ? { 'X-User-Role': storedUser.role } : {}),
+    };
+  }, [token, user]);
+
+  const refreshAccessToken = useCallback(async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return null;
+    }
+
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      return null;
+    }
+
+    const data = await getJson(res);
+    const authData = data.data || data;
+    if (!authData?.accessToken) {
+      return null;
+    }
+
+    localStorage.setItem('accessToken', authData.accessToken);
+    if (authData.refreshToken) {
+      localStorage.setItem('refreshToken', authData.refreshToken);
+    }
+    return authData.accessToken;
+  }, []);
+
+  const communityFetch = useCallback(async (endpoint, options = {}) => {
+    const gatewayUrl = `${API_BASE_URL}${endpoint}`;
+    const directUrl = `${COMMUNITY_DIRECT_URL}${endpoint}`;
+    const method = (options.method || 'GET').toUpperCase();
+    const canUseDirectFallback = method === 'GET';
+    const requestOptions = {
+      ...options,
+      headers: buildAuthHeaders(options.headers || {}),
+    };
+
+    let gatewayRes;
+    try {
+      gatewayRes = await fetch(gatewayUrl, requestOptions);
+    } catch (fetchError) {
+      if (!canUseDirectFallback) {
+        throw fetchError;
+      }
+      return fetch(directUrl, requestOptions);
+    }
+
+    if (gatewayRes.status === 401) {
+      const refreshedToken = await refreshAccessToken();
+      if (!refreshedToken) {
+        return gatewayRes;
+      }
+
+      const retryOptions = {
+        ...requestOptions,
+        headers: {
+          ...requestOptions.headers,
+          Authorization: `Bearer ${refreshedToken}`,
+        },
+      };
+      gatewayRes = await fetch(gatewayUrl, retryOptions);
+    }
+
+    if (gatewayRes.status === 503 && canUseDirectFallback) {
+      return fetch(directUrl, requestOptions);
+    }
+
+    return gatewayRes;
+  }, [buildAuthHeaders, refreshAccessToken]);
 
   const withTeamMeta = useCallback((team) => {
     const myMembership = team.members?.find((member) => member.userId === user?.userId);
@@ -48,7 +125,7 @@ export const useTeams = () => {
     setError(null);
     try {
       const res = await communityFetch(API_ENDPOINTS.TEAMS.LIST, {
-        headers: buildAuthHeaders()
+        headers: {}
       });
       if (!res.ok) {
         let errMsg = `HTTP Error ${res.status}`;
@@ -70,19 +147,19 @@ export const useTeams = () => {
     } catch (e) {
       console.error("Teams API failed:", e.message);
       setTeams([]);
-      setError('Team service is unavailable. Start community-service and refresh this page.');
+      setError(e.message === 'HTTP Error 401'
+        ? 'Your session expired. Please log in again.'
+        : 'Team service is unavailable. Start community-service and refresh this page.');
     } finally {
       setLoading(false);
     }
-  }, [buildAuthHeaders, withTeamMeta]);
+  }, [communityFetch, withTeamMeta]);
 
   const createTeam = async (teamData) => {
     try {
       const res = await communityFetch(API_ENDPOINTS.TEAMS.CREATE, {
         method: 'POST',
-        headers: {
-          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(teamData)
       });
       if (!res.ok) {
@@ -106,9 +183,7 @@ export const useTeams = () => {
     try {
       const res = await communityFetch(`${API_ENDPOINTS.TEAMS.LIST}/${teamId}`, {
         method: 'PUT',
-        headers: {
-          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(teamData)
       });
       if (!res.ok) {
@@ -126,7 +201,7 @@ export const useTeams = () => {
   const fetchInvitations = useCallback(async () => {
     try {
       const res = await communityFetch(API_ENDPOINTS.INVITATIONS.LIST, {
-        headers: buildAuthHeaders()
+        headers: {}
       });
       if (res.ok) {
         const data = await getJson(res);
@@ -136,7 +211,7 @@ export const useTeams = () => {
       console.error("Invitations API failed:", e.message);
       setError(e.message || 'Failed to load invitations');
     }
-  }, [buildAuthHeaders]);
+  }, [communityFetch]);
 
   const respondToInvitation = async (invitationId, status) => {
     try {
@@ -145,9 +220,7 @@ export const useTeams = () => {
         : API_ENDPOINTS.INVITATIONS.DECLINE;
       const res = await communityFetch(endpoint.replace(':invitationId', invitationId), {
         method: 'PUT',
-        headers: {
-          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       if (res.ok) {
         await fetchInvitations();
@@ -164,9 +237,7 @@ export const useTeams = () => {
       const endpoint = API_ENDPOINTS.INVITATIONS.SEND.replace(':teamId', teamId);
       const res = await communityFetch(endpoint, {
         method: 'POST',
-        headers: {
-          ...buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inviteeEmail: email, message })
       });
       if (!res.ok) {
