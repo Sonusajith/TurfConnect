@@ -96,21 +96,25 @@ const SlotPickerPage = () => {
 
   const handlePaymentComplete = async (booking, options = {}) => {
     try {
+      const completeDummyGatewayPayment = async () => {
+        addToast('Razorpay gateway unavailable. Continuing with dummy payment gateway.', 'warning');
+        const fallbackRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', 'MOCK');
+        const verifyRes = await paymentService.verifyPayment(fallbackRes.data.transactionId);
+
+        setIsPaymentOpen(false);
+        setSelectedSlot(null);
+        setActiveBooking(null);
+        navigate(ROUTES.BOOKINGS);
+        return verifyRes.data;
+      };
+
       const providerToUse = options.demoPayment ? 'MOCK' : activePaymentProvider;
       let initiateRes;
       try {
         initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', providerToUse);
       } catch (initiateError) {
         if (providerToUse === 'RAZORPAY') {
-          addToast('Razorpay test gateway is unavailable. Completing this as a dummy Razorpay payment.', 'warning');
-          const fallbackRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', 'MOCK');
-          const verifyRes = await paymentService.verifyPayment(fallbackRes.data.transactionId);
-
-          setIsPaymentOpen(false);
-          setSelectedSlot(null);
-          setActiveBooking(null);
-          navigate(ROUTES.BOOKINGS);
-          return verifyRes.data;
+          return completeDummyGatewayPayment();
         }
         throw initiateError;
       }
@@ -135,7 +139,7 @@ const SlotPickerPage = () => {
 
       const razorpayKeyId = keyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
       if (!razorpayKeyId || !window.Razorpay) {
-        throw new Error('Razorpay checkout is unavailable. Add Razorpay test keys on the backend or use VITE_PAYMENT_PROVIDER=MOCK.');
+        return completeDummyGatewayPayment();
       }
 
       return new Promise((resolve, reject) => {
@@ -181,12 +185,16 @@ const SlotPickerPage = () => {
           },
         };
 
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response) {
-          addToast(response.error.description || 'Payment failed', 'error');
-          reject(new Error('Payment failed'));
-        });
-        rzp.open();
+        try {
+          const rzp = new window.Razorpay(options);
+          rzp.on('payment.failed', function (response) {
+            addToast(response.error.description || 'Payment failed', 'error');
+            reject(new Error('Payment failed'));
+          });
+          rzp.open();
+        } catch {
+          completeDummyGatewayPayment().then(resolve).catch(reject);
+        }
       });
     } catch (e) {
       addToast(e.message || 'Checkout payment flow failed', 'error');
