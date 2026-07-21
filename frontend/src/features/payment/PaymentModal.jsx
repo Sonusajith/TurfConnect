@@ -18,7 +18,7 @@ const providerContent = {
     button: 'Complete Demo Payment',
   },
   RAZORPAY: {
-    body: "You will be redirected to Razorpay's secure checkout to complete your payment.",
+    body: "Use Razorpay's secure checkout, or complete a dummy Razorpay payment for local user testing.",
     button: 'Pay with Razorpay',
   },
 };
@@ -33,19 +33,31 @@ const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete, paymentProv
 
   const content = providerContent[paymentProvider] || providerContent.RAZORPAY;
 
-  const handlePayment = async (e) => {
-    e.preventDefault();
+  const completePayment = async (options = {}) => {
     setLoading(true);
     setError('');
 
     try {
-      await onPaymentComplete(booking);
+      if (Object.keys(options).length > 0) {
+        await onPaymentComplete(booking, options);
+      } else {
+        await onPaymentComplete(booking);
+      }
       setSuccess(true);
     } catch (e) {
       setError(e.message || 'Payment failed. Please retry.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    await completePayment();
+  };
+
+  const handleDummyPayment = async () => {
+    await completePayment({ demoPayment: true, paymentMethod });
   };
 
   return (
@@ -159,10 +171,21 @@ const PaymentModal = ({ isOpen, onClose, booking, onPaymentComplete, paymentProv
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <Button variant="outline" className="flex-1" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
+            {paymentProvider !== 'MOCK' && (
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 text-sm font-bold"
+                isLoading={loading}
+                onClick={handleDummyPayment}
+              >
+                Complete Dummy Razorpay Payment
+              </Button>
+            )}
             <Button
               type="submit"
               variant="primary"

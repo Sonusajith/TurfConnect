@@ -94,20 +94,21 @@ const SlotPickerPage = () => {
     }
   };
 
-  const handlePaymentComplete = async (booking) => {
+  const handlePaymentComplete = async (booking, options = {}) => {
     try {
-      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', activePaymentProvider);
+      const providerToUse = options.demoPayment ? 'MOCK' : activePaymentProvider;
+      const initiateRes = await paymentService.initiate(booking.id, booking.totalPrice, 'INR', providerToUse);
       if (!initiateRes.success) {
         throw new Error(initiateRes.message || 'Payment initiation failed on the server. Please try a different method.');
       }
 
       const { transactionId, amount, provider, orderId, keyId } = initiateRes.data;
-      const activeProvider = provider || activePaymentProvider;
+      const activeProvider = provider || providerToUse;
       const activeOrderId = orderId || transactionId;
 
       if (activeProvider === 'MOCK') {
         const verifyRes = await paymentService.verifyPayment(transactionId);
-        addToast('Booking confirmed successfully!', 'success');
+        addToast(options.demoPayment ? 'Dummy Razorpay payment confirmed successfully!' : 'Booking confirmed successfully!', 'success');
 
         setIsPaymentOpen(false);
         setSelectedSlot(null);

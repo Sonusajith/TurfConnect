@@ -79,4 +79,28 @@ describe('PaymentModal Component', () => {
       expect(screen.getByText(/payment successful/i)).toBeInTheDocument();
     });
   });
+
+  test('triggers dummy Razorpay callback from Razorpay screen', async () => {
+    const handleComplete = vi.fn().mockResolvedValue({ success: true });
+
+    render(
+      <PaymentModal
+        isOpen={true}
+        onClose={vi.fn()}
+        booking={mockBooking}
+        onPaymentComplete={handleComplete}
+        paymentProvider="RAZORPAY"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /complete dummy razorpay payment/i }));
+
+    await waitFor(() => {
+      expect(handleComplete).toHaveBeenCalledWith(mockBooking, {
+        demoPayment: true,
+        paymentMethod: 'UPI',
+      });
+      expect(screen.getByText(/payment successful/i)).toBeInTheDocument();
+    });
+  });
 });

@@ -7,7 +7,7 @@ const getConfiguredProvider = () => {
     return configuredProvider;
   }
 
-  return import.meta.env.VITE_RAZORPAY_KEY_ID ? 'RAZORPAY' : 'MOCK';
+  return 'RAZORPAY';
 };
 
 export const paymentService = {
