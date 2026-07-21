@@ -19,9 +19,9 @@ const LoginPage = () => {
       addToast('Welcome back! Login successful.', 'success');
       
       if (user.role === 'SUPER_ADMIN' || user.role === 'ORG_ADMIN') {
-        navigate(ROUTES.ADMIN_ANALYTICS);
+        window.location.assign(ROUTES.ADMIN_ANALYTICS);
       } else if (user.role === 'TURF_OWNER') {
-        navigate(ROUTES.OWNER_DASHBOARD);
+        window.location.assign(ROUTES.OWNER_DASHBOARD);
       } else {
         navigate(ROUTES.DASHBOARD);
       }
