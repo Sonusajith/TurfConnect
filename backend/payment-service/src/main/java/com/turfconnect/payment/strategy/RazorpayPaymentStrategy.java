@@ -3,12 +3,12 @@ package com.turfconnect.payment.strategy;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
-import org.json.JSONObject;
 import com.turfconnect.shared.dto.payment.PaymentInitiateRequest;
 import com.turfconnect.shared.dto.payment.PaymentResponse;
 import com.turfconnect.shared.dto.payment.PaymentStatus;
 import com.turfconnect.shared.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -35,8 +35,11 @@ public class RazorpayPaymentStrategy implements PaymentGatewayStrategy {
         if (keyId == null || keyId.trim().isEmpty() || keyId.contains("your_razorpay")) {
             throw new BadRequestException("Razorpay gateway is not configured. Please supply a valid Key ID.");
         }
+        if (keySecret == null || keySecret.trim().isEmpty() || keySecret.contains("your_razorpay")) {
+            throw new BadRequestException("Razorpay gateway is not configured. Please supply a valid Key Secret.");
+        }
 
-        // Razorpay expects amount in paise (e.g. ₹10.00 is 1000 paise)
+        // Razorpay expects amount in paise, so Rs. 10.00 is sent as 1000.
         long amountPaise = request.getAmount().multiply(new BigDecimal("100")).longValue();
         String orderId;
 
@@ -63,6 +66,7 @@ public class RazorpayPaymentStrategy implements PaymentGatewayStrategy {
                 .provider("RAZORPAY")
                 .status(PaymentStatus.PENDING)
                 .orderId(orderId)
+                .keyId(keyId)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -74,16 +78,17 @@ public class RazorpayPaymentStrategy implements PaymentGatewayStrategy {
             return true;
         }
         try {
-            Mac sha256HMAC = Mac.getInstance("HmacSHA256");
+            Mac sha256Hmac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secretKey = new SecretKeySpec(webhookSecret.getBytes("UTF-8"), "HmacSHA256");
-            sha256HMAC.init(secretKey);
-            byte[] hash = sha256HMAC.doFinal(payload.getBytes("UTF-8"));
-            
-            // Convert to Hex
+            sha256Hmac.init(secretKey);
+            byte[] hash = sha256Hmac.doFinal(payload.getBytes("UTF-8"));
+
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
                 hexString.append(hex);
             }
             String expectedSignature = hexString.toString();

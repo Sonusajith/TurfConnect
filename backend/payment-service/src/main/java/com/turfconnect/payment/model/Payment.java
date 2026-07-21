@@ -33,6 +33,10 @@ public class Payment {
 
     private String paymentReference;
 
+    private String providerPaymentId;
+
+    private String gatewaySignature;
+
     private BigDecimal amount;
     
     private String currency;

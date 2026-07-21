@@ -5,6 +5,7 @@ import com.turfconnect.payment.service.RefundService;
 import com.turfconnect.shared.dto.ApiResponse;
 import com.turfconnect.shared.dto.payment.PaymentInitiateRequest;
 import com.turfconnect.shared.dto.payment.PaymentResponse;
+import com.turfconnect.shared.dto.payment.PaymentVerifyRequest;
 import com.turfconnect.shared.dto.payment.RefundRequest;
 import com.turfconnect.shared.dto.payment.RefundResponse;
 import com.turfconnect.shared.exception.BadRequestException;
@@ -42,9 +43,15 @@ public class PaymentController {
 
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<PaymentResponse>> verifyPayment(
-            @RequestParam("transactionId") String transactionId) {
+            @RequestParam(value = "transactionId", required = false) String transactionId,
+            @RequestBody(required = false) PaymentVerifyRequest request) {
 
-        PaymentResponse response = paymentService.verifyPayment(transactionId);
+        PaymentVerifyRequest verifyRequest = request != null ? request : new PaymentVerifyRequest();
+        if (verifyRequest.getTransactionId() == null || verifyRequest.getTransactionId().trim().isEmpty()) {
+            verifyRequest.setTransactionId(transactionId);
+        }
+
+        PaymentResponse response = paymentService.verifyPayment(verifyRequest);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

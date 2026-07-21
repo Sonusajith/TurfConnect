@@ -6,6 +6,7 @@ import { paymentService } from '../services/paymentService';
 import { useSlots } from '../hooks/useSlots';
 import { useSlotSocket } from '../hooks/useSlotSocket';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../hooks/useAuth';
 import SlotGrid from '../features/slots/SlotGrid';
 import CheckoutModal from '../features/booking/CheckoutModal';
 import PaymentModal from '../features/payment/PaymentModal';
@@ -24,6 +25,7 @@ const SlotPickerPage = () => {
   const { turfId } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { user } = useAuth();
   const [activePaymentProvider, setActivePaymentProvider] = useState(paymentService.getConfiguredProvider());
 
   const [date, setDate] = useState(() => {
@@ -99,8 +101,9 @@ const SlotPickerPage = () => {
         throw new Error(initiateRes.message || 'Payment initiation failed on the server. Please try a different method.');
       }
 
-      const { transactionId, amount, provider } = initiateRes.data;
+      const { transactionId, amount, provider, orderId, keyId } = initiateRes.data;
       const activeProvider = provider || activePaymentProvider;
+      const activeOrderId = orderId || transactionId;
 
       if (activeProvider === 'MOCK') {
         const verifyRes = await paymentService.verifyPayment(transactionId);
@@ -113,21 +116,26 @@ const SlotPickerPage = () => {
         return verifyRes.data;
       }
 
-      if (!import.meta.env.VITE_RAZORPAY_KEY_ID || !window.Razorpay) {
-        throw new Error('Razorpay checkout is unavailable. Add VITE_RAZORPAY_KEY_ID or use VITE_PAYMENT_PROVIDER=MOCK.');
+      const razorpayKeyId = keyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKeyId || !window.Razorpay) {
+        throw new Error('Razorpay checkout is unavailable. Add Razorpay test keys on the backend or use VITE_PAYMENT_PROVIDER=MOCK.');
       }
 
       return new Promise((resolve, reject) => {
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          key: razorpayKeyId,
           amount: amount * 100,
           currency: 'INR',
           name: 'TurfConnect',
           description: `Booking for ${turf.name}`,
-          order_id: transactionId,
-          handler: async function () {
+          order_id: activeOrderId,
+          handler: async function (razorpayResponse) {
             try {
-              const verifyRes = await paymentService.verifyPayment(transactionId);
+              const verifyRes = await paymentService.verifyPayment(transactionId, {
+                razorpayOrderId: razorpayResponse.razorpay_order_id,
+                razorpayPaymentId: razorpayResponse.razorpay_payment_id,
+                razorpaySignature: razorpayResponse.razorpay_signature,
+              });
               addToast('Booking confirmed successfully!', 'success');
 
               setIsPaymentOpen(false);
@@ -141,8 +149,8 @@ const SlotPickerPage = () => {
             }
           },
           prefill: {
-            name: 'Test User',
-            email: 'test@example.com',
+            name: user?.name || 'TurfConnect Player',
+            email: user?.email || 'player@turfconnect.test',
             contact: '9999999999',
           },
           theme: {

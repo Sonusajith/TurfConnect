@@ -6,8 +6,8 @@ import com.turfconnect.payment.strategy.PaymentGatewayStrategy;
 import com.turfconnect.shared.dto.payment.PaymentInitiateRequest;
 import com.turfconnect.shared.dto.payment.PaymentResponse;
 import com.turfconnect.shared.dto.payment.PaymentStatus;
+import com.turfconnect.shared.dto.payment.PaymentVerifyRequest;
 import com.turfconnect.shared.exception.BadRequestException;
-import com.turfconnect.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +38,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceTest {
+
+    private static final String RAZORPAY_TEST_SECRET = "rzp_test_secret";
 
     @Mock
     private PaymentRepository paymentRepository;
@@ -66,6 +71,8 @@ public class PaymentServiceTest {
         paymentService = new PaymentService(paymentRepository, strategyMap, restTemplate, rabbitTemplate);
         ReflectionTestUtils.setField(paymentService, "bookingServiceUrl", "http://localhost:8083");
         ReflectionTestUtils.setField(paymentService, "internalTokenSecret", "secret-test-token");
+        ReflectionTestUtils.setField(paymentService, "razorpayKeyId", "rzp_test_key");
+        ReflectionTestUtils.setField(paymentService, "razorpayKeySecret", RAZORPAY_TEST_SECRET);
     }
 
     @Test
@@ -188,5 +195,86 @@ public class PaymentServiceTest {
         assertThrows(BadRequestException.class, () -> 
                 paymentService.verifyPayment("tx-offline")
         );
+    }
+
+    @Test
+    void verifyPayment_RazorpayValidSignature_ConfirmsBooking() {
+        Payment pending = Payment.builder()
+                .id("pay-rzp")
+                .bookingId("book-rzp")
+                .transactionId("order_123")
+                .paymentReference("order_123")
+                .provider("RAZORPAY")
+                .amount(BigDecimal.valueOf(600))
+                .currency("INR")
+                .status(PaymentStatus.PENDING)
+                .build();
+
+        PaymentVerifyRequest request = PaymentVerifyRequest.builder()
+                .transactionId("order_123")
+                .razorpayOrderId("order_123")
+                .razorpayPaymentId("pay_123")
+                .razorpaySignature(hmacSha256Hex("order_123|pay_123", RAZORPAY_TEST_SECRET))
+                .build();
+
+        when(paymentRepository.findByTransactionId("order_123")).thenReturn(Optional.of(pending));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), eq(Void.class)))
+                .thenReturn(ResponseEntity.ok().build());
+
+        PaymentResponse response = paymentService.verifyPayment(request);
+
+        assertEquals(PaymentStatus.SUCCESS, response.getStatus());
+        assertEquals("pay_123", response.getPaymentReference());
+        assertEquals("order_123", response.getOrderId());
+        assertEquals("rzp_test_key", response.getKeyId());
+        verify(restTemplate).exchange(contains("/api/v1/bookings/book-rzp/confirm"), eq(HttpMethod.PUT), any(HttpEntity.class), eq(Void.class));
+        verify(rabbitTemplate).convertAndSend(anyString(), eq("payment.success"), any(Object.class));
+    }
+
+    @Test
+    void verifyPayment_RazorpayInvalidSignature_DoesNotConfirmBooking() {
+        Payment pending = Payment.builder()
+                .id("pay-rzp")
+                .bookingId("book-rzp")
+                .transactionId("order_123")
+                .provider("RAZORPAY")
+                .status(PaymentStatus.PENDING)
+                .build();
+
+        PaymentVerifyRequest request = PaymentVerifyRequest.builder()
+                .transactionId("order_123")
+                .razorpayOrderId("order_123")
+                .razorpayPaymentId("pay_123")
+                .razorpaySignature("bad-signature")
+                .build();
+
+        when(paymentRepository.findByTransactionId("order_123")).thenReturn(Optional.of(pending));
+
+        assertThrows(BadRequestException.class, () -> paymentService.verifyPayment(request));
+
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(restTemplate, never()).exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(Void.class));
+    }
+
+    private String hmacSha256Hex(String payload, String secret) {
+        try {
+            Mac sha256Hmac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            sha256Hmac.init(secretKey);
+            byte[] hash = sha256Hmac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

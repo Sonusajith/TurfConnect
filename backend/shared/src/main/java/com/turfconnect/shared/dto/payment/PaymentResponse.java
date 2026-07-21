@@ -24,6 +24,7 @@ public class PaymentResponse {
     private String failureReason;
     private String clientSecret;
     private String orderId;
+    private String keyId;
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
 }

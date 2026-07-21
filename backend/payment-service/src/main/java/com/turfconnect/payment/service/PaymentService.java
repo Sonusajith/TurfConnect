@@ -8,6 +8,7 @@ import com.turfconnect.payment.strategy.PaymentGatewayStrategy;
 import com.turfconnect.shared.dto.payment.PaymentInitiateRequest;
 import com.turfconnect.shared.dto.payment.PaymentResponse;
 import com.turfconnect.shared.dto.payment.PaymentStatus;
+import com.turfconnect.shared.dto.payment.PaymentVerifyRequest;
 import com.turfconnect.shared.exception.BadRequestException;
 import com.turfconnect.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -40,6 +45,12 @@ public class PaymentService {
 
     @Value("${spring.security.internal-token:internal-secret-token}")
     private String internalTokenSecret;
+
+    @Value("${razorpay.key-id:}")
+    private String razorpayKeyId;
+
+    @Value("${razorpay.key-secret:}")
+    private String razorpayKeySecret;
 
     public PaymentResponse initiatePayment(PaymentInitiateRequest request, String idempotencyKey) {
         // 1. Idempotency check: lookup key if present
@@ -85,6 +96,15 @@ public class PaymentService {
     }
 
     public PaymentResponse verifyPayment(String transactionId) {
+        return verifyPayment(PaymentVerifyRequest.builder().transactionId(transactionId).build());
+    }
+
+    public PaymentResponse verifyPayment(PaymentVerifyRequest request) {
+        if (request == null || request.getTransactionId() == null || request.getTransactionId().trim().isEmpty()) {
+            throw new BadRequestException("transactionId is required for payment verification.");
+        }
+
+        String transactionId = request.getTransactionId().trim();
         Payment payment = paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for transaction ID: " + transactionId));
 
@@ -92,7 +112,13 @@ public class PaymentService {
             return toPaymentResponse(payment);
         }
 
-        // Simulating manual verification success
+        if ("RAZORPAY".equalsIgnoreCase(payment.getProvider())) {
+            verifyRazorpayCheckoutPayment(payment, request);
+            payment.setProviderPaymentId(request.getRazorpayPaymentId());
+            payment.setGatewaySignature(request.getRazorpaySignature());
+            payment.setPaymentReference(request.getRazorpayPaymentId());
+        }
+
         payment.setStatus(PaymentStatus.SUCCESS);
         payment.setCompletedAt(LocalDateTime.now());
         Payment saved = paymentRepository.save(payment);
@@ -104,6 +130,64 @@ public class PaymentService {
         publishPaymentEvent(saved);
 
         return toPaymentResponse(saved);
+    }
+
+    private void verifyRazorpayCheckoutPayment(Payment payment, PaymentVerifyRequest request) {
+        String orderId = trimToNull(request.getRazorpayOrderId());
+        String paymentId = trimToNull(request.getRazorpayPaymentId());
+        String signature = trimToNull(request.getRazorpaySignature());
+
+        if (orderId == null || paymentId == null || signature == null) {
+            throw new BadRequestException("Razorpay payment id, order id, and signature are required.");
+        }
+        if (!orderId.equals(payment.getTransactionId())) {
+            throw new BadRequestException("Razorpay order does not match the saved payment order.");
+        }
+        if (razorpayKeySecret == null || razorpayKeySecret.trim().isEmpty() || razorpayKeySecret.contains("your_razorpay")) {
+            throw new BadRequestException("Razorpay gateway is not configured. Please supply a valid Key Secret.");
+        }
+
+        String payload = orderId + "|" + paymentId;
+        String expectedSignature = hmacSha256Hex(payload, razorpayKeySecret);
+        if (!constantTimeEquals(expectedSignature, signature)) {
+            throw new BadRequestException("Razorpay payment signature verification failed.");
+        }
+    }
+
+    private String hmacSha256Hex(String payload, String secret) {
+        try {
+            Mac sha256Hmac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            sha256Hmac.init(secretKey);
+            byte[] hash = sha256Hmac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            log.error("Razorpay checkout signature calculation failed", e);
+            throw new BadRequestException("Payment signature verification failed.");
+        }
+    }
+
+    private boolean constantTimeEquals(String expected, String actual) {
+        return MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.UTF_8),
+                actual.getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 
     public void processWebhook(String provider, String payload, String signatureHeader) {
@@ -222,6 +306,8 @@ public class PaymentService {
                 .provider(payment.getProvider())
                 .status(payment.getStatus())
                 .failureReason(payment.getFailureReason())
+                .orderId("RAZORPAY".equalsIgnoreCase(payment.getProvider()) ? payment.getTransactionId() : null)
+                .keyId("RAZORPAY".equalsIgnoreCase(payment.getProvider()) ? razorpayKeyId : null)
                 .createdAt(payment.getCreatedAt())
                 .completedAt(payment.getCompletedAt())
                 .build();

@@ -22,9 +22,12 @@ export const paymentService = {
     });
   },
 
-  // Calls the backend verify endpoint after successful frontend checkout
-  verifyPayment: async (transactionId) => {
-    return apiClient.post(`${API_ENDPOINTS.PAYMENTS.VERIFY}?transactionId=${transactionId}`);
+  // Calls the backend verify endpoint after successful frontend checkout.
+  verifyPayment: async (transactionId, verification = {}) => {
+    return apiClient.post(API_ENDPOINTS.PAYMENTS.VERIFY, {
+      transactionId,
+      ...verification,
+    });
   },
 
   // Simulates gateway success webhook for testing (Legacy)
