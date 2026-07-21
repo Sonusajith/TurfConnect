@@ -1,8 +1,9 @@
 export const ROUTES = {
+  LANDING: '/',
   LOGIN: '/login',
   REGISTER: '/register',
   ADMIN_LOGIN: '/super-secret-admin',
-  DASHBOARD: '/',
+  DASHBOARD: '/dashboard',
   EXPLORE: '/explore',
   TURF_DETAILS: '/turfs/:turfId',
   SLOT_PICKER: '/turfs/:turfId/slots',

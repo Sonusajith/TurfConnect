@@ -8,6 +8,7 @@ import ProtectedRoute from './router/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminSecretLogin from './pages/AdminSecretLogin';
+import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
 import ExplorePage from './pages/ExplorePage';
 import TurfDetailsPage from './pages/TurfDetailsPage';
@@ -33,6 +34,8 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <Routes>
+            <Route path={ROUTES.LANDING} element={<LandingPage />} />
+
             {/* Public/Auth Routes */}
             <Route element={<AuthLayout />}>
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
